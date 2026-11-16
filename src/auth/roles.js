@@ -25,6 +25,7 @@ export const ROUTE_ROLES = {
   '/blocages': ['GERANT', 'ACCUEIL'],
   '/terrains': ['GERANT'],
   '/horaires': ['GERANT'],
+  '/annonces': ['GERANT'],
   // Le Gerant gere l'Accueil et les Controleurs ; l'Admin gere les Gerants
   // et consulte le reste de l'equipe (meme partage que SenYummies).
   '/personnel': ['GERANT'],

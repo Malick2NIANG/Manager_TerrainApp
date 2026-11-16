@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { path: '/blocages', label: 'Blocages', icon: 'fa-ban', roles: ['GERANT', 'ACCUEIL'] },
   { path: '/terrains', label: 'Terrains et tarifs', icon: 'fa-futbol', roles: ['GERANT'] },
   { path: '/horaires', label: 'Horaires', icon: 'fa-clock', roles: ['GERANT'] },
+  { path: '/annonces', label: 'Annonces', icon: 'fa-bullhorn', roles: ['GERANT'] },
   {
     path: '/journal-audit',
     label: 'Journal d’audit',

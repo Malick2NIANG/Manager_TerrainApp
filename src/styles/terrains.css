@@ -80,7 +80,7 @@
 /* ---------- terrains, horaires, blocages ---------- */
 .ta-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
 .ta-carte { display: flex; flex-direction: column; border: 1px solid #ebebeb; border-radius: 12px; background: #fff; overflow: hidden; }
-.ta-carte-photo { aspect-ratio: 16 / 7; background: var(--marque-pale); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; color: var(--marque); font-size: 28px; }
+.ta-carte-photo { position: relative; aspect-ratio: 16 / 7; background: var(--marque-pale); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; color: var(--marque); font-size: 28px; }
 .ta-carte-corps { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; }
 .ta-carte-corps h3 { margin: 0; font-size: 15px; }
 .ta-carte-corps p { margin: 0; color: #5b5b5f; font-size: 13px; }
@@ -124,3 +124,27 @@
 .manager-shell.is-dark .ta-choix button, .manager-shell.is-dark .ta-creneaux-choix button, .manager-shell.is-dark .ta-jours button:not(.manager-button) { border-color: #2f2f33; background: #121214; }
 .manager-shell.is-dark .ta-total { background: rgb(var(--marque-vif-rgb) / 14%); }
 .manager-shell.is-dark .ta-table th, .manager-shell.is-dark .ta-table td { border-color: #2a2a2e; }
+
+/* Galerie photos de l'annonce (formulaire terrain). */
+.ta-galerie { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
+.ta-galerie-photo { position: relative; border-radius: 10px; overflow: hidden; background: var(--marque-pale); aspect-ratio: 3 / 2; }
+.ta-galerie-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ta-galerie-couverture { position: absolute; left: 6px; top: 6px; background: #fff; color: #141414; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.ta-galerie-actions { position: absolute; inset: auto 0 0 0; display: flex; justify-content: flex-end; gap: 4px; padding: 6px; background: linear-gradient(transparent, rgba(0,0,0,.55)); }
+.ta-galerie-actions button { width: 28px; height: 28px; border: 0; border-radius: 999px; background: rgba(255,255,255,.95); color: #141414; font-size: 12px; cursor: pointer; }
+.ta-galerie-actions button:disabled { opacity: .4; cursor: default; }
+.ta-galerie-ajout { width: 100%; aspect-ratio: 3 / 2; border: 2px dashed #cfcfcf; border-radius: 10px; background: transparent; color: inherit; font: inherit; font-size: 13px; font-weight: 600; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+.ta-galerie-ajout:hover { border-color: var(--marque); color: var(--marque); }
+.ta-galerie-ajout i { font-size: 18px; }
+.manager-shell.is-dark .ta-galerie-ajout { border-color: #3a3a40; }
+.ta-carte-nb-photos { position: absolute; right: 8px; bottom: 8px; background: rgba(20,20,20,.72); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; display: inline-flex; gap: 5px; align-items: center; }
+
+/* Annonces : la video prend la place de la photo, meme cadrage. */
+.crud-dropzone-preview { position: relative; }
+.crud-dropzone-preview video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.crud-grid-photo video, .crud-annonce-popup-photo video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ta-annonce-video-badge { position: absolute; left: 8px; bottom: 8px; z-index: 1; display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; background: rgba(20,20,20,.75); color: #fff; font-size: 11px; font-weight: 700; }
+.crud-grid-photo .ta-annonce-video-badge { left: auto; right: 8px; bottom: auto; top: 8px; }
+.ta-galerie-photo video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ta-galerie-photo .ta-annonce-video-badge { left: auto; right: 6px; top: 6px; bottom: auto; }
+.ta-carte-photo video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }

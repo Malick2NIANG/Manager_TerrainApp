@@ -21,6 +21,7 @@ const PAGES = {
   '/blocages': lazy(() => import('./features/terrains/Blocages.jsx')),
   '/terrains': lazy(() => import('./features/terrains/Terrains.jsx')),
   '/horaires': lazy(() => import('./features/terrains/Horaires.jsx')),
+  '/annonces': lazy(() => import('./features/annonces/Annonces.jsx')),
   '/personnel': lazy(() => import('./features/gerant/Personnel.jsx')),
   '/equipe': lazy(() => import('./features/manager/PersonnelManager.jsx')),
   '/journal-audit/:roleSlug': lazy(() => import('./features/manager/JournalAudit.jsx')),

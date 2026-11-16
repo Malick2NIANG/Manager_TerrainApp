@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react'
-import ImageCropModal from '../gerant/ImageCropModal.jsx'
-import { imageEnvoyee } from '../../hooks/useRessourceApi.js'
+import { useState } from 'react'
+import GaleriePhotos from './GaleriePhotos.jsx'
+import { estVideo, mediaEnvoye } from '../annonces/annonces.js'
 import { formatFCFA } from '../../utils/dates.js'
 
 export const JOURS = [
@@ -16,10 +16,11 @@ export function versApi(f) {
     sportId: Number(f.sportId),
     nom: f.nom.trim(),
     description: f.description?.trim() || null,
+    localite: f.localite?.trim() || null,
     surface: f.surface?.trim() || null,
     capacite: Number(f.capacite),
     equipements: String(f.equipements || '').split(',').map((e) => e.trim()).filter(Boolean),
-    photoUrl: f.photoUrl || null,
+    photos: (f.photos || []).filter(Boolean),
     dureeCreneauMinutes: Number(f.dureeCreneauMinutes),
     tarifHeure: Number(f.tarifHeure),
     plages: f.plages.map((p) => ({ libelle: p.libelle.trim(), jours: p.jours, debut: p.debut, fin: p.fin, tarifHeure: Number(p.tarifHeure) })),
@@ -45,22 +46,21 @@ export function erreursFormulaire(f) {
 
 function depuis(terrain, sports) {
   return terrain ? {
-    sportId: terrain.sportId, nom: terrain.nom, description: terrain.description || '', surface: terrain.surface || '',
-    capacite: terrain.capacite, equipements: terrain.equipements.join(', '), photoUrl: terrain.photoUrl || '',
+    sportId: terrain.sportId, nom: terrain.nom, description: terrain.description || '', localite: terrain.localite || '',
+    surface: terrain.surface || '', capacite: terrain.capacite, equipements: terrain.equipements.join(', '),
+    photos: terrain.photos || (terrain.photoUrl ? [terrain.photoUrl] : []),
     dureeCreneauMinutes: terrain.dureeCreneauMinutes, tarifHeure: terrain.tarifHeure,
     plages: terrain.plages.map((p) => ({ ...p, debut: hhmm(p.debut), fin: hhmm(p.fin) })), actif: terrain.actif, ordre: terrain.ordre,
   } : {
-    sportId: sports[0]?.id || '', nom: '', description: '', surface: 'Gazon synthétique', capacite: 10, equipements: 'Éclairage, Vestiaires',
-    photoUrl: '', dureeCreneauMinutes: 60, tarifHeure: '', plages: [], actif: true, ordre: 0,
+    sportId: sports[0]?.id || '', nom: '', description: '', localite: '', surface: 'Gazon synthétique', capacite: 10,
+    equipements: 'Éclairage, Vestiaires', photos: [], dureeCreneauMinutes: 60, tarifHeure: '', plages: [], actif: true, ordre: 0,
   }
 }
 
 export default function TerrainFormModal({ terrain, sports, onFermer, onEnregistrer }) {
   const [f, setF] = useState(() => depuis(terrain, sports))
-  const [recadrage, setRecadrage] = useState(null)
   const [envoi, setEnvoi] = useState(false)
   const [erreur, setErreur] = useState(null)
-  const fichier = useRef(null)
   const maj = (champ) => (e) => setF((x) => ({ ...x, [champ]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
   const majPlage = (i, champ, valeur) => setF((x) => ({ ...x, plages: x.plages.map((p, j) => (j === i ? { ...p, [champ]: valeur } : p)) }))
 
@@ -74,8 +74,10 @@ export default function TerrainFormModal({ terrain, sports, onFermer, onEnregist
     setEnvoi(true)
     setErreur(null)
     try {
-      const photoUrl = await imageEnvoyee(f.photoUrl)
-      await onEnregistrer(versApi({ ...f, photoUrl }))
+      // Photos et videos encore dans le navigateur : envoyees une a une, dans l'ordre.
+      const photos = []
+      for (const url of f.photos) photos.push(await mediaEnvoye(url, estVideo(url) ? 'VIDEO' : 'IMAGE'))
+      await onEnregistrer(versApi({ ...f, photos }))
     } catch (err) {
       setEnvoi(false)
       setErreur(err.message)
@@ -106,8 +108,12 @@ export default function TerrainFormModal({ terrain, sports, onFermer, onEnregist
               <input value={f.nom} onChange={maj('nom')} maxLength={80} placeholder="Terrain A" />
             </label>
           </div>
-          <label>Description
-            <textarea rows={2} value={f.description} onChange={maj('description')} maxLength={1000} />
+          <label>Description <span className="ta-form-aide">ce que le client lit sur l’annonce</span>
+            <textarea rows={3} value={f.description} onChange={maj('description')} maxLength={1000}
+              placeholder="Terrain couvert, gazon récent, éclairage LED…" />
+          </label>
+          <label>Localité <span className="ta-form-aide">quartier ou site, pour la recherche</span>
+            <input value={f.localite} onChange={maj('localite')} maxLength={120} placeholder="Liberté 6, Dakar" />
           </label>
           <div className="ta-form-ligne">
             <label>Surface
@@ -124,16 +130,7 @@ export default function TerrainFormModal({ terrain, sports, onFermer, onEnregist
             <input value={f.equipements} onChange={maj('equipements')} />
           </label>
 
-          <fieldset>
-            <legend>Photo</legend>
-            <div className="ta-choix">
-              {f.photoUrl && <img src={f.photoUrl} alt="" style={{ width: 160, aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 8 }} />}
-              <button type="button" onClick={() => fichier.current?.click()}>{f.photoUrl ? 'Changer' : 'Ajouter une photo'}</button>
-              {f.photoUrl && <button type="button" onClick={() => setF((x) => ({ ...x, photoUrl: '' }))}>Retirer</button>}
-            </div>
-            <input ref={fichier} type="file" accept="image/jpeg,image/png,image/webp" hidden
-              onChange={(e) => { const fi = e.target.files?.[0]; if (fi) setRecadrage(URL.createObjectURL(fi)); e.target.value = '' }} />
-          </fieldset>
+          <GaleriePhotos photos={f.photos} onChange={(photos) => setF((x) => ({ ...x, photos }))} />
 
           <div className="ta-form-ligne">
             <label>Durée d’un créneau
@@ -201,11 +198,6 @@ export default function TerrainFormModal({ terrain, sports, onFermer, onEnregist
         </form>
       </section>
 
-      {recadrage && (
-        <ImageCropModal imageSrc={recadrage} aspect={16 / 9} eyebrow="Photo du terrain"
-          onCancel={() => setRecadrage(null)}
-          onConfirm={(url) => { setF((x) => ({ ...x, photoUrl: url })); setRecadrage(null) }} />
-      )}
     </div>
   )
 }

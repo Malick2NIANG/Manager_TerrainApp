@@ -6,6 +6,7 @@ import { apiDelete, apiGet, apiPost, apiPut } from '../../api/client.js'
 import { formatFCFA } from '../../utils/dates.js'
 import TerrainFormModal from './TerrainFormModal.jsx'
 import '../../styles/terrains.css'
+import { estVideo } from '../annonces/annonces.js'
 
 // Sports et terrains du complexe (gerant) : tarifs, plages tarifaires,
 // duree de creneau, photo, ouverture a la reservation.
@@ -120,12 +121,17 @@ export default function Terrains() {
         <div className="ta-liste">
           {terrains.map((t) => (
             <article className={`ta-carte ${t.actif ? '' : 'ta-inactif'}`} key={t.id}>
-              <div className="ta-carte-photo" style={t.photoUrl ? { backgroundImage: `url(${t.photoUrl})` } : undefined}>
+              <div className="ta-carte-photo" style={t.photoUrl && !estVideo(t.photoUrl) ? { backgroundImage: `url(${t.photoUrl})` } : undefined}>
+                {t.photoUrl && estVideo(t.photoUrl) && <video src={t.photoUrl} muted playsInline preload="metadata" aria-label="Vidéo de couverture" />}
                 {!t.photoUrl && <i className="fa-solid fa-futbol" aria-hidden="true" />}
+                <span className="ta-carte-nb-photos">
+                  <i className="fa-solid fa-images" aria-hidden="true" /> {t.photos?.length || 0}
+                </span>
               </div>
               <div className="ta-carte-corps">
                 <h3>{t.nom}</h3>
                 <p>{t.sport} · {t.capacite} joueurs · créneaux de {t.dureeCreneauMinutes} min</p>
+                {t.localite && <p><i className="fa-solid fa-location-dot" aria-hidden="true" /> {t.localite}</p>}
                 <p><strong>{formatFCFA(t.tarifHeure)} / h</strong>
                   {t.plages.length > 0 && ` · ${t.plages.map((p) => `${p.libelle} ${formatFCFA(p.tarifHeure)}`).join(' · ')}`}</p>
                 {!t.actif && <p>Non réservable</p>}
