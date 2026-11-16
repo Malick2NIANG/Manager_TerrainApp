@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { path: '/terrains', label: 'Terrains et tarifs', icon: 'fa-futbol', roles: ['GERANT'] },
   { path: '/horaires', label: 'Horaires', icon: 'fa-clock', roles: ['GERANT'] },
   { path: '/annonces', label: 'Annonces', icon: 'fa-bullhorn', roles: ['GERANT'] },
+  { path: '/avis', label: 'Avis des joueurs', icon: 'fa-star', roles: ['GERANT'] },
   {
     path: '/journal-audit',
     label: 'Journal d’audit',
@@ -90,7 +91,12 @@ const BOTTOM_TAB_LABELS = {
   '/journal-audit': 'Journal',
   '/personnel': 'Équipe',
   '/equipe': 'Équipe',
+  '/annonces': 'Annonces',
+  '/avis': 'Avis',
 }
+
+// Telephone : 4 onglets dans la barre du bas, le reste dans "Plus".
+const ONGLETS_MAX = 4
 
 const SIDEBAR_COLLAPSED_KEY = 'terrainapp_manager_sidebar_collapsed'
 const TABLETTE_QUERY = '(min-width: 761px) and (max-width: 1199px)'
@@ -276,6 +282,7 @@ export default function Layout({ children }) {
   }, [])
 
   const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(role))
+  const [plusOpen, setPlusOpen] = useState(false)
   const unreadNotifications = notifications.filter((notification) => notification.unread)
 
   const formattedDate = new Intl.DateTimeFormat('fr-FR', {
@@ -534,7 +541,7 @@ export default function Layout({ children }) {
         <PiedDePage className="manager-workarea-footer" />
       </div>
       <nav className="manager-bottom-tabbar" aria-label={`Navigation ${ROLE_LABELS[role]}`}>
-        {visibleItems.map((item) => {
+        {(visibleItems.length > ONGLETS_MAX + 1 ? visibleItems.slice(0, ONGLETS_MAX) : visibleItems).map((item) => {
           const target = item.children ? item.children[0].path : item.path
           const isGroupActive = item.children && location.pathname.startsWith(item.path)
           return (
@@ -548,7 +555,27 @@ export default function Layout({ children }) {
             </NavLink>
           )
         })}
+        {visibleItems.length > ONGLETS_MAX + 1 && (
+          <button type="button" aria-expanded={plusOpen} onClick={() => setPlusOpen((o) => !o)}
+            className={`manager-bottom-tabbar-link ${visibleItems.slice(ONGLETS_MAX).some((i) => location.pathname.startsWith(i.path)) ? 'is-active' : ''}`}>
+            <span className="manager-bottom-tabbar-icon" aria-hidden="true"><i className="fa-solid fa-ellipsis" /></span>
+            <span className="manager-bottom-tabbar-label">Plus</span>
+          </button>
+        )}
       </nav>
+      {plusOpen && (
+        <>
+          <button className="ta-plus-fond" type="button" aria-label="Fermer le menu" onClick={() => setPlusOpen(false)} />
+          <nav className="ta-plus-feuille" aria-label="Plus de pages">
+            {visibleItems.slice(ONGLETS_MAX).map((item) => (
+              <NavLink key={item.path} to={item.children ? item.children[0].path : item.path} onClick={() => setPlusOpen(false)}
+                className={({ isActive }) => (isActive || location.pathname.startsWith(item.path) ? 'is-active' : '')}>
+                <i className={`fa-solid ${item.icon}`} aria-hidden="true" /> {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        </>
+      )}
       {mobileOpen && <button className="manager-mobile-backdrop" aria-label="Fermer la navigation" type="button" onClick={() => setMobileOpen(false)} />}
       {passwordOpen && <ChangePasswordModal onClose={() => setPasswordOpen(false)} onNotice={showNotice} />}
       <Toast toast={toast} onClose={() => setToast(null)} />

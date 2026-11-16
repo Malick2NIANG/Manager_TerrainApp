@@ -150,3 +150,28 @@
 .ta-carte-photo video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .ta-gps-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: -4px; }
 .ta-gps-actions a.manager-button { text-decoration: none; }
+
+/* Avis des joueurs (page Avis du gerant). */
+.ta-select { height: 42px; padding: 0 12px; border: 1px solid #d8d8d8; border-radius: 10px; background: #fff; font: inherit; font-size: 14px; color: inherit; }
+.ta-avis-liste { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 14px; }
+.ta-avis { border: 1px solid #ececea; border-radius: 14px; background: #fff; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.ta-avis.is-masque { opacity: .6; }
+.ta-avis-entete { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ta-etoiles { color: #f5a524; display: inline-flex; gap: 2px; font-size: 14px; }
+.ta-avis-terrain { font-weight: 700; font-size: 14px; }
+.ta-avis-badge { margin-left: auto; padding: 2px 8px; border-radius: 999px; background: #ececea; color: #5b5b5f; font-size: 11px; font-weight: 700; }
+.ta-avis-texte { margin: 0; font-size: 14px; line-height: 1.55; }
+.ta-avis-texte.is-vide { color: #8a8a88; font-style: italic; }
+.ta-avis-pied { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #6b6b6b; font-size: 12px; }
+.manager-shell.is-dark .ta-avis, .manager-shell.is-dark .ta-select { background: #1c1c20; border-color: #2a2a2e; }
+
+/* Barre du bas (telephone) : 4 onglets + "Plus" qui ouvre le reste. */
+.ta-plus-feuille { position: fixed; z-index: 30; right: 0; bottom: 0; left: 0; border-radius: 20px 20px 0 0; background: #fff; box-shadow: 0 -12px 40px rgb(0 0 0 / 22%); padding: 10px 16px calc(16px + env(safe-area-inset-bottom, 0px)); animation: ta-feuille .22s ease-out; }
+.ta-plus-feuille::before { content: ""; display: block; width: 40px; height: 4px; margin: 0 auto 10px; border-radius: 4px; background: #d8d8d8; }
+.ta-plus-feuille a { display: flex; align-items: center; gap: 14px; padding: 13px 8px; border-radius: 12px; color: inherit; text-decoration: none; font-weight: 600; }
+.ta-plus-feuille a i { width: 22px; text-align: center; color: var(--marque); font-size: 17px; }
+.ta-plus-feuille a.is-active { background: var(--marque-pale); color: var(--marque); }
+.ta-plus-fond { position: fixed; z-index: 29; inset: 0; border: 0; background: rgb(0 0 0 / 40%); }
+.manager-bottom-tabbar button.manager-bottom-tabbar-link { border: 0; background: none; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
+.manager-shell.is-dark .ta-plus-feuille { background: #1c1c20; }
+@keyframes ta-feuille { from { transform: translateY(100%); } to { transform: none; } }
