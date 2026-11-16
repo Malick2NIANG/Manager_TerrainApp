@@ -4,6 +4,7 @@ import Toast from '../../components/Toast.jsx'
 import StatFilterCards from '../../components/crud/StatFilterCards.jsx'
 import { apiGet, apiPatch } from '../../api/client.js'
 import '../../styles/terrains.css'
+import EnTetePage from '../../components/EnTetePage.jsx'
 
 const FILTRES = [
   { key: 'TOUS', label: 'Tous les avis', icon: 'fa-star', accent: '#9c6b0c', accentBg: '#f6ecd9' },
@@ -65,13 +66,9 @@ export default function Avis() {
 
   return (
     <Layout>
-      <section className="dashboard-intro">
-        <div>
-          <p className="manager-eyebrow">Gérance</p>
-          <h1>Avis des joueurs</h1>
-          <p>Notes laissées après les matchs. {note !== null && <strong>Moyenne : {String(note).replace('.', ',')} / 5.</strong>} Masquez un avis abusif : il disparaît de l’app et de la note.</p>
-        </div>
-      </section>
+      <EnTetePage groupe="vitrine"
+        resume={note !== null ? `Note moyenne : ${String(note).replace('.', ',')} / 5 · ${compte.VISIBLES} avis visibles` : null}
+        aide="Notes laissées par les joueurs après leur match. Masquez un avis abusif : il disparaît de l’app et de la note moyenne." />
 
       <StatFilterCards items={FILTRES.map((f) => ({ ...f, value: compte[f.key] }))} selected={filtre} onSelect={setFiltre} />
 

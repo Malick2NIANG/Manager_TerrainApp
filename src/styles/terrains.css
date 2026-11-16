@@ -181,3 +181,47 @@
 .ta-tel input { min-width: 0; }
 .ta-form input.ta-tel-indicatif { width: 72px; flex: none; text-align: center; font-weight: 700; color: #6b6b6b; background: #f4f4f1; cursor: default; }
 .manager-shell.is-dark .ta-form input.ta-tel-indicatif { background: #151518; color: #9a9a9e; }
+
+/* === En-tete de page commun, onglets de groupe, volets ================= */
+.ta-entete { margin-bottom: 22px; }
+.ta-entete-ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.ta-entete-titre { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ta-entete h1 { margin: 0; font-size: clamp(24px, 2.6vw, 32px); letter-spacing: -.6px; line-height: 1.1; }
+.ta-entete-aide-bouton { width: 32px; height: 32px; border: 0; border-radius: 999px; background: transparent; color: #8a8a88; font-size: 17px; cursor: pointer; }
+.ta-entete-aide-bouton:hover, .ta-entete-aide-bouton[aria-expanded="true"] { color: var(--marque); background: var(--marque-pale); }
+.ta-entete-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ta-entete-resume { margin: 6px 0 0; color: #6b6b6b; font-size: 14px; }
+.ta-entete-aide { margin: 10px 0 0; max-width: 640px; padding: 10px 14px; border-radius: 10px; background: var(--marque-pale); color: #3c3c3c; font-size: 13px; line-height: 1.55; }
+.ta-onglets { display: flex; gap: 4px; margin-top: 16px; border-bottom: 1px solid #e5e5e3; overflow-x: auto; scrollbar-width: none; }
+.ta-onglets::-webkit-scrollbar { display: none; }
+.ta-onglet { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 2px solid transparent; margin-bottom: -1px; color: #6b6b6b; font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.ta-onglet:hover { color: #141414; }
+.ta-onglet.is-actif { color: var(--marque); border-bottom-color: var(--marque); }
+.manager-shell.is-dark .ta-onglets { border-color: #2a2a2e; }
+.manager-shell.is-dark .ta-onglet { color: #9a9a9e; }
+.manager-shell.is-dark .ta-onglet.is-actif { color: var(--marque-vif); border-bottom-color: var(--marque-vif); }
+.manager-shell.is-dark .ta-entete-aide { background: #1c1c20; color: #c8c8cc; }
+
+.ta-volet { border: 1px solid #e5e5e3; border-radius: 12px; background: #fff; }
+.ta-volet + .ta-volet { margin-top: 10px; }
+.ta-volet-tete { display: flex; width: 100%; align-items: center; gap: 12px; padding: 13px 16px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 12px; }
+.ta-volet-tete:hover { background: #fafaf8; }
+.ta-volet-icone { width: 20px; color: var(--marque); text-align: center; }
+.ta-volet-textes { display: flex; min-width: 0; flex: 1; flex-direction: column; }
+.ta-volet-titre { font-weight: 700; font-size: 14px; }
+.ta-volet-resume { overflow: hidden; color: #6b6b6b; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.ta-volet-chevron { color: #8a8a88; transition: transform .2s ease; }
+.ta-volet.is-ouvert .ta-volet-chevron { transform: rotate(180deg); }
+.ta-volet-corps { padding: 4px 16px 16px; }
+.manager-shell.is-dark .ta-volet { background: #1c1c20; border-color: #2a2a2e; }
+.manager-shell.is-dark .ta-volet-tete:hover { background: #222226; }
+
+/* Planning : creneaux libres en une ligne d'heures (cliquables). */
+.planning-libres { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e5e5e3; }
+.planning-libres-titre { display: block; margin-bottom: 6px; color: #6b6b6b; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+.planning-libres-heures { display: flex; flex-wrap: wrap; gap: 6px; }
+.planning-libres-heures > * { padding: 5px 10px; border: 1px solid #d8e9df; border-radius: 999px; background: var(--marque-pale); color: var(--marque); font: inherit; font-size: 12px; font-weight: 700; }
+.planning-libres-heures button { cursor: pointer; }
+.planning-libres-heures button:hover { background: var(--marque); color: #fff; border-color: var(--marque); }
+.manager-shell.is-dark .planning-libres { border-color: #2a2a2e; }
+.manager-shell.is-dark .planning-libres-heures > * { background: #16251d; border-color: #24402f; color: var(--marque-vif); }

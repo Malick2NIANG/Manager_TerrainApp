@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import GaleriePhotos from './GaleriePhotos.jsx'
+import Volet from '../../components/Volet.jsx'
 import { gpsEnTexte, lireGps } from './gps.js'
 import { estVideo, mediaEnvoye } from '../annonces/annonces.js'
 import { formatFCFA } from '../../utils/dates.js'
@@ -118,6 +119,7 @@ export default function TerrainFormModal({ terrain, sports, onFermer, onEnregist
         </div>
 
         <form className="ta-form" onSubmit={valider} noValidate>
+          {/* Couche 1 : l'essentiel pour qu'un terrain soit reservable. */}
           <div className="ta-form-ligne">
             <label>Sport
               <select value={f.sportId} onChange={maj('sportId')}>
@@ -128,45 +130,6 @@ export default function TerrainFormModal({ terrain, sports, onFermer, onEnregist
               <input value={f.nom} onChange={maj('nom')} maxLength={80} placeholder="Terrain A" />
             </label>
           </div>
-          <label>Description <span className="ta-form-aide">ce que le client lit sur l’annonce</span>
-            <textarea rows={3} value={f.description} onChange={maj('description')} maxLength={1000}
-              placeholder="Terrain couvert, gazon récent, éclairage LED…" />
-          </label>
-          <label>Localité <span className="ta-form-aide">quartier ou site, pour la recherche</span>
-            <input value={f.localite} onChange={maj('localite')} maxLength={120} placeholder="Liberté 6, Dakar" />
-          </label>
-          <label>Position GPS <span className="ta-form-aide">pour le bouton « Itinéraire » de l’app : coordonnées ou lien Google Maps</span>
-            <input value={f.gps} onChange={maj('gps')} placeholder="14.7256, -17.4569" />
-          </label>
-          <div className="ta-gps-actions">
-            <button type="button" className="manager-button manager-button-quiet" onClick={maPosition}>
-              <i className="fa-solid fa-location-crosshairs" aria-hidden="true" /> Ma position actuelle
-            </button>
-            {lireGps(f.gps) && (
-              <a className="manager-button manager-button-quiet" target="_blank" rel="noopener noreferrer"
-                href={`https://www.google.com/maps/search/?api=1&query=${lireGps(f.gps).latitude},${lireGps(f.gps).longitude}`}>
-                <i className="fa-solid fa-map-location-dot" aria-hidden="true" /> Vérifier sur la carte
-              </a>
-            )}
-            {localisation && <span className="ta-form-aide">{localisation}</span>}
-          </div>
-          <div className="ta-form-ligne">
-            <label>Surface
-              <input value={f.surface} onChange={maj('surface')} maxLength={60} />
-            </label>
-            <label>Joueurs (capacité)
-              <input type="number" min={1} max={100} value={f.capacite} onChange={maj('capacite')} />
-            </label>
-            <label>Ordre d’affichage
-              <input type="number" min={0} value={f.ordre} onChange={maj('ordre')} />
-            </label>
-          </div>
-          <label>Équipements <span className="ta-form-aide">séparés par des virgules</span>
-            <input value={f.equipements} onChange={maj('equipements')} />
-          </label>
-
-          <GaleriePhotos photos={f.photos} onChange={(photos) => setF((x) => ({ ...x, photos }))} />
-
           <div className="ta-form-ligne">
             <label>Durée d’un créneau
               <select value={f.dureeCreneauMinutes} onChange={maj('dureeCreneauMinutes')}>
@@ -177,53 +140,105 @@ export default function TerrainFormModal({ terrain, sports, onFermer, onEnregist
               <input type="number" min={0} step={500} value={f.tarifHeure} onChange={maj('tarifHeure')} placeholder="15000" />
             </label>
           </div>
-
-          <fieldset>
-            <legend>Tarifs particuliers (heures pleines, week-end…)</legend>
-            <div className="ta-plages">
-              {f.plages.map((p, i) => (
-                <div className="ta-plage" key={i}>
-                  <div className="ta-form-ligne">
-                    <label>Nom<input value={p.libelle} onChange={(e) => majPlage(i, 'libelle', e.target.value)} placeholder="Soirée" /></label>
-                    <label>De<input type="time" value={p.debut} onChange={(e) => majPlage(i, 'debut', e.target.value)} /></label>
-                    <label>À<input type="time" value={p.fin} onChange={(e) => majPlage(i, 'fin', e.target.value)} /></label>
-                    <label>Tarif / h<input type="number" min={0} step={500} value={p.tarifHeure} onChange={(e) => majPlage(i, 'tarifHeure', e.target.value)} /></label>
-                  </div>
-                  <div className="ta-jours" role="group" aria-label="Jours">
-                    {JOURS.map((j) => {
-                      const actif = p.jours.includes(j.n)
-                      return (
-                        <button key={j.n} type="button" aria-pressed={actif} className={actif ? 'is-actif' : ''}
-                          onClick={() => majPlage(i, 'jours', actif ? p.jours.filter((x) => x !== j.n) : [...p.jours, j.n].sort())}>
-                          {j.court}
-                        </button>
-                      )
-                    })}
-                    <button type="button" className="manager-button manager-button-quiet" onClick={() => setF((x) => ({ ...x, plages: x.plages.filter((_, k) => k !== i) }))}>
-                      Supprimer
-                    </button>
-                  </div>
-                  {p.fin && p.debut && p.fin < p.debut && <span className="ta-form-aide">Passe minuit : compte pour le jour du début.</span>}
-                </div>
-              ))}
-              <div>
-                <button type="button" className="manager-button manager-button-quiet"
-                  onClick={() => setF((x) => ({ ...x, plages: [...x.plages, { libelle: 'Soirée', jours: [1, 2, 3, 4, 5, 6, 7], debut: '18:00', fin: '01:00', tarifHeure: '' }] }))}>
-                  <i className="fa-solid fa-plus" aria-hidden="true" /> Ajouter un tarif particulier
-                </button>
-              </div>
-            </div>
-          </fieldset>
-
           {f.tarifHeure !== '' && (
             <p className="ta-form-aide">
               Créneau de {f.dureeCreneauMinutes} min au tarif de base : {formatFCFA(Math.round(Number(f.tarifHeure) * Number(f.dureeCreneauMinutes) / 60))}.
             </p>
           )}
-
           <label style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <input type="checkbox" checked={f.actif} onChange={maj('actif')} /> Terrain réservable
           </label>
+
+          {/* Couches suivantes : a ouvrir quand on en a besoin. */}
+          <div>
+            <Volet titre="Photos et vidéos" icone="fa-images"
+              resume={f.photos.length ? `${f.photos.length} média${f.photos.length > 1 ? 's' : ''} · le premier sert de couverture` : 'Aucune photo : ajoutez-en, elles rassurent les clients'}>
+              <GaleriePhotos photos={f.photos} onChange={(photos) => setF((x) => ({ ...x, photos }))} />
+            </Volet>
+            <Volet titre="Annonce dans l’app" icone="fa-mobile-screen"
+              resume={[f.localite, f.description && 'description', lireGps(f.gps) && 'position GPS'].filter(Boolean).join(' · ') || 'Description, quartier, itinéraire'}>
+              <label>Description <span className="ta-form-aide">ce que le client lit sur l’annonce</span>
+                <textarea rows={3} value={f.description} onChange={maj('description')} maxLength={1000}
+                  placeholder="Terrain couvert, gazon récent, éclairage LED…" />
+              </label>
+              <label>Localité <span className="ta-form-aide">quartier ou site, pour la recherche</span>
+                <input value={f.localite} onChange={maj('localite')} maxLength={120} placeholder="Liberté 6, Dakar" />
+              </label>
+              <label>Position GPS <span className="ta-form-aide">pour le bouton « Itinéraire » de l’app : coordonnées ou lien Google Maps</span>
+                <input value={f.gps} onChange={maj('gps')} placeholder="14.7256, -17.4569" />
+              </label>
+              <div className="ta-gps-actions">
+                <button type="button" className="manager-button manager-button-quiet" onClick={maPosition}>
+                  <i className="fa-solid fa-location-crosshairs" aria-hidden="true" /> Ma position actuelle
+                </button>
+                {lireGps(f.gps) && (
+                  <a className="manager-button manager-button-quiet" target="_blank" rel="noopener noreferrer"
+                    href={`https://www.google.com/maps/search/?api=1&query=${lireGps(f.gps).latitude},${lireGps(f.gps).longitude}`}>
+                    <i className="fa-solid fa-map-location-dot" aria-hidden="true" /> Vérifier sur la carte
+                  </a>
+                )}
+                {localisation && <span className="ta-form-aide">{localisation}</span>}
+              </div>
+            </Volet>
+            <Volet titre="Tarifs particuliers" icone="fa-moon"
+              resume={f.plages.length ? f.plages.map((p) => `${p.libelle || 'Sans nom'} ${p.debut}–${p.fin}`).join(' · ') : 'Aucun : le même tarif à toute heure'}>
+                <div className="ta-plages">
+                  {f.plages.map((p, i) => (
+                    <div className="ta-plage" key={i}>
+                      <div className="ta-form-ligne">
+                        <label>Nom<input value={p.libelle} onChange={(e) => majPlage(i, 'libelle', e.target.value)} placeholder="Soirée" /></label>
+                        <label>De<input type="time" value={p.debut} onChange={(e) => majPlage(i, 'debut', e.target.value)} /></label>
+                        <label>À<input type="time" value={p.fin} onChange={(e) => majPlage(i, 'fin', e.target.value)} /></label>
+                        <label>Tarif / h<input type="number" min={0} step={500} value={p.tarifHeure} onChange={(e) => majPlage(i, 'tarifHeure', e.target.value)} /></label>
+                      </div>
+                      <div className="ta-jours" role="group" aria-label="Jours">
+                        {JOURS.map((j) => {
+                          const actif = p.jours.includes(j.n)
+                          return (
+                            <button key={j.n} type="button" aria-pressed={actif} className={actif ? 'is-actif' : ''}
+                              onClick={() => majPlage(i, 'jours', actif ? p.jours.filter((x) => x !== j.n) : [...p.jours, j.n].sort())}>
+                              {j.court}
+                            </button>
+                          )
+                        })}
+                        <button type="button" className="manager-button manager-button-quiet" onClick={() => setF((x) => ({ ...x, plages: x.plages.filter((_, k) => k !== i) }))}>
+                          Supprimer
+                        </button>
+                      </div>
+                      {p.fin && p.debut && p.fin < p.debut && <span className="ta-form-aide">Passe minuit : compte pour le jour du début.</span>}
+                    </div>
+                  ))}
+                  <div>
+                    <button type="button" className="manager-button manager-button-quiet"
+                      onClick={() => setF((x) => ({ ...x, plages: [...x.plages, { libelle: 'Soirée', jours: [1, 2, 3, 4, 5, 6, 7], debut: '18:00', fin: '01:00', tarifHeure: '' }] }))}>
+                      <i className="fa-solid fa-plus" aria-hidden="true" /> Ajouter un tarif particulier
+                    </button>
+                  </div>
+                </div>
+            </Volet>
+            <Volet titre="Caractéristiques" icone="fa-list-check"
+              resume={[`${f.capacite} joueurs`, f.surface, f.equipements].filter(Boolean).join(' · ')}>
+              <div className="ta-form-ligne">
+                <label>Surface
+                  <input value={f.surface} onChange={maj('surface')} maxLength={60} />
+                </label>
+                <label>Joueurs (capacité)
+                  <input type="number" min={1} max={100} value={f.capacite} onChange={maj('capacite')} />
+                </label>
+                <label>Ordre d’affichage
+                  <input type="number" min={0} value={f.ordre} onChange={maj('ordre')} />
+                </label>
+              </div>
+              <label>Équipements <span className="ta-form-aide">séparés par des virgules</span>
+                <input value={f.equipements} onChange={maj('equipements')} />
+              </label>
+            </Volet>
+          </div>
+
+
+
+
+
 
           {erreur && <p className="ta-form-erreur" role="alert">{erreur}</p>}
           <div className="manager-modal-actions">

@@ -4,6 +4,7 @@ import Toast from '../../components/Toast.jsx'
 import { apiGet, apiPut } from '../../api/client.js'
 import { JOURS } from './TerrainFormModal.jsx'
 import '../../styles/terrains.css'
+import EnTetePage from '../../components/EnTetePage.jsx'
 
 const NOMS = ['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 const hhmm = (t) => String(t || '').slice(0, 5)
@@ -40,13 +41,8 @@ export default function Horaires() {
 
   return (
     <Layout>
-      <section className="dashboard-intro">
-        <div>
-          <p className="manager-eyebrow">Gérance</p>
-          <h1>Horaires d’ouverture</h1>
-          <p>Les créneaux réservables vont de l’ouverture à la fermeture, chaque jour.</p>
-        </div>
-      </section>
+      <EnTetePage groupe="complexe"
+        aide="Les créneaux réservables vont de l’ouverture à la fermeture, chaque jour. Une fermeture après minuit compte pour le jour de l’ouverture." />
 
       {erreur && <p className="ta-form-erreur" role="alert">{erreur}</p>}
       {lignes && (

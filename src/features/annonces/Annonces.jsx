@@ -11,6 +11,7 @@ import MediaSlide from './MediaSlide.jsx'
 import '../../styles/terrains.css'
 import useRessourceApi from '../../hooks/useRessourceApi.js'
 import { STATUT_LABELS, countByStatut, slidesEnvoyees } from './annonces.js'
+import EnTetePage from '../../components/EnTetePage.jsx'
 
 const FILTER_DEFS = [
   { key: 'ACTIF', label: 'Publiées', icon: 'fa-circle-check', accent: '#1f6f57', accentBg: '#e2f2ec' },
@@ -111,13 +112,13 @@ export default function Annonces() {
 
   return (
     <Layout>
-      <section className="dashboard-intro">
-        <div>
-          <p className="manager-eyebrow">Gérance</p>
-          <h1>Annonces</h1>
-          <p>Nouveautés, promos, tournois : à l’ouverture de l’app, les annonces publiées défilent toutes seules (photo ou vidéo), et le client peut les faire glisser.</p>
-        </div>
-      </section>
+      <EnTetePage groupe="vitrine"
+        aide="Nouveautés, promos, tournois : à l’ouverture de l’app, les annonces publiées défilent toutes seules (photo ou vidéo), et le client peut les faire glisser."
+        actions={(
+          <button className="manager-button manager-button-primary" type="button" onClick={() => setModal({ kind: 'annonce-form', chaine: null })}>
+            <i className="fa-solid fa-plus" aria-hidden="true" /> Nouvelle annonce
+          </button>
+        )} />
 
       <section>
         <StatFilterCards
@@ -136,10 +137,6 @@ export default function Annonces() {
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             />
           </div>
-          <span className="crud-toolbar-spacer" />
-          <button className="crud-add-button" type="button" onClick={() => setModal({ kind: 'annonce-form', chaine: null })}>
-            <i className="fa-solid fa-plus" aria-hidden="true" /> Nouvelle annonce
-          </button>
         </div>
 
         {visibles.length === 0 && (

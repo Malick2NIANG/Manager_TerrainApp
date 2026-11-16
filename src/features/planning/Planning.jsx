@@ -9,6 +9,7 @@ import { dateLongue, decalerJour, formatFCFA, heure, jourISO, plage } from '../.
 import { BadgeStatut, MOYENS, reservationDuCreneau, telephoneLisible } from './statuts.jsx'
 import ComptoirModal from './ComptoirModal.jsx'
 import '../../styles/terrains.css'
+import EnTetePage from '../../components/EnTetePage.jsx'
 
 // Planning du jour, terrain par terrain : chaque creneau libre ouvre la
 // reservation au comptoir, chaque creneau pris ouvre la fiche (annulation).
@@ -70,13 +71,14 @@ export default function Planning() {
 
   return (
     <Layout>
-      <section className="dashboard-intro">
-        <div>
-          <p className="manager-eyebrow">Planning</p>
-          <h1>Réservations du jour</h1>
-          <p>{stats.nombre} réservation{stats.nombre > 1 ? 's' : ''} confirmée{stats.nombre > 1 ? 's' : ''} · {formatFCFA(stats.montant)}</p>
-        </div>
-      </section>
+      <EnTetePage groupe="planning"
+        resume={`${stats.nombre} réservation${stats.nombre > 1 ? 's' : ''} confirmée${stats.nombre > 1 ? 's' : ''} · ${formatFCFA(stats.montant)}`}
+        aide="Touchez une réservation pour voir le client, le paiement ou l’annuler. Les créneaux libres apparaissent sous chaque terrain : touchez-en un pour réserver au comptoir."
+        actions={peutReserver && (
+          <button className="manager-button manager-button-primary" type="button" onClick={() => setComptoir({})}>
+            <i className="fa-solid fa-plus" aria-hidden="true" /> Nouvelle réservation
+          </button>
+        )} />
 
       <div className="ta-toolbar">
         <div className="ta-jour">
@@ -94,11 +96,6 @@ export default function Planning() {
         </div>
         <span className="ta-toolbar-spacer" />
         <span className={`ta-live ${connecte ? 'is-on' : ''}`}>{connecte ? 'En direct' : 'Hors direct'}</span>
-        {peutReserver && (
-          <button className="manager-button manager-button-primary" type="button" onClick={() => setComptoir({})}>
-            <i className="fa-solid fa-plus" aria-hidden="true" /> Nouvelle réservation
-          </button>
-        )}
       </div>
 
       {erreur && <p className="ta-form-erreur" role="alert">{erreur}</p>}
@@ -115,49 +112,49 @@ export default function Planning() {
               </header>
               {t.creneaux.length === 0 ? (
                 <p className="planning-vide">Fermé ce jour-là.</p>
-              ) : (
-                <div className="planning-creneaux">
-                  {t.creneaux.map((c) => {
-                    const r = reservationDuCreneau(reservations, t.terrainId, c.debut, c.fin)
-                    if (r) {
-                      return (
-                        <button key={c.debut} type="button" className="planning-creneau is-reserve" onClick={() => setFiche(r)}>
-                          <span className="planning-creneau-heure">{heure(c.debut)}</span>
-                          <span className="planning-creneau-corps">
-                            <strong>{r.clientNom}</strong>
-                            <small>{r.reference} · {r.canal === 'COMPTOIR' ? 'Comptoir' : 'En ligne'}</small>
-                          </span>
-                          <BadgeStatut statut={r.statut} />
-                        </button>
-                      )
-                    }
-                    if (c.etat === 'BLOQUE') {
-                      return (
-                        <div key={c.debut} className="planning-creneau is-bloque">
-                          <span className="planning-creneau-heure">{heure(c.debut)}</span>
-                          <span className="planning-creneau-corps"><strong>Fermé</strong></span>
-                        </div>
-                      )
-                    }
-                    if (c.etat === 'LIBRE' && peutReserver) {
-                      return (
-                        <button key={c.debut} type="button" className="planning-creneau is-libre"
-                          onClick={() => setComptoir({ terrainId: t.terrainId, debut: c.debut })}>
-                          <span className="planning-creneau-heure">{heure(c.debut)}</span>
-                          <span className="planning-creneau-corps">Libre · {formatFCFA(c.prix)}</span>
-                          <i className="fa-solid fa-plus" aria-hidden="true" />
-                        </button>
-                      )
-                    }
-                    return (
-                      <div key={c.debut} className={`planning-creneau ${c.etat === 'PASSE' ? 'is-passe' : ''}`}>
-                        <span className="planning-creneau-heure">{heure(c.debut)}</span>
-                        <span className="planning-creneau-corps">{c.etat === 'PASSE' ? 'Passé' : `Libre · ${formatFCFA(c.prix)}`}</span>
+              ) : (() => {
+                // L'essentiel d'abord : reservations et fermetures ; les
+                // creneaux libres a venir en une ligne d'heures ; les
+                // creneaux libres deja passes ne s'affichent pas.
+                const occupes = t.creneaux.map((c) => ({ c, r: reservationDuCreneau(reservations, t.terrainId, c.debut, c.fin) }))
+                  .filter(({ c, r }) => r || c.etat === 'BLOQUE')
+                const libres = t.creneaux.filter((c) => c.etat === 'LIBRE' && !reservationDuCreneau(reservations, t.terrainId, c.debut, c.fin))
+                return (
+                  <>
+                    {occupes.length === 0 && <p className="planning-vide">Aucune réservation.</p>}
+                    {occupes.length > 0 && (
+                      <div className="planning-creneaux">
+                        {occupes.map(({ c, r }) => (r ? (
+                          <button key={c.debut} type="button" className="planning-creneau is-reserve" onClick={() => setFiche(r)}>
+                            <span className="planning-creneau-heure">{heure(c.debut)}</span>
+                            <span className="planning-creneau-corps">
+                              <strong>{r.clientNom}</strong>
+                              <small>{r.reference} · {r.canal === 'COMPTOIR' ? 'Comptoir' : 'En ligne'}</small>
+                            </span>
+                            <BadgeStatut statut={r.statut} />
+                          </button>
+                        ) : (
+                          <div key={c.debut} className="planning-creneau is-bloque">
+                            <span className="planning-creneau-heure">{heure(c.debut)}</span>
+                            <span className="planning-creneau-corps"><strong>Fermé</strong></span>
+                          </div>
+                        )))}
                       </div>
-                    )
-                  })}
-                </div>
-              )}
+                    )}
+                    {libres.length > 0 && (
+                      <div className="planning-libres">
+                        <span className="planning-libres-titre">{libres.length} libre{libres.length > 1 ? 's' : ''}</span>
+                        <div className="planning-libres-heures">
+                          {libres.map((c) => (peutReserver ? (
+                            <button key={c.debut} type="button" title={`Réserver ${heure(c.debut)} · ${formatFCFA(c.prix)}`}
+                              onClick={() => setComptoir({ terrainId: t.terrainId, debut: c.debut })}>{heure(c.debut)}</button>
+                          ) : <span key={c.debut}>{heure(c.debut)}</span>))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
             </section>
           ))}
         </div>

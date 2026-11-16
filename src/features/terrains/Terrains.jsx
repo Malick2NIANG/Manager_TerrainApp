@@ -7,6 +7,8 @@ import { formatFCFA } from '../../utils/dates.js'
 import TerrainFormModal from './TerrainFormModal.jsx'
 import '../../styles/terrains.css'
 import { estVideo } from '../annonces/annonces.js'
+import EnTetePage from '../../components/EnTetePage.jsx'
+import Volet from '../../components/Volet.jsx'
 
 // Sports et terrains du complexe (gerant) : tarifs, plages tarifaires,
 // duree de creneau, photo, ouverture a la reservation.
@@ -78,41 +80,16 @@ export default function Terrains() {
 
   return (
     <Layout>
-      <section className="dashboard-intro">
-        <div>
-          <p className="manager-eyebrow">Gérance</p>
-          <h1>Terrains et tarifs</h1>
-          <p>Vos sports, vos terrains, leurs tarifs et la durée des créneaux.</p>
-        </div>
-      </section>
+      <EnTetePage groupe="complexe"
+        resume={terrains ? `${terrains.length} terrain${terrains.length > 1 ? 's' : ''} · ${sports.length} sport${sports.length > 1 ? 's' : ''}` : null}
+        aide="Chaque terrain est une annonce dans l’app : photos, tarif à l’heure, tarifs particuliers (soirée, week-end) et durée des créneaux. Les sports servent de filtre aux clients."
+        actions={sports.length > 0 && (
+          <button className="manager-button manager-button-primary" type="button" onClick={() => setEdition({})}>
+            <i className="fa-solid fa-plus" aria-hidden="true" /> Nouveau terrain
+          </button>
+        )} />
 
       <h2 className="dashboard-section-heading" style={{ fontSize: 16 }}>Sports</h2>
-      <div className="ta-sports">
-        {sports.map((s) => (
-          <span className={`ta-sport ${s.actif ? '' : 'ta-inactif'}`} key={s.id}>
-            {s.nom}
-            <button type="button" title={s.actif ? 'Masquer ce sport' : 'Réafficher ce sport'} aria-label={s.actif ? `Masquer ${s.nom}` : `Réafficher ${s.nom}`} onClick={() => basculerSport(s)}>
-              <i className={`fa-solid ${s.actif ? 'fa-eye' : 'fa-eye-slash'}`} aria-hidden="true" />
-            </button>
-            <button type="button" aria-label={`Supprimer ${s.nom}`} onClick={() => setSuppression(s)}>
-              <i className="fa-solid fa-trash" aria-hidden="true" />
-            </button>
-          </span>
-        ))}
-        <form className="ta-form" style={{ flexDirection: 'row', gap: 8 }} onSubmit={ajouterSport}>
-          <input value={nouveauSport} onChange={(e) => setNouveauSport(e.target.value)} placeholder="Nouveau sport (ex. Padel)" aria-label="Nouveau sport" maxLength={60} />
-          <button className="manager-button manager-button-quiet" type="submit" disabled={!nouveauSport.trim()}>Ajouter</button>
-        </form>
-      </div>
-
-      <div className="ta-toolbar">
-        <h2 className="dashboard-section-heading" style={{ fontSize: 16, margin: 0 }}>Terrains</h2>
-        <span className="ta-toolbar-spacer" />
-        <button className="manager-button manager-button-primary" type="button" disabled={!sports.length} onClick={() => setEdition({})}>
-          <i className="fa-solid fa-plus" aria-hidden="true" /> Nouveau terrain
-        </button>
-      </div>
-
       {erreur && <p className="ta-form-erreur" role="alert">{erreur}</p>}
       {terrains === null && !erreur && <p className="planning-vide">Chargement…</p>}
       {terrains?.length === 0 && <p className="planning-vide">{sports.length ? 'Aucun terrain pour le moment.' : 'Ajoutez d’abord un sport.'}</p>}
@@ -138,7 +115,8 @@ export default function Terrains() {
                     : <span className="ta-form-aide">Pas encore d’avis</span>}
                 </p>
                 <p><strong>{formatFCFA(t.tarifHeure)} / h</strong>
-                  {t.plages.length > 0 && ` · ${t.plages.map((p) => `${p.libelle} ${formatFCFA(p.tarifHeure)}`).join(' · ')}`}</p>
+                  {t.plages.length > 0 && <span title={t.plages.map((p) => `${p.libelle} ${formatFCFA(p.tarifHeure)}`).join(' · ')}>
+                    {` · ${t.plages.length} tarif${t.plages.length > 1 ? 's' : ''} particulier${t.plages.length > 1 ? 's' : ''}`}</span>}</p>
                 {!t.actif && <p>Non réservable</p>}
               </div>
               <div className="ta-carte-actions">
@@ -150,6 +128,30 @@ export default function Terrains() {
           ))}
         </div>
       )}
+
+      <div style={{ marginTop: 22 }}>
+        <Volet key={sports.length ? 'sports' : 'aucun-sport'} titre="Sports proposés" icone="fa-medal" ouvertParDefaut={!sports.length}
+          resume={sports.length ? sports.map((s) => s.nom).join(' · ') : 'Ajoutez un sport pour créer vos terrains'}>
+          <div className="ta-sports">
+            {sports.map((s) => (
+              <span className={`ta-sport ${s.actif ? '' : 'ta-inactif'}`} key={s.id}>
+                {s.nom}
+                <button type="button" title={s.actif ? 'Masquer ce sport' : 'Réafficher ce sport'} aria-label={s.actif ? `Masquer ${s.nom}` : `Réafficher ${s.nom}`} onClick={() => basculerSport(s)}>
+                  <i className={`fa-solid ${s.actif ? 'fa-eye' : 'fa-eye-slash'}`} aria-hidden="true" />
+                </button>
+                <button type="button" aria-label={`Supprimer ${s.nom}`} onClick={() => setSuppression(s)}>
+                  <i className="fa-solid fa-trash" aria-hidden="true" />
+                </button>
+              </span>
+            ))}
+            <form className="ta-form" style={{ flexDirection: 'row', gap: 8 }} onSubmit={ajouterSport}>
+              <input value={nouveauSport} onChange={(e) => setNouveauSport(e.target.value)} placeholder="Nouveau sport (ex. Padel)" aria-label="Nouveau sport" maxLength={60} />
+              <button className="manager-button manager-button-quiet" type="submit" disabled={!nouveauSport.trim()}>Ajouter</button>
+            </form>
+          </div>
+
+        </Volet>
+      </div>
 
       {edition && <TerrainFormModal terrain={edition.terrain} sports={sports} onFermer={() => setEdition(null)} onEnregistrer={enregistrer} />}
       {suppression && (

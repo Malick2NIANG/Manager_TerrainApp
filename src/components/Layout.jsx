@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { tempsEcoule, useNotifications } from '../notifications/NotificationsContext.jsx'
 import { ROLE_LABELS } from '../auth/roles.js'
+import { dansGroupe } from './navigation.js'
 import { useAuth } from '../auth/AuthContext.jsx'
 import Toast from './Toast.jsx'
 import { Initiales, NomMarque } from './Marque.jsx'
@@ -9,15 +10,14 @@ import ConfirmModal from './crud/ConfirmModal.jsx'
 import '../styles/manager.css'
 import PiedDePage from './PiedDePage.jsx'
 
+// Menu : une entree par tache. Les pages liees (onglets) sont regroupees :
+// Planning (reservations, fermetures, scanner), Mon complexe (terrains,
+// horaires), Vitrine (annonces, avis) — voir components/navigation.js.
 const NAV_ITEMS = [
   { path: '/dashboard', label: 'Tableau de bord', icon: 'fa-gauge-high', roles: ['GERANT', 'ACCUEIL', 'CONTROLEUR', 'ADMIN'] },
-  { path: '/planning', label: 'Planning', icon: 'fa-calendar-days', roles: ['GERANT', 'ACCUEIL', 'CONTROLEUR'] },
-  { path: '/scan', label: 'Scanner un ticket', icon: 'fa-qrcode', roles: ['GERANT', 'ACCUEIL', 'CONTROLEUR'] },
-  { path: '/blocages', label: 'Blocages', icon: 'fa-ban', roles: ['GERANT', 'ACCUEIL'] },
-  { path: '/terrains', label: 'Terrains et tarifs', icon: 'fa-futbol', roles: ['GERANT'] },
-  { path: '/horaires', label: 'Horaires', icon: 'fa-clock', roles: ['GERANT'] },
-  { path: '/annonces', label: 'Annonces', icon: 'fa-bullhorn', roles: ['GERANT'] },
-  { path: '/avis', label: 'Avis des joueurs', icon: 'fa-star', roles: ['GERANT'] },
+  { path: '/planning', label: 'Planning', icon: 'fa-calendar-days', roles: ['GERANT', 'ACCUEIL', 'CONTROLEUR'], groupe: 'planning' },
+  { path: '/terrains', label: 'Mon complexe', icon: 'fa-futbol', roles: ['GERANT'], groupe: 'complexe' },
+  { path: '/annonces', label: 'Vitrine', icon: 'fa-store', roles: ['GERANT'], groupe: 'vitrine' },
   {
     path: '/journal-audit',
     label: 'Journal d’audit',
@@ -33,7 +33,7 @@ const NAV_ITEMS = [
   // L'Admin gere les comptes Gerant (et consulte le reste de l'equipe) ;
   // le Gerant gere l'Accueil et les Controleurs.
   { path: '/equipe', label: 'Personnel', icon: 'fa-users', roles: ['ADMIN'] },
-  { path: '/personnel', label: 'Utilisateurs', icon: 'fa-users', roles: ['GERANT'] },
+  { path: '/personnel', label: 'Équipe', icon: 'fa-users', roles: ['GERANT'] },
 ]
 
 function initials(username, role) {
@@ -86,12 +86,12 @@ const BOTTOM_TAB_LABELS = {
   '/planning': 'Planning',
   '/scan': 'Scanner',
   '/blocages': 'Blocages',
-  '/terrains': 'Terrains',
+  '/terrains': 'Complexe',
   '/horaires': 'Horaires',
   '/journal-audit': 'Journal',
   '/personnel': 'Équipe',
   '/equipe': 'Équipe',
-  '/annonces': 'Annonces',
+  '/annonces': 'Vitrine',
   '/avis': 'Avis',
 }
 
@@ -399,7 +399,7 @@ export default function Layout({ children }) {
 
             return (
               <NavLink
-                className={({ isActive }) => `manager-nav-link ${isActive ? 'is-active' : ''}`}
+                className={({ isActive }) => `manager-nav-link ${isActive || (item.groupe && dansGroupe(item.groupe, location.pathname)) ? 'is-active' : ''}`}
                 key={item.path}
                 to={item.path}
                 onClick={() => setMobileOpen(false)}
@@ -543,7 +543,7 @@ export default function Layout({ children }) {
       <nav className="manager-bottom-tabbar" aria-label={`Navigation ${ROLE_LABELS[role]}`}>
         {(visibleItems.length > ONGLETS_MAX + 1 ? visibleItems.slice(0, ONGLETS_MAX) : visibleItems).map((item) => {
           const target = item.children ? item.children[0].path : item.path
-          const isGroupActive = item.children && location.pathname.startsWith(item.path)
+          const isGroupActive = (item.children && location.pathname.startsWith(item.path)) || (item.groupe && dansGroupe(item.groupe, location.pathname))
           return (
             <NavLink
               key={item.path}

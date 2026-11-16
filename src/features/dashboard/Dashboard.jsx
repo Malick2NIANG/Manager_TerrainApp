@@ -9,6 +9,7 @@ import useFluxPlanning from '../../hooks/useFluxPlanning.js'
 import { formatFCFA, heure, jourISO } from '../../utils/dates.js'
 import { BadgeStatut, reservationDuCreneau } from '../planning/statuts.jsx'
 import '../../styles/terrains.css'
+import EnTetePage from '../../components/EnTetePage.jsx'
 
 const INTRO = {
   GERANT: { eyebrow: 'Gérance', description: 'Réservations, recettes et occupation du jour en un coup d’œil.' },
@@ -124,14 +125,7 @@ export default function Dashboard() {
   const intro = INTRO[role] || INTRO.ACCUEIL
   return (
     <Layout>
-      <section className="dashboard-intro">
-        <div>
-          <p className="manager-eyebrow">{intro.eyebrow}</p>
-          <h1>Tableau de bord</h1>
-          <p>{intro.description}</p>
-        </div>
-        <span className="dashboard-role-badge">{ROLE_LABELS[role]}</span>
-      </section>
+      <EnTetePage titre="Tableau de bord" aide={intro.description} />
       {role === 'ADMIN' ? <TableauAdmin /> : <TableauDuJour />}
     </Layout>
   )
