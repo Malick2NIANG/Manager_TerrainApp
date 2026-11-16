@@ -5,7 +5,7 @@ import Toast from '../../components/Toast.jsx'
 import Pagination from '../../components/crud/Pagination.jsx'
 import StatFilterCards from '../../components/crud/StatFilterCards.jsx'
 import { ROLE_LABELS } from '../../auth/roles.js'
-import { DOMAINES_AUDIT } from './auditData.js'
+import { domaineAudit } from './auditData.js'
 import { useJournalAudit } from './useDonneesManager.js'
 import {
   erreurPeriode, filtrerJournal, filtrerParPeriode, libellePeriode, libellesFiltres, nomFichierExport,
@@ -30,10 +30,11 @@ const DOMAINE_ACCENTS = {
   RESERVATION: { accent: 'var(--marque)', accentBg: 'var(--marque-pale)' },
   TERRAIN: { accent: '#2f6fed', accentBg: '#e8eefc' },
   BLOCAGE: { accent: '#b3261e', accentBg: '#fbe4e2' },
+  ANNONCE: { accent: '#9c6b0c', accentBg: '#f6ecd9' },
   PERSONNEL: { accent: '#1f6f57', accentBg: '#e2f2ec' },
 }
 
-const DOMAINES_CARTES = ['RESERVATION', 'TERRAIN', 'BLOCAGE', 'PERSONNEL']
+const DOMAINES_CARTES = ['RESERVATION', 'TERRAIN', 'BLOCAGE', 'ANNONCE', 'PERSONNEL']
 
 const ROWS_OPTIONS = [10, 25, 50]
 
@@ -85,7 +86,7 @@ function AuditDetailModal({ entree, onClose }) {
       <section className="manager-modal" role="dialog" aria-modal="true" aria-labelledby="audit-detail-title">
         <div className="manager-modal-header">
           <div>
-            <p className="manager-eyebrow">{DOMAINES_AUDIT[entree.domaine].label}</p>
+            <p className="manager-eyebrow">{domaineAudit(entree.domaine).label}</p>
             <h2 id="audit-detail-title">Détail de l’action</h2>
           </div>
           <button className="manager-icon-button" type="button" aria-label="Fermer" onClick={onClose}>
@@ -95,7 +96,7 @@ function AuditDetailModal({ entree, onClose }) {
         <dl className="staff-user-details">
           <div><dt>Employé</dt><dd>{entree.acteur.nom}</dd></div>
           <div><dt>Rôle</dt><dd>{ROLE_LABELS[entree.acteur.role]}</dd></div>
-          <div><dt>Type d’action</dt><dd>{DOMAINES_AUDIT[entree.domaine].label}</dd></div>
+          <div><dt>Type d’action</dt><dd>{domaineAudit(entree.domaine).label}</dd></div>
           <div><dt>Date</dt><dd>{new Date(entree.createdAt).toLocaleString('fr-FR')}</dd></div>
           <div className="staff-user-detail-wide"><dt>Description</dt><dd>{entree.action}</dd></div>
         </dl>
@@ -235,8 +236,8 @@ export default function JournalAudit() {
 
   const domaineItems = useMemo(() => DOMAINES_CARTES.map((key) => ({
     key,
-    label: DOMAINES_AUDIT[key].label,
-    icon: DOMAINES_AUDIT[key].icon,
+    label: domaineAudit(key).label,
+    icon: domaineAudit(key).icon,
     value: entreesDuRole.filter((entree) => entree.domaine === key).length,
     ...DOMAINE_ACCENTS[key],
   })), [entreesDuRole])
@@ -366,10 +367,10 @@ export default function JournalAudit() {
                   {groupe.entrees.map((entree) => (
                     <li key={entree.id}>
                       <div className="dashboard-activity-row is-static is-wrapping">
-                        <span className="dashboard-activity-icon" aria-hidden="true"><i className={`fa-solid ${DOMAINES_AUDIT[entree.domaine].icon}`} /></span>
+                        <span className="dashboard-activity-icon" aria-hidden="true"><i className={`fa-solid ${domaineAudit(entree.domaine).icon}`} /></span>
                         <span className="dashboard-activity-text">
                           <strong>{entree.acteur.nom}</strong>
-                          <span>{DOMAINES_AUDIT[entree.domaine].label}</span>
+                          <span>{domaineAudit(entree.domaine).label}</span>
                         </span>
                         <time className="dashboard-activity-time" dateTime={entree.createdAt} title={new Date(entree.createdAt).toLocaleString('fr-FR')}>
                           {new Date(entree.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}

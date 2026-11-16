@@ -132,6 +132,11 @@ export default function Terrains() {
                 <h3>{t.nom}</h3>
                 <p>{t.sport} · {t.capacite} joueurs · créneaux de {t.dureeCreneauMinutes} min</p>
                 {t.localite && <p><i className="fa-solid fa-location-dot" aria-hidden="true" /> {t.localite}</p>}
+                <p>
+                  {t.nombreAvis > 0
+                    ? <><i className="fa-solid fa-star ta-etoile" aria-hidden="true" /> {String(t.noteMoyenne).replace('.', ',')} · {t.nombreAvis} avis</>
+                    : <span className="ta-form-aide">Pas encore d’avis</span>}
+                </p>
                 <p><strong>{formatFCFA(t.tarifHeure)} / h</strong>
                   {t.plages.length > 0 && ` · ${t.plages.map((p) => `${p.libelle} ${formatFCFA(p.tarifHeure)}`).join(' · ')}`}</p>
                 {!t.actif && <p>Non réservable</p>}

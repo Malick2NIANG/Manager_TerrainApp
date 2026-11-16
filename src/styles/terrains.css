@@ -175,3 +175,9 @@
 .manager-bottom-tabbar button.manager-bottom-tabbar-link { border: 0; background: none; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
 .manager-shell.is-dark .ta-plus-feuille { background: #1c1c20; }
 @keyframes ta-feuille { from { transform: translateY(100%); } to { transform: none; } }
+.ta-etoile { color: #f5a524; }
+/* Telephone : indicatif +221 fixe + numero. */
+.ta-tel { display: flex; gap: 8px; }
+.ta-tel input { min-width: 0; }
+.ta-form input.ta-tel-indicatif { width: 72px; flex: none; text-align: center; font-weight: 700; color: #6b6b6b; background: #f4f4f1; cursor: default; }
+.manager-shell.is-dark .ta-form input.ta-tel-indicatif { background: #151518; color: #9a9a9e; }

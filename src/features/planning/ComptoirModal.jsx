@@ -7,12 +7,28 @@ function nouvelleCle() {
   return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `cle-${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
-/** "77 123 45 67" -> "+221771234567", null si invalide (meme regle que le serveur). */
+/** "77 123 45 67" -> "+221771234567", null si invalide (meme regle que le serveur et l'App Client). */
 export function normaliserTelephone(saisie) {
   let chiffres = String(saisie || '').replace(/[^\d]/g, '')
   if (chiffres.startsWith('00221')) chiffres = chiffres.slice(5)
   else if (chiffres.startsWith('221') && chiffres.length === 12) chiffres = chiffres.slice(3)
-  return /^\d{9}$/.test(chiffres) ? `+221${chiffres}` : null
+  return /^(7[015678]|33)\d{7}$/.test(chiffres) ? `+221${chiffres}` : null
+}
+
+/** Saisie du numero local mise en forme : "771234567" -> "77 123 45 67" (l'indicatif +221 est fixe). */
+export function formaterSaisieLocale(saisie) {
+  let c = String(saisie || '').replace(/\D/g, '')
+  if (c.startsWith('221') && c.length > 9) c = c.slice(3)
+  c = c.slice(0, 9)
+  return [c.slice(0, 2), c.slice(2, 5), c.slice(5, 7), c.slice(7, 9)].filter(Boolean).join(' ')
+}
+
+/** Code PIN facultatif au comptoir : vide, ou 4 chiffres pas trop evidents. */
+export function refusPin(pin) {
+  if (!pin) return null
+  if (!/^\d{4}$/.test(pin)) return 'Le code PIN fait 4 chiffres.'
+  if (/^(\d)\1{3}$/.test(pin) || ['1234', '4321', '0123', '9876'].includes(pin)) return 'Code PIN trop facile à deviner.'
+  return null
 }
 
 // Reservation saisie au comptoir : encaissee sur place (especes ou paiement
@@ -22,8 +38,10 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
   const [jour, setJour] = useState(initial.debut ? initial.debut.slice(0, 10) : jourInitial)
   const [creneaux, setCreneaux] = useState(null)
   const [debut, setDebut] = useState(initial.debut || null)
+  const [prenom, setPrenom] = useState('')
   const [nom, setNom] = useState('')
   const [telephone, setTelephone] = useState('')
+  const [pin, setPin] = useState('')
   const [moyen, setMoyen] = useState('especes')
   const [envoi, setEnvoi] = useState(false)
   const [erreur, setErreur] = useState(null)
@@ -46,19 +64,23 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
 
   const creneau = useMemo(() => creneaux?.find((c) => c.debut === debut) || null, [creneaux, debut])
   const tel = normaliserTelephone(telephone)
-  const complet = creneau && nom.trim().length >= 2 && tel
-
   async function valider(e) {
     e.preventDefault()
-    if (!complet) {
-      setErreur(!creneau ? 'Choisissez un créneau.' : nom.trim().length < 2 ? 'Indiquez le nom du client.' : 'Numéro sénégalais à 9 chiffres (ex. 77 123 45 67).')
+    const probleme = !creneau ? 'Choisissez un créneau.'
+      : prenom.trim().length < 2 ? 'Indiquez le prénom du client.'
+        : nom.trim().length < 2 ? 'Indiquez le nom du client.'
+          : !tel ? 'Numéro à 9 chiffres (ex. 77 123 45 67).'
+            : refusPin(pin)
+    if (probleme) {
+      setErreur(probleme)
       return
     }
     setEnvoi(true)
     setErreur(null)
     try {
       const r = await apiPostAvecEntetes('/reservations/comptoir', {
-        terrainId: Number(terrainId), debut: creneau.debut, clientNom: nom.trim(), clientTelephone: tel, moyenPaiement: moyen,
+        terrainId: Number(terrainId), debut: creneau.debut, clientNom: `${prenom.trim()} ${nom.trim()}`, clientTelephone: tel,
+        moyenPaiement: moyen, pin: pin || null,
       }, { 'Idempotency-Key': cle.current })
       onCree(r.reservation)
     } catch (err) {
@@ -109,11 +131,25 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
           </fieldset>
 
           <div className="ta-form-ligne">
-            <label>Nom du client
-              <input value={nom} onChange={(e) => setNom(e.target.value)} maxLength={80} autoComplete="off" />
+            <label>Prénom
+              <input value={prenom} onChange={(e) => setPrenom(e.target.value)} maxLength={40} autoComplete="off" />
             </label>
+            <label>Nom
+              <input value={nom} onChange={(e) => setNom(e.target.value)} maxLength={39} autoComplete="off" />
+            </label>
+          </div>
+          <div className="ta-form-ligne">
             <label>Téléphone
-              <input value={telephone} onChange={(e) => setTelephone(e.target.value)} inputMode="tel" placeholder="77 123 45 67" autoComplete="off" />
+              <span className="ta-tel">
+                <input value="+221" readOnly tabIndex={-1} aria-label="Indicatif du Sénégal" className="ta-tel-indicatif" />
+                <input value={telephone} onChange={(e) => setTelephone(formaterSaisieLocale(e.target.value))} inputMode="numeric"
+                  placeholder="77 123 45 67" maxLength={12} autoComplete="off" aria-label="Numéro" />
+              </span>
+            </label>
+            <label>Code PIN du client <span className="ta-form-aide">facultatif</span>
+              <input value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric"
+                placeholder="4 chiffres" autoComplete="off" />
+              <span className="ta-form-aide">Choisi par le client : il retrouvera cette réservation, son ticket et son reçu dans l’app.</span>
             </label>
           </div>
 
