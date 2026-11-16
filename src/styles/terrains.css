@@ -47,7 +47,9 @@
 .ta-form legend { margin-bottom: 6px; font-size: 12px; font-weight: 600; }
 .ta-form input, .ta-form select, .ta-form textarea { border: 1px solid #d8d8d8; border-radius: 6px; padding: 10px 12px; font: inherit; font-size: 13px; outline: none; background: #fff; color: inherit; }
 .ta-form input:focus, .ta-form select:focus, .ta-form textarea:focus { border-color: var(--marque); box-shadow: 0 0 0 3px rgb(var(--marque-rgb) / 12%); }
-.ta-form-ligne { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.ta-form-ligne { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 12px; }
+.ta-plage .ta-form-ligne { grid-template-columns: repeat(auto-fit, minmax(min(110px, 100%), 1fr)); }
+.ta-form input:not([type="checkbox"]), .ta-form select, .ta-form textarea { min-width: 0; width: 100%; box-sizing: border-box; }
 .ta-form-aide { color: #5b5b5f; font-size: 12px; font-weight: 400; }
 .ta-form-erreur { margin: 0; padding: 10px 12px; border-radius: 8px; background: #fbe4e2; color: #8c1d17; font-size: 13px; }
 .ta-total { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 14px; border-radius: 10px; background: var(--marque-pale); font-size: 14px; }
@@ -85,10 +87,12 @@
 .ta-carte-actions { display: flex; gap: 8px; padding: 0 14px 14px; margin-top: auto; }
 .ta-inactif { opacity: 0.6; }
 .ta-plages { display: flex; flex-direction: column; gap: 10px; }
-.ta-plage { display: grid; grid-template-columns: 1fr; gap: 8px; padding: 10px; border: 1px solid #ebebeb; border-radius: 10px; }
-.ta-jours { display: flex; flex-wrap: wrap; gap: 6px; }
-.ta-jours button { width: 40px; height: 32px; border: 1px solid #d8d8d8; border-radius: 6px; background: #fff; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; color: inherit; }
-.ta-jours button.is-actif { border-color: var(--marque); background: var(--marque); color: #fff; }
+.ta-plage { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 10px; border: 1px solid #ebebeb; border-radius: 10px; min-width: 0; }
+.ta-form, .ta-plages, .ta-form fieldset { min-width: 0; }
+.ta-jours .manager-button { margin-left: auto; }
+.ta-jours { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.ta-jours button:not(.manager-button) { width: 40px; height: 32px; border: 1px solid #d8d8d8; border-radius: 6px; background: #fff; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; color: inherit; }
+.ta-jours button.is-actif:not(.manager-button) { border-color: var(--marque); background: var(--marque); color: #fff; }
 .ta-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .ta-table th, .ta-table td { padding: 10px 12px; border-bottom: 1px solid #ebebeb; text-align: left; }
 .ta-table th { color: #5b5b5f; font-size: 12px; font-weight: 600; }
@@ -117,6 +121,6 @@
 .manager-shell.is-dark .ta-form input, .manager-shell.is-dark .ta-form select, .manager-shell.is-dark .ta-form textarea,
 .manager-shell.is-dark .ta-jour input[type='date'], .manager-shell.is-dark .scan-manuel input,
 .manager-shell.is-dark .ta-table input[type='time'] { border-color: #2f2f33; color: #f2f2f2; background: #121214; }
-.manager-shell.is-dark .ta-choix button, .manager-shell.is-dark .ta-creneaux-choix button, .manager-shell.is-dark .ta-jours button { border-color: #2f2f33; background: #121214; }
+.manager-shell.is-dark .ta-choix button, .manager-shell.is-dark .ta-creneaux-choix button, .manager-shell.is-dark .ta-jours button:not(.manager-button) { border-color: #2f2f33; background: #121214; }
 .manager-shell.is-dark .ta-total { background: rgb(var(--marque-vif-rgb) / 14%); }
 .manager-shell.is-dark .ta-table th, .manager-shell.is-dark .ta-table td { border-color: #2a2a2e; }

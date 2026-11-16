@@ -167,7 +167,6 @@ export default function TerrainFormModal({ terrain, sports, onFermer, onEnregist
                         </button>
                       )
                     })}
-                    <span className="ta-toolbar-spacer" />
                     <button type="button" className="manager-button manager-button-quiet" onClick={() => setF((x) => ({ ...x, plages: x.plages.filter((_, k) => k !== i) }))}>
                       Supprimer
                     </button>

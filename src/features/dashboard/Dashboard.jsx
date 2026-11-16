@@ -7,7 +7,7 @@ import { KpiCard, formatRelativeTime } from '../../components/dashboard/Dashboar
 import { apiGet } from '../../api/client.js'
 import useFluxPlanning from '../../hooks/useFluxPlanning.js'
 import { formatFCFA, heure, jourISO } from '../../utils/dates.js'
-import { BadgeStatut } from '../planning/statuts.jsx'
+import { BadgeStatut, reservationDuCreneau } from '../planning/statuts.jsx'
 import '../../styles/terrains.css'
 
 const INTRO = {
@@ -20,15 +20,17 @@ const INTRO = {
 /** Indicateurs du jour a partir du planning et des disponibilites. */
 export function indicateursDuJour(reservations, dispos, maintenant = Date.now()) {
   const actives = reservations.filter((r) => ['CONFIRMEE', 'HONOREE'].includes(r.statut))
-  const creneaux = dispos.flatMap((t) => t.creneaux)
-  const pris = creneaux.filter((c) => c.etat === 'RESERVE').length
+  // Occupation sur toute la journee (creneaux passes compris) : creneaux
+  // couverts par une reservation / creneaux ouverts a la reservation.
+  const creneaux = dispos.flatMap((t) => t.creneaux.map((c) => ({ ...c, terrainId: t.terrainId })))
+  const pris = creneaux.filter((c) => reservationDuCreneau(reservations, c.terrainId, c.debut, c.fin)).length
   const ouverts = creneaux.filter((c) => c.etat !== 'BLOQUE').length
   return {
     nombre: actives.length,
     recette: actives.reduce((s, r) => s + r.montant, 0),
     enLigne: actives.filter((r) => r.canal === 'APP').length,
     occupation: ouverts ? Math.round((pris / ouverts) * 100) : 0,
-    prochaines: actives.filter((r) => r.statut === 'CONFIRMEE' && new Date(r.fin).getTime() > maintenant)
+    prochaines: actives.filter((r) => new Date(r.fin).getTime() > maintenant)
       .sort((a, b) => new Date(a.debut) - new Date(b.debut)).slice(0, 6),
   }
 }
@@ -57,7 +59,11 @@ function TableauDuJour() {
         <KpiCard icon="fa-chart-pie" accent="blue" label="Occupation des terrains" value={`${k.occupation} %`} detail="créneaux réservés aujourd’hui" to="/planning" />
       </div>
       <section className="dashboard-panel" style={{ marginTop: 20 }}>
-        <div className="dashboard-section-heading"><h2>Prochains matchs</h2><Link to="/planning">Voir le planning</Link></div>
+        <div className="dashboard-panel-heading ta-toolbar">
+          <div><p className="manager-eyebrow">Aujourd’hui</p><h2>Prochains matchs</h2></div>
+          <span className="ta-toolbar-spacer" />
+          <Link className="manager-button manager-button-quiet" to="/planning">Voir le planning</Link>
+        </div>
         {k.prochaines.length === 0 ? <p className="planning-vide">Plus aucun match prévu aujourd’hui.</p> : (
           <div className="planning-creneaux">
             {k.prochaines.map((r) => (
@@ -91,13 +97,20 @@ function TableauAdmin() {
         <KpiCard icon="fa-clipboard-list" accent="gold" label="Actions aujourd’hui" value={actions ? actions.length : '…'} to="/journal-audit/gerant" />
       </div>
       <section className="dashboard-panel" style={{ marginTop: 20 }}>
-        <div className="dashboard-section-heading"><h2>Dernières actions</h2><Link to="/journal-audit/gerant">Journal d’audit</Link></div>
+        <div className="dashboard-panel-heading ta-toolbar">
+          <div><p className="manager-eyebrow">Monitoring</p><h2>Dernières actions</h2></div>
+          <span className="ta-toolbar-spacer" />
+          <Link className="manager-button manager-button-quiet" to="/journal-audit/gerant">Journal d’audit</Link>
+        </div>
         {actions?.length === 0 && <p className="planning-vide">Aucune action aujourd’hui.</p>}
         <ul className="dashboard-activity-list">
           {(actions || []).map((a) => (
-            <li className="dashboard-activity-row" key={a.id}>
-              <span className="dashboard-activity-text"><strong>{a.acteur?.nom}</strong> {a.action}</span>
-              <span className="dashboard-activity-time">{formatRelativeTime(a.createdAt)}</span>
+            <li key={a.id}>
+              <span className="dashboard-activity-row">
+                <span className="dashboard-activity-icon" aria-hidden="true"><i className="fa-solid fa-clock-rotate-left" /></span>
+                <span className="dashboard-activity-text"><strong>{a.acteur?.nom}</strong><span>{a.action}</span></span>
+                <span className="dashboard-activity-time">{formatRelativeTime(a.createdAt)}</span>
+              </span>
             </li>
           ))}
         </ul>
