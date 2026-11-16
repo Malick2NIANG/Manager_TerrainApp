@@ -148,3 +148,5 @@
 .ta-galerie-photo video { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ta-galerie-photo .ta-annonce-video-badge { left: auto; right: 6px; top: 6px; bottom: auto; }
 .ta-carte-photo video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ta-gps-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: -4px; }
+.ta-gps-actions a.manager-button { text-decoration: none; }

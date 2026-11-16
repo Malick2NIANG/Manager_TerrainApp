@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import GaleriePhotos from './GaleriePhotos.jsx'
+import { gpsEnTexte, lireGps } from './gps.js'
 import { estVideo, mediaEnvoye } from '../annonces/annonces.js'
 import { formatFCFA } from '../../utils/dates.js'
 
@@ -17,6 +18,8 @@ export function versApi(f) {
     nom: f.nom.trim(),
     description: f.description?.trim() || null,
     localite: f.localite?.trim() || null,
+    latitude: lireGps(f.gps)?.latitude ?? null,
+    longitude: lireGps(f.gps)?.longitude ?? null,
     surface: f.surface?.trim() || null,
     capacite: Number(f.capacite),
     equipements: String(f.equipements || '').split(',').map((e) => e.trim()).filter(Boolean),
@@ -35,6 +38,7 @@ export function erreursFormulaire(f) {
   if (!f.sportId) e.push('le sport')
   if (!f.nom.trim()) e.push('le nom')
   if (!(Number(f.capacite) > 0)) e.push('la capacité')
+  if (f.gps?.trim() && !lireGps(f.gps)) e.push('la position GPS (ex. 14.7256, -17.4569 ou un lien Google Maps)')
   if (!(Number(f.tarifHeure) >= 0) || f.tarifHeure === '') e.push('le tarif horaire')
   f.plages.forEach((p, i) => {
     if (!p.libelle.trim() || !p.jours.length || !p.debut || !p.fin || p.debut === p.fin || p.tarifHeure === '') {
@@ -46,13 +50,13 @@ export function erreursFormulaire(f) {
 
 function depuis(terrain, sports) {
   return terrain ? {
-    sportId: terrain.sportId, nom: terrain.nom, description: terrain.description || '', localite: terrain.localite || '',
+    sportId: terrain.sportId, nom: terrain.nom, description: terrain.description || '', localite: terrain.localite || '', gps: gpsEnTexte(terrain.latitude, terrain.longitude),
     surface: terrain.surface || '', capacite: terrain.capacite, equipements: terrain.equipements.join(', '),
     photos: terrain.photos || (terrain.photoUrl ? [terrain.photoUrl] : []),
     dureeCreneauMinutes: terrain.dureeCreneauMinutes, tarifHeure: terrain.tarifHeure,
     plages: terrain.plages.map((p) => ({ ...p, debut: hhmm(p.debut), fin: hhmm(p.fin) })), actif: terrain.actif, ordre: terrain.ordre,
   } : {
-    sportId: sports[0]?.id || '', nom: '', description: '', localite: '', surface: 'Gazon synthétique', capacite: 10,
+    sportId: sports[0]?.id || '', nom: '', description: '', localite: '', gps: '', surface: 'Gazon synthétique', capacite: 10,
     equipements: 'Éclairage, Vestiaires', photos: [], dureeCreneauMinutes: 60, tarifHeure: '', plages: [], actif: true, ordre: 0,
   }
 }
@@ -61,6 +65,22 @@ export default function TerrainFormModal({ terrain, sports, onFermer, onEnregist
   const [f, setF] = useState(() => depuis(terrain, sports))
   const [envoi, setEnvoi] = useState(false)
   const [erreur, setErreur] = useState(null)
+  const [localisation, setLocalisation] = useState(null)
+  const maPosition = () => {
+    if (!navigator.geolocation) {
+      setLocalisation('La localisation n’est pas disponible sur cet appareil.')
+      return
+    }
+    setLocalisation('Localisation en cours…')
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setF((x) => ({ ...x, gps: gpsEnTexte(Math.round(coords.latitude * 1e6) / 1e6, Math.round(coords.longitude * 1e6) / 1e6) }))
+        setLocalisation(`Position relevée (précision ${Math.round(coords.accuracy)} m).`)
+      },
+      () => setLocalisation('Position refusée ou introuvable : collez plutôt un lien Google Maps.'),
+      { enableHighAccuracy: true, timeout: 15000 },
+    )
+  }
   const maj = (champ) => (e) => setF((x) => ({ ...x, [champ]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
   const majPlage = (i, champ, valeur) => setF((x) => ({ ...x, plages: x.plages.map((p, j) => (j === i ? { ...p, [champ]: valeur } : p)) }))
 
@@ -115,6 +135,21 @@ export default function TerrainFormModal({ terrain, sports, onFermer, onEnregist
           <label>Localité <span className="ta-form-aide">quartier ou site, pour la recherche</span>
             <input value={f.localite} onChange={maj('localite')} maxLength={120} placeholder="Liberté 6, Dakar" />
           </label>
+          <label>Position GPS <span className="ta-form-aide">pour le bouton « Itinéraire » de l’app : coordonnées ou lien Google Maps</span>
+            <input value={f.gps} onChange={maj('gps')} placeholder="14.7256, -17.4569" />
+          </label>
+          <div className="ta-gps-actions">
+            <button type="button" className="manager-button manager-button-quiet" onClick={maPosition}>
+              <i className="fa-solid fa-location-crosshairs" aria-hidden="true" /> Ma position actuelle
+            </button>
+            {lireGps(f.gps) && (
+              <a className="manager-button manager-button-quiet" target="_blank" rel="noopener noreferrer"
+                href={`https://www.google.com/maps/search/?api=1&query=${lireGps(f.gps).latitude},${lireGps(f.gps).longitude}`}>
+                <i className="fa-solid fa-map-location-dot" aria-hidden="true" /> Vérifier sur la carte
+              </a>
+            )}
+            {localisation && <span className="ta-form-aide">{localisation}</span>}
+          </div>
           <div className="ta-form-ligne">
             <label>Surface
               <input value={f.surface} onChange={maj('surface')} maxLength={60} />
