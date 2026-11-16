@@ -1,0 +1,12 @@
+/* Couleur de marque par defaut (TerrainApp), remplacee au demarrage par
+   src/config/marque.js. Toutes les feuilles de style utilisent ces
+   variables : aucune couleur de marque n'est ecrite en dur ailleurs. */
+:root {
+  --marque: #1f7a4d;
+  --marque-rgb: 31 122 77;
+  --marque-vif: #3fb57a;
+  --marque-vif-rgb: 63 181 122;
+  --marque-pale: #e6f3ec;
+  --marque-bordure: #bfdccb;
+  --marque-rose: #a8dfc0;
+}

@@ -1,0 +1,130 @@
+// Client API vers le backend commun (Spring Boot).
+// Base = /api/v1 (voir backend/contrat-api/openapi.yaml, source de verite du contrat)
+// Contrairement a l'App Client, le staff est authentifie : une fois le token
+// stocke via setAuthToken() (apres /auth/login), il est attache automatiquement
+// a chaque appel.
+import { configuration } from '../config/runtime.js'
+import { signalerRequete } from '../utils/reseau.js'
+
+// Docker : API_BASE_URL dans /config.js (voir config/runtime.js).
+export const API_BASE_URL = configuration('API_BASE_URL', import.meta.env.VITE_API_BASE_URL, '/api/v1')
+const TOKEN_KEY = 'terrainapp_manager_token'
+// Emis quand l'API repond 401 alors qu'un token etait envoye (token expire ou revoque).
+export const SESSION_EXPIRED_EVENT = 'terrainapp:session-expired'
+
+export function setAuthToken(token) {
+  localStorage.setItem(TOKEN_KEY, token)
+}
+
+export function clearAuthToken() {
+  localStorage.removeItem(TOKEN_KEY)
+}
+
+export function getAuthToken() {
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+function authHeaders() {
+  const token = getAuthToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+
+// Reseau coupe / serveur injoignable : fetch rejette un TypeError au message
+// brut ("Failed to fetch") qui s'affichait tel quel dans les ecrans.
+// Chaque appel alimente aussi la surveillance reseau (utils/reseau.js) :
+// duree de la reponse, ou echec reseau.
+async function appeler(url, options) {
+  const debut = performance.now()
+  try {
+    const res = await fetch(url, options)
+    signalerRequete({ ok: true, duree: performance.now() - debut })
+    return res
+  } catch {
+    signalerRequete({ ok: false, duree: performance.now() - debut })
+    const error = new Error('Connexion au serveur impossible. Vérifiez le réseau puis réessayez.')
+    error.code = 'RESEAU'
+    throw error
+  }
+}
+
+async function handleResponse(res) {
+  const token = getAuthToken()
+  if (res.status === 401 && token) {
+    clearAuthToken()
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))
+  }
+  if (!res.ok) {
+    // Format d'erreur standard (voir ApiError cote backend) : { code, message, field }
+    const body = await res.json().catch(() => null)
+    const error = new Error(body?.message || `Erreur API (${res.status})`)
+    error.code = body?.code
+    error.field = body?.field
+    error.status = res.status
+    throw error
+  }
+  return res.status === 204 ? null : res.json()
+}
+
+export async function apiGet(path) {
+  const res = await appeler(`${API_BASE_URL}${path}`, { headers: { ...authHeaders() } })
+  return handleResponse(res)
+}
+
+export async function apiPost(path, body) {
+  const res = await appeler(`${API_BASE_URL}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(body),
+  })
+  return handleResponse(res)
+}
+
+export async function apiPatch(path, body) {
+  const res = await appeler(`${API_BASE_URL}${path}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(body),
+  })
+  return handleResponse(res)
+}
+
+export async function apiDelete(path) {
+  const res = await appeler(`${API_BASE_URL}${path}`, {
+    method: 'DELETE',
+    headers: { ...authHeaders() },
+  })
+  return handleResponse(res)
+}
+
+export async function apiPut(path, body) {
+  const res = await appeler(`${API_BASE_URL}${path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(body),
+  })
+  return handleResponse(res)
+}
+
+// Envoi d'un fichier (multipart/form-data) : le navigateur pose lui-meme
+// l'en-tete Content-Type avec la frontiere des parties.
+export async function apiEnvoyerFichier(path, champ, fichier, nomFichier) {
+  const formulaire = new FormData()
+  formulaire.append(champ, fichier, nomFichier)
+  const res = await appeler(`${API_BASE_URL}${path}`, {
+    method: 'POST',
+    headers: { ...authHeaders() },
+    body: formulaire,
+  })
+  return handleResponse(res)
+}
+
+// POST avec en-tetes supplementaires (ex. Idempotency-Key).
+export async function apiPostAvecEntetes(path, body, entetes = {}) {
+  const res = await appeler(`${API_BASE_URL}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders(), ...entetes },
+    body: JSON.stringify(body),
+  })
+  return handleResponse(res)
+}

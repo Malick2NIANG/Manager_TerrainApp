@@ -1,0 +1,125 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthContext.jsx'
+import { ROLE_LABELS } from '../../auth/roles.js'
+import Layout from '../../components/Layout.jsx'
+import { KpiCard, formatRelativeTime } from '../../components/dashboard/DashboardWidgets.jsx'
+import { apiGet } from '../../api/client.js'
+import useFluxPlanning from '../../hooks/useFluxPlanning.js'
+import { formatFCFA, heure, jourISO } from '../../utils/dates.js'
+import { BadgeStatut } from '../planning/statuts.jsx'
+import '../../styles/terrains.css'
+
+const INTRO = {
+  GERANT: { eyebrow: 'Gérance', description: 'Réservations, recettes et occupation du jour en un coup d’œil.' },
+  ACCUEIL: { eyebrow: 'Accueil', description: 'Les réservations du jour et les prochains matchs.' },
+  CONTROLEUR: { eyebrow: 'Entrée', description: 'Les prochains matchs à accueillir.' },
+  ADMIN: { eyebrow: 'Administration', description: 'L’équipe et les dernières actions du personnel.' },
+}
+
+/** Indicateurs du jour a partir du planning et des disponibilites. */
+export function indicateursDuJour(reservations, dispos, maintenant = Date.now()) {
+  const actives = reservations.filter((r) => ['CONFIRMEE', 'HONOREE'].includes(r.statut))
+  const creneaux = dispos.flatMap((t) => t.creneaux)
+  const pris = creneaux.filter((c) => c.etat === 'RESERVE').length
+  const ouverts = creneaux.filter((c) => c.etat !== 'BLOQUE').length
+  return {
+    nombre: actives.length,
+    recette: actives.reduce((s, r) => s + r.montant, 0),
+    enLigne: actives.filter((r) => r.canal === 'APP').length,
+    occupation: ouverts ? Math.round((pris / ouverts) * 100) : 0,
+    prochaines: actives.filter((r) => r.statut === 'CONFIRMEE' && new Date(r.fin).getTime() > maintenant)
+      .sort((a, b) => new Date(a.debut) - new Date(b.debut)).slice(0, 6),
+  }
+}
+
+function TableauDuJour() {
+  const [donnees, setDonnees] = useState(null)
+  const [erreur, setErreur] = useState(null)
+  const jour = jourISO()
+
+  const charger = () => Promise.all([apiGet(`/planning?date=${jour}`), apiGet(`/disponibilites?date=${jour}`)])
+    .then(([r, d]) => setDonnees({ r, d }))
+    .catch((e) => setErreur(e.message))
+
+  useEffect(() => { charger() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useFluxPlanning(() => charger())
+
+  const k = useMemo(() => (donnees ? indicateursDuJour(donnees.r, donnees.d) : null), [donnees])
+  if (erreur) return <p className="ta-form-erreur" role="alert">{erreur}</p>
+  if (!k) return <p className="planning-vide">Chargement…</p>
+
+  return (
+    <>
+      <div className="dashboard-kpi-grid">
+        <KpiCard icon="fa-calendar-check" accent="green" label="Réservations aujourd’hui" value={k.nombre} detail={`dont ${k.enLigne} en ligne`} to="/planning" />
+        <KpiCard icon="fa-coins" accent="gold" label="Recette du jour" value={formatFCFA(k.recette)} detail="réservations confirmées" to="/planning" />
+        <KpiCard icon="fa-chart-pie" accent="blue" label="Occupation des terrains" value={`${k.occupation} %`} detail="créneaux réservés aujourd’hui" to="/planning" />
+      </div>
+      <section className="dashboard-panel" style={{ marginTop: 20 }}>
+        <div className="dashboard-section-heading"><h2>Prochains matchs</h2><Link to="/planning">Voir le planning</Link></div>
+        {k.prochaines.length === 0 ? <p className="planning-vide">Plus aucun match prévu aujourd’hui.</p> : (
+          <div className="planning-creneaux">
+            {k.prochaines.map((r) => (
+              <div className="planning-creneau" key={r.id}>
+                <span className="planning-creneau-heure">{heure(r.debut)}</span>
+                <span className="planning-creneau-corps"><strong>{r.clientNom}</strong><small>{r.terrain} · {r.reference}</small></span>
+                <BadgeStatut statut={r.statut} />
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </>
+  )
+}
+
+function TableauAdmin() {
+  const [equipe, setEquipe] = useState(null)
+  const [actions, setActions] = useState(null)
+  useEffect(() => {
+    apiGet('/staff-users').then(setEquipe).catch(() => setEquipe([]))
+    const j = jourISO()
+    apiGet(`/audit?du=${j}&au=${j}&page=0&taille=8`).then((r) => setActions(r?.entrees || [])).catch(() => setActions([]))
+  }, [])
+  const compte = (role) => (equipe || []).filter((u) => u.role === role && u.active).length
+  return (
+    <>
+      <div className="dashboard-kpi-grid">
+        <KpiCard icon="fa-user-tie" accent="green" label="Gérants actifs" value={equipe ? compte('GERANT') : '…'} to="/equipe" />
+        <KpiCard icon="fa-users" accent="blue" label="Accueil et contrôleurs" value={equipe ? compte('ACCUEIL') + compte('CONTROLEUR') : '…'} to="/equipe" />
+        <KpiCard icon="fa-clipboard-list" accent="gold" label="Actions aujourd’hui" value={actions ? actions.length : '…'} to="/journal-audit/gerant" />
+      </div>
+      <section className="dashboard-panel" style={{ marginTop: 20 }}>
+        <div className="dashboard-section-heading"><h2>Dernières actions</h2><Link to="/journal-audit/gerant">Journal d’audit</Link></div>
+        {actions?.length === 0 && <p className="planning-vide">Aucune action aujourd’hui.</p>}
+        <ul className="dashboard-activity-list">
+          {(actions || []).map((a) => (
+            <li className="dashboard-activity-row" key={a.id}>
+              <span className="dashboard-activity-text"><strong>{a.acteur?.nom}</strong> {a.action}</span>
+              <span className="dashboard-activity-time">{formatRelativeTime(a.createdAt)}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </>
+  )
+}
+
+export default function Dashboard() {
+  const { role } = useAuth()
+  const intro = INTRO[role] || INTRO.ACCUEIL
+  return (
+    <Layout>
+      <section className="dashboard-intro">
+        <div>
+          <p className="manager-eyebrow">{intro.eyebrow}</p>
+          <h1>Tableau de bord</h1>
+          <p>{intro.description}</p>
+        </div>
+        <span className="dashboard-role-badge">{ROLE_LABELS[role]}</span>
+      </section>
+      {role === 'ADMIN' ? <TableauAdmin /> : <TableauDuJour />}
+    </Layout>
+  )
+}

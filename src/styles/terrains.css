@@ -1,0 +1,122 @@
+/* Ecrans propres a TerrainApp : planning, scan, terrains, horaires, blocages.
+   Memes codes visuels que le reste du back-office (manager.css). */
+
+/* ---------- barre d'outils ---------- */
+.ta-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 18px; }
+.ta-toolbar-spacer { flex: 1; }
+.ta-jour { display: inline-flex; align-items: center; gap: 6px; }
+.ta-jour input[type='date'] { border: 1px solid #d8d8d8; border-radius: 6px; padding: 9px 10px; font: inherit; font-size: 13px; background: #fff; }
+.ta-jour-libelle { min-width: 170px; font-weight: 700; text-transform: capitalize; }
+.ta-live { display: inline-flex; align-items: center; gap: 6px; color: #5b5b5f; font-size: 12px; }
+.ta-live::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #adadb2; }
+.ta-live.is-on::before { background: #1f6f57; box-shadow: 0 0 0 3px rgb(31 111 87 / 18%); }
+
+/* ---------- planning ---------- */
+.planning-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; align-items: start; }
+.planning-terrain { border: 1px solid #ebebeb; border-radius: 12px; background: #fff; overflow: hidden; }
+.planning-terrain-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 12px 14px; border-bottom: 1px solid #ebebeb; background: var(--marque-pale); }
+.planning-terrain-tete h2 { margin: 0; font-size: 15px; }
+.planning-terrain-tete span { color: #5b5b5f; font-size: 12px; }
+.planning-creneaux { display: flex; flex-direction: column; }
+.planning-creneau { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 8px 14px; border: 0; border-bottom: 1px solid #f2f2f2; background: none; font: inherit; text-align: left; color: inherit; }
+.planning-creneau:last-child { border-bottom: 0; }
+.planning-creneau-heure { width: 46px; flex-shrink: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.planning-creneau-corps { flex: 1; min-width: 0; font-size: 13px; }
+.planning-creneau-corps strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.planning-creneau-corps small { color: #5b5b5f; }
+.planning-creneau.is-libre { cursor: pointer; color: #5b5b5f; }
+.planning-creneau.is-libre:hover { background: var(--marque-pale); color: var(--marque); }
+.planning-creneau.is-reserve { cursor: pointer; background: rgb(var(--marque-rgb) / 7%); }
+.planning-creneau.is-reserve:hover { background: rgb(var(--marque-rgb) / 12%); }
+.planning-creneau.is-bloque { color: #8c1d17; background: repeating-linear-gradient(-45deg, #fbe4e2 0 6px, #fff 6px 12px); }
+.planning-creneau.is-passe { color: #adadb2; }
+.planning-badge { display: inline-flex; align-items: center; flex-shrink: 0; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #ececea; color: #5b5b5f; }
+.planning-badge.is-confirmee { background: #e2f2ec; color: #1f6f57; }
+.planning-badge.is-attente { background: #fcf7e5; color: #8e700f; }
+.planning-badge.is-honoree { background: #e8eefc; color: #2f6fed; }
+.planning-badge.is-annulee { background: #fbe4e2; color: #b3261e; }
+.planning-vide { padding: 18px 14px; color: #5b5b5f; font-size: 13px; }
+
+/* ---------- fiche / formulaires ---------- */
+.ta-fiche { display: grid; grid-template-columns: 130px 1fr; gap: 8px 12px; margin: 0; font-size: 14px; }
+.ta-fiche dt { color: #5b5b5f; }
+.ta-fiche dd { margin: 0; font-weight: 600; }
+.ta-form { display: flex; flex-direction: column; gap: 14px; }
+.ta-form label, .ta-form fieldset { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: #141414; }
+.ta-form fieldset { border: 0; padding: 0; margin: 0; }
+.ta-form legend { margin-bottom: 6px; font-size: 12px; font-weight: 600; }
+.ta-form input, .ta-form select, .ta-form textarea { border: 1px solid #d8d8d8; border-radius: 6px; padding: 10px 12px; font: inherit; font-size: 13px; outline: none; background: #fff; color: inherit; }
+.ta-form input:focus, .ta-form select:focus, .ta-form textarea:focus { border-color: var(--marque); box-shadow: 0 0 0 3px rgb(var(--marque-rgb) / 12%); }
+.ta-form-ligne { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.ta-form-aide { color: #5b5b5f; font-size: 12px; font-weight: 400; }
+.ta-form-erreur { margin: 0; padding: 10px 12px; border-radius: 8px; background: #fbe4e2; color: #8c1d17; font-size: 13px; }
+.ta-total { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 14px; border-radius: 10px; background: var(--marque-pale); font-size: 14px; }
+.ta-total strong { font-size: 18px; color: var(--marque); }
+.ta-choix { display: flex; flex-wrap: wrap; gap: 8px; }
+.ta-choix button { border: 1px solid #d8d8d8; border-radius: 999px; padding: 8px 14px; background: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; color: inherit; }
+.ta-choix button.is-actif { border-color: var(--marque); background: var(--marque); color: #fff; }
+.ta-creneaux-choix { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+.ta-creneaux-choix button { border: 1px solid #d8d8d8; border-radius: 8px; padding: 8px 4px; background: #fff; font: inherit; font-size: 13px; cursor: pointer; color: inherit; }
+.ta-creneaux-choix button small { display: block; color: #5b5b5f; font-size: 11px; }
+.ta-creneaux-choix button.is-actif { border-color: var(--marque); background: var(--marque); color: #fff; }
+.ta-creneaux-choix button.is-actif small { color: #fff; }
+
+/* ---------- scan ---------- */
+.scan-page { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.scan-panneau { border: 1px solid #ebebeb; border-radius: 12px; background: #fff; padding: 16px; }
+.scan-camera { width: 100%; aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden; background: #0a0a0a; }
+.scan-camera video { width: 100%; height: 100%; object-fit: cover; }
+.scan-manuel { display: flex; gap: 8px; margin-top: 14px; }
+.scan-manuel input { flex: 1; min-width: 0; border: 1px solid #d8d8d8; border-radius: 6px; padding: 11px 12px; font: inherit; font-size: 14px; text-transform: uppercase; }
+.scan-verdict { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 28px 16px; border-radius: 12px; text-align: center; }
+.scan-verdict i { font-size: 46px; }
+.scan-verdict h2 { margin: 0; font-size: 22px; }
+.scan-verdict.is-valide { background: #e2f2ec; color: #1f6f57; }
+.scan-verdict.is-refuse { background: #fbe4e2; color: #8c1d17; }
+.scan-verdict.is-attente { background: #f6f6f6; color: #5b5b5f; }
+
+/* ---------- terrains, horaires, blocages ---------- */
+.ta-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.ta-carte { display: flex; flex-direction: column; border: 1px solid #ebebeb; border-radius: 12px; background: #fff; overflow: hidden; }
+.ta-carte-photo { aspect-ratio: 16 / 7; background: var(--marque-pale); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; color: var(--marque); font-size: 28px; }
+.ta-carte-corps { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; }
+.ta-carte-corps h3 { margin: 0; font-size: 15px; }
+.ta-carte-corps p { margin: 0; color: #5b5b5f; font-size: 13px; }
+.ta-carte-actions { display: flex; gap: 8px; padding: 0 14px 14px; margin-top: auto; }
+.ta-inactif { opacity: 0.6; }
+.ta-plages { display: flex; flex-direction: column; gap: 10px; }
+.ta-plage { display: grid; grid-template-columns: 1fr; gap: 8px; padding: 10px; border: 1px solid #ebebeb; border-radius: 10px; }
+.ta-jours { display: flex; flex-wrap: wrap; gap: 6px; }
+.ta-jours button { width: 40px; height: 32px; border: 1px solid #d8d8d8; border-radius: 6px; background: #fff; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; color: inherit; }
+.ta-jours button.is-actif { border-color: var(--marque); background: var(--marque); color: #fff; }
+.ta-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ta-table th, .ta-table td { padding: 10px 12px; border-bottom: 1px solid #ebebeb; text-align: left; }
+.ta-table th { color: #5b5b5f; font-size: 12px; font-weight: 600; }
+.ta-table input[type='time'] { border: 1px solid #d8d8d8; border-radius: 6px; padding: 7px 8px; font: inherit; }
+.ta-table-wrap { overflow-x: auto; border: 1px solid #ebebeb; border-radius: 12px; background: #fff; }
+.ta-sports { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.ta-sport { display: inline-flex; align-items: center; gap: 6px; padding: 6px 6px 6px 12px; border: 1px solid #ebebeb; border-radius: 999px; background: #fff; font-size: 13px; font-weight: 600; }
+.ta-sport button { border: 0; background: none; cursor: pointer; color: #5b5b5f; padding: 4px 6px; }
+
+@media (max-width: 760px) {
+  .scan-page { grid-template-columns: 1fr; }
+  .ta-fiche { grid-template-columns: 110px 1fr; }
+  .ta-jour-libelle { min-width: 0; }
+}
+
+/* ---------- mode sombre ---------- */
+.manager-shell.is-dark .planning-terrain,
+.manager-shell.is-dark .scan-panneau,
+.manager-shell.is-dark .ta-carte,
+.manager-shell.is-dark .ta-table-wrap,
+.manager-shell.is-dark .ta-sport { border-color: #2a2a2e; background: #17171a; }
+.manager-shell.is-dark .planning-terrain-tete { border-color: #2a2a2e; background: rgb(var(--marque-vif-rgb) / 12%); }
+.manager-shell.is-dark .planning-creneau { border-color: #222226; }
+.manager-shell.is-dark .planning-creneau.is-bloque { color: #f2a19b; background: repeating-linear-gradient(-45deg, rgb(179 38 30 / 22%) 0 6px, transparent 6px 12px); }
+.manager-shell.is-dark .ta-form label, .manager-shell.is-dark .ta-form fieldset { color: #f2f2f2; }
+.manager-shell.is-dark .ta-form input, .manager-shell.is-dark .ta-form select, .manager-shell.is-dark .ta-form textarea,
+.manager-shell.is-dark .ta-jour input[type='date'], .manager-shell.is-dark .scan-manuel input,
+.manager-shell.is-dark .ta-table input[type='time'] { border-color: #2f2f33; color: #f2f2f2; background: #121214; }
+.manager-shell.is-dark .ta-choix button, .manager-shell.is-dark .ta-creneaux-choix button, .manager-shell.is-dark .ta-jours button { border-color: #2f2f33; background: #121214; }
+.manager-shell.is-dark .ta-total { background: rgb(var(--marque-vif-rgb) / 14%); }
+.manager-shell.is-dark .ta-table th, .manager-shell.is-dark .ta-table td { border-color: #2a2a2e; }

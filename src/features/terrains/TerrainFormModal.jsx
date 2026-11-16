@@ -1,0 +1,212 @@
+import { useRef, useState } from 'react'
+import ImageCropModal from '../gerant/ImageCropModal.jsx'
+import { imageEnvoyee } from '../../hooks/useRessourceApi.js'
+import { formatFCFA } from '../../utils/dates.js'
+
+export const JOURS = [
+  { n: 1, court: 'Lun' }, { n: 2, court: 'Mar' }, { n: 3, court: 'Mer' }, { n: 4, court: 'Jeu' },
+  { n: 5, court: 'Ven' }, { n: 6, court: 'Sam' }, { n: 7, court: 'Dim' },
+]
+const DUREES = [30, 45, 60, 90, 120]
+const hhmm = (t) => String(t || '').slice(0, 5)
+
+/** Saisie du formulaire -> corps de l'API (montants entiers, champs nettoyes). */
+export function versApi(f) {
+  return {
+    sportId: Number(f.sportId),
+    nom: f.nom.trim(),
+    description: f.description?.trim() || null,
+    surface: f.surface?.trim() || null,
+    capacite: Number(f.capacite),
+    equipements: String(f.equipements || '').split(',').map((e) => e.trim()).filter(Boolean),
+    photoUrl: f.photoUrl || null,
+    dureeCreneauMinutes: Number(f.dureeCreneauMinutes),
+    tarifHeure: Number(f.tarifHeure),
+    plages: f.plages.map((p) => ({ libelle: p.libelle.trim(), jours: p.jours, debut: p.debut, fin: p.fin, tarifHeure: Number(p.tarifHeure) })),
+    actif: f.actif,
+    ordre: Number(f.ordre) || 0,
+  }
+}
+
+/** Champs manquants ou invalides, en clair. */
+export function erreursFormulaire(f) {
+  const e = []
+  if (!f.sportId) e.push('le sport')
+  if (!f.nom.trim()) e.push('le nom')
+  if (!(Number(f.capacite) > 0)) e.push('la capacité')
+  if (!(Number(f.tarifHeure) >= 0) || f.tarifHeure === '') e.push('le tarif horaire')
+  f.plages.forEach((p, i) => {
+    if (!p.libelle.trim() || !p.jours.length || !p.debut || !p.fin || p.debut === p.fin || p.tarifHeure === '') {
+      e.push(`la plage tarifaire n°${i + 1}`)
+    }
+  })
+  return e
+}
+
+function depuis(terrain, sports) {
+  return terrain ? {
+    sportId: terrain.sportId, nom: terrain.nom, description: terrain.description || '', surface: terrain.surface || '',
+    capacite: terrain.capacite, equipements: terrain.equipements.join(', '), photoUrl: terrain.photoUrl || '',
+    dureeCreneauMinutes: terrain.dureeCreneauMinutes, tarifHeure: terrain.tarifHeure,
+    plages: terrain.plages.map((p) => ({ ...p, debut: hhmm(p.debut), fin: hhmm(p.fin) })), actif: terrain.actif, ordre: terrain.ordre,
+  } : {
+    sportId: sports[0]?.id || '', nom: '', description: '', surface: 'Gazon synthétique', capacite: 10, equipements: 'Éclairage, Vestiaires',
+    photoUrl: '', dureeCreneauMinutes: 60, tarifHeure: '', plages: [], actif: true, ordre: 0,
+  }
+}
+
+export default function TerrainFormModal({ terrain, sports, onFermer, onEnregistrer }) {
+  const [f, setF] = useState(() => depuis(terrain, sports))
+  const [recadrage, setRecadrage] = useState(null)
+  const [envoi, setEnvoi] = useState(false)
+  const [erreur, setErreur] = useState(null)
+  const fichier = useRef(null)
+  const maj = (champ) => (e) => setF((x) => ({ ...x, [champ]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
+  const majPlage = (i, champ, valeur) => setF((x) => ({ ...x, plages: x.plages.map((p, j) => (j === i ? { ...p, [champ]: valeur } : p)) }))
+
+  async function valider(e) {
+    e.preventDefault()
+    const manquants = erreursFormulaire(f)
+    if (manquants.length) {
+      setErreur(`À compléter : ${manquants.join(', ')}.`)
+      return
+    }
+    setEnvoi(true)
+    setErreur(null)
+    try {
+      const photoUrl = await imageEnvoyee(f.photoUrl)
+      await onEnregistrer(versApi({ ...f, photoUrl }))
+    } catch (err) {
+      setEnvoi(false)
+      setErreur(err.message)
+    }
+  }
+
+  return (
+    <div className="manager-modal-backdrop" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && !envoi && onFermer()}>
+      <section className="manager-modal manager-modal-wide" role="dialog" aria-modal="true" aria-labelledby="terrain-titre">
+        <div className="manager-modal-header">
+          <div>
+            <p className="manager-eyebrow">Terrains et tarifs</p>
+            <h2 id="terrain-titre">{terrain ? `Modifier ${terrain.nom}` : 'Nouveau terrain'}</h2>
+          </div>
+          <button className="manager-icon-button" type="button" aria-label="Fermer" onClick={onFermer} disabled={envoi}>
+            <i className="fa-solid fa-xmark" aria-hidden="true" />
+          </button>
+        </div>
+
+        <form className="ta-form" onSubmit={valider} noValidate>
+          <div className="ta-form-ligne">
+            <label>Sport
+              <select value={f.sportId} onChange={maj('sportId')}>
+                {sports.map((s) => <option key={s.id} value={s.id}>{s.nom}</option>)}
+              </select>
+            </label>
+            <label>Nom du terrain
+              <input value={f.nom} onChange={maj('nom')} maxLength={80} placeholder="Terrain A" />
+            </label>
+          </div>
+          <label>Description
+            <textarea rows={2} value={f.description} onChange={maj('description')} maxLength={1000} />
+          </label>
+          <div className="ta-form-ligne">
+            <label>Surface
+              <input value={f.surface} onChange={maj('surface')} maxLength={60} />
+            </label>
+            <label>Joueurs (capacité)
+              <input type="number" min={1} max={100} value={f.capacite} onChange={maj('capacite')} />
+            </label>
+            <label>Ordre d’affichage
+              <input type="number" min={0} value={f.ordre} onChange={maj('ordre')} />
+            </label>
+          </div>
+          <label>Équipements <span className="ta-form-aide">séparés par des virgules</span>
+            <input value={f.equipements} onChange={maj('equipements')} />
+          </label>
+
+          <fieldset>
+            <legend>Photo</legend>
+            <div className="ta-choix">
+              {f.photoUrl && <img src={f.photoUrl} alt="" style={{ width: 160, aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 8 }} />}
+              <button type="button" onClick={() => fichier.current?.click()}>{f.photoUrl ? 'Changer' : 'Ajouter une photo'}</button>
+              {f.photoUrl && <button type="button" onClick={() => setF((x) => ({ ...x, photoUrl: '' }))}>Retirer</button>}
+            </div>
+            <input ref={fichier} type="file" accept="image/jpeg,image/png,image/webp" hidden
+              onChange={(e) => { const fi = e.target.files?.[0]; if (fi) setRecadrage(URL.createObjectURL(fi)); e.target.value = '' }} />
+          </fieldset>
+
+          <div className="ta-form-ligne">
+            <label>Durée d’un créneau
+              <select value={f.dureeCreneauMinutes} onChange={maj('dureeCreneauMinutes')}>
+                {DUREES.map((d) => <option key={d} value={d}>{d < 60 ? `${d} min` : `${Math.floor(d / 60)} h${d % 60 ? ` ${d % 60}` : ''}`}</option>)}
+              </select>
+            </label>
+            <label>Tarif à l’heure (F CFA)
+              <input type="number" min={0} step={500} value={f.tarifHeure} onChange={maj('tarifHeure')} placeholder="15000" />
+            </label>
+          </div>
+
+          <fieldset>
+            <legend>Tarifs particuliers (heures pleines, week-end…)</legend>
+            <div className="ta-plages">
+              {f.plages.map((p, i) => (
+                <div className="ta-plage" key={i}>
+                  <div className="ta-form-ligne">
+                    <label>Nom<input value={p.libelle} onChange={(e) => majPlage(i, 'libelle', e.target.value)} placeholder="Soirée" /></label>
+                    <label>De<input type="time" value={p.debut} onChange={(e) => majPlage(i, 'debut', e.target.value)} /></label>
+                    <label>À<input type="time" value={p.fin} onChange={(e) => majPlage(i, 'fin', e.target.value)} /></label>
+                    <label>Tarif / h<input type="number" min={0} step={500} value={p.tarifHeure} onChange={(e) => majPlage(i, 'tarifHeure', e.target.value)} /></label>
+                  </div>
+                  <div className="ta-jours" role="group" aria-label="Jours">
+                    {JOURS.map((j) => {
+                      const actif = p.jours.includes(j.n)
+                      return (
+                        <button key={j.n} type="button" aria-pressed={actif} className={actif ? 'is-actif' : ''}
+                          onClick={() => majPlage(i, 'jours', actif ? p.jours.filter((x) => x !== j.n) : [...p.jours, j.n].sort())}>
+                          {j.court}
+                        </button>
+                      )
+                    })}
+                    <span className="ta-toolbar-spacer" />
+                    <button type="button" className="manager-button manager-button-quiet" onClick={() => setF((x) => ({ ...x, plages: x.plages.filter((_, k) => k !== i) }))}>
+                      Supprimer
+                    </button>
+                  </div>
+                  {p.fin && p.debut && p.fin < p.debut && <span className="ta-form-aide">Passe minuit : compte pour le jour du début.</span>}
+                </div>
+              ))}
+              <div>
+                <button type="button" className="manager-button manager-button-quiet"
+                  onClick={() => setF((x) => ({ ...x, plages: [...x.plages, { libelle: 'Soirée', jours: [1, 2, 3, 4, 5, 6, 7], debut: '18:00', fin: '01:00', tarifHeure: '' }] }))}>
+                  <i className="fa-solid fa-plus" aria-hidden="true" /> Ajouter un tarif particulier
+                </button>
+              </div>
+            </div>
+          </fieldset>
+
+          {f.tarifHeure !== '' && (
+            <p className="ta-form-aide">
+              Créneau de {f.dureeCreneauMinutes} min au tarif de base : {formatFCFA(Math.round(Number(f.tarifHeure) * Number(f.dureeCreneauMinutes) / 60))}.
+            </p>
+          )}
+
+          <label style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <input type="checkbox" checked={f.actif} onChange={maj('actif')} /> Terrain réservable
+          </label>
+
+          {erreur && <p className="ta-form-erreur" role="alert">{erreur}</p>}
+          <div className="manager-modal-actions">
+            <button className="manager-button manager-button-quiet" type="button" onClick={onFermer} disabled={envoi}>Annuler</button>
+            <button className="manager-button manager-button-primary" type="submit" disabled={envoi}>{envoi ? 'Enregistrement…' : 'Enregistrer'}</button>
+          </div>
+        </form>
+      </section>
+
+      {recadrage && (
+        <ImageCropModal imageSrc={recadrage} aspect={16 / 9} eyebrow="Photo du terrain"
+          onCancel={() => setRecadrage(null)}
+          onConfirm={(url) => { setF((x) => ({ ...x, photoUrl: url })); setRecadrage(null) }} />
+      )}
+    </div>
+  )
+}
