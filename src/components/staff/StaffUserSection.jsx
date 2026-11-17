@@ -343,6 +343,9 @@ export default function StaffUserSection({
   createLabel = 'Créer un compte',
   hideStatusFilter = false,
   compactStatusActions = false,
+  // entete(ouvrirCreation) : en-tete de page rendu au-dessus, qui porte le
+  // bouton de creation (meme place que sur les autres pages).
+  entete = null,
 }) {
   const { username: currentUsername } = useAuth()
   const [allUsers, setAllUsers] = useState([])
@@ -497,6 +500,7 @@ export default function StaffUserSection({
 
   const body = (
     <>
+      {entete && entete(() => setModal({ kind: 'form', user: null }))}
       {!hideStatusFilter && (
         <StatFilterCards
           items={FILTER_DEFS.map((item) => ({ ...item, value: counts[item.key] }))}
@@ -516,7 +520,7 @@ export default function StaffUserSection({
           />
         </div>
         <span className="crud-toolbar-spacer" />
-        {!readOnly && (
+        {!readOnly && !entete && (
           <button className="crud-add-button" type="button" onClick={() => setModal({ kind: 'form', user: null })}>
             <i className="fa-solid fa-user-plus" aria-hidden="true" /> {createLabel}
           </button>

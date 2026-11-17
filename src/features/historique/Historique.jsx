@@ -101,8 +101,8 @@ export default function Historique() {
         resume={donnees ? `Du ${dateCourte(`${donnees.du}T12:00:00Z`)} au ${dateCourte(`${donnees.au}T12:00:00Z`)} · ${totalPeriode} réservation${totalPeriode > 1 ? 's' : ''}` : null}
         aide={AIDES.historique}
         actions={(
-          <button className="manager-button manager-button-quiet" type="button" onClick={exporter} disabled={export_ || !donnees?.total}>
-            <i className={`fa-solid ${export_ ? 'fa-spinner fa-spin' : 'fa-file-csv'}`} aria-hidden="true" /> Exporter (CSV)
+          <button className="manager-button manager-button-primary" type="button" onClick={exporter} disabled={export_ || !donnees?.total}>
+            <i className={`fa-solid ${export_ ? 'fa-spinner fa-spin' : 'fa-file-arrow-down'}`} aria-hidden="true" /> {export_ ? 'Export…' : 'Exporter en CSV'}
           </button>
         )} />
 

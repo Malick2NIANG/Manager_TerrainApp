@@ -10,9 +10,15 @@ const ROLES_GERES_PAR_GERANT = ['ACCUEIL', 'CONTROLEUR']
 export default function Personnel() {
   return (
     <Layout>
-      <EnTetePage titre="Équipe" resume="Accueil et contrôleurs du complexe" aide={AIDES.equipe} />
-
       <StaffUserSection
+        entete={(ouvrirCreation) => (
+          <EnTetePage titre="Équipe" resume="Accueil et contrôleurs du complexe" aide={AIDES.equipe}
+            actions={(
+              <button className="manager-button manager-button-primary" type="button" onClick={ouvrirCreation}>
+                <i className="fa-solid fa-user-plus" aria-hidden="true" /> Créer un compte
+              </button>
+            )} />
+        )}
         roles={ROLES_GERES_PAR_GERANT}
         assignableRoles={ROLES_GERES_PAR_GERANT}
         eyebrow="Gestion du personnel"

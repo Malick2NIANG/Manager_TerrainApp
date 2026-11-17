@@ -1,4 +1,7 @@
 import { useState } from 'react'
+// Styles de l'en-tete (titre, bouton i, actions) : charges ici pour les
+// pages qui n'importent pas terrains.css (Equipe, Personnel, Journal).
+import '../styles/terrains.css'
 import { useLocation, useNavigate } from 'react-router-dom'
 import StatFilterCards from './crud/StatFilterCards.jsx'
 import useCompteurs from './useCompteurs.js'
