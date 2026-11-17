@@ -336,3 +336,28 @@ button.pg-bloc.is-libre:hover, button.pg-bloc.is-libre:focus-visible { backgroun
   .ta-cartes-groupe .crud-filter-label { font-size: 11px; }
   .ta-cartes-groupe .crud-filter-selected { display: none; }
 }
+
+/* Choix du jour : pilule precedent | date (clic = calendrier) | suivant */
+.ta-date { display: inline-flex; align-items: stretch; border: 1px solid #e3e3e0; border-radius: 14px; background: #fff; box-shadow: 0 4px 14px rgb(20 20 20 / 4%); overflow: hidden; }
+.ta-date-fleche { width: 42px; border: 0; background: none; color: #5b5b5f; font-size: 14px; cursor: pointer; transition: background 140ms ease, color 140ms ease; }
+.ta-date-fleche:hover { background: var(--marque-pale); color: var(--marque); }
+.ta-date-fleche:focus-visible, .ta-date-centre:focus-within { outline: 2px solid var(--marque); outline-offset: -2px; }
+.ta-date-centre { position: relative; display: flex; align-items: center; gap: 10px; min-width: 210px; padding: 7px 14px; border-left: 1px solid #efefed; border-right: 1px solid #efefed; cursor: pointer; }
+.ta-date-centre:hover { background: #fafaf9; }
+.ta-date-icone { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: var(--marque-pale); color: var(--marque); font-size: 14px; flex: none; }
+.ta-date-textes { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.ta-date-textes small { color: #8a8a8e; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.ta-date-textes small.is-aujourdhui { color: var(--marque); }
+.ta-date-textes strong { font-size: 15px; text-transform: capitalize; white-space: nowrap; }
+.ta-date .ta-date-cache { position: absolute; inset: 0; width: 100%; opacity: 0; padding: 0; border: 0; cursor: pointer; }
+.ta-date-retour { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border: 1px solid var(--marque); border-radius: 999px; background: var(--marque-pale); color: var(--marque); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.ta-date-retour:hover { background: var(--marque); color: #fff; }
+@media (max-width: 760px) {
+  .ta-date { flex: 1; }
+  .ta-date-centre { flex: 1; min-width: 0; padding: 6px 10px; }
+  .ta-date-textes strong { font-size: 14px; overflow: hidden; text-overflow: ellipsis; }
+}
+.manager-shell.is-dark .ta-date { background: #18181b; border-color: #2a2a2e; box-shadow: none; }
+.manager-shell.is-dark .ta-date-centre { border-color: #2a2a2e; }
+.manager-shell.is-dark .ta-date-centre:hover { background: #1f1f23; }
+.manager-shell.is-dark .ta-date-fleche { color: #a1a1a6; }

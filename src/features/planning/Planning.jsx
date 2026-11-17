@@ -5,7 +5,7 @@ import ConfirmModal from '../../components/crud/ConfirmModal.jsx'
 import { apiGet, apiPost } from '../../api/client.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import useFluxPlanning from '../../hooks/useFluxPlanning.js'
-import { dateLongue, decalerJour, formatFCFA, heure, jourISO, plage } from '../../utils/dates.js'
+import { dateLongue, decalerJour, formatFCFA, heure, jourISO, jourRelatif, plage } from '../../utils/dates.js'
 import { BadgeStatut, MOYENS, telephoneLisible } from './statuts.jsx'
 import ComptoirModal from './ComptoirModal.jsx'
 import PlanningGrille from './PlanningGrille.jsx'
@@ -98,23 +98,29 @@ export default function Planning() {
         )} />
 
       <div className="ta-toolbar">
-        <div className="ta-jour">
-          <button className="manager-icon-button" type="button" aria-label="Jour précédent" onClick={() => setJour((j) => decalerJour(j, -1))}>
+        <div className="ta-date" role="group" aria-label="Jour affiché">
+          <button type="button" className="ta-date-fleche" aria-label="Jour précédent" onClick={() => setJour((j) => decalerJour(j, -1))}>
             <i className="fa-solid fa-chevron-left" aria-hidden="true" />
           </button>
-          <label className="ta-jour-libelle ta-jour-choix" title="Choisir un jour">
-            {dateLongue(`${jour}T12:00:00Z`)} <i className="fa-regular fa-calendar" aria-hidden="true" />
-            <input type="date" className="ta-jour-cache" aria-label="Choisir un jour" value={jour}
+          <label className="ta-date-centre" title="Choisir un jour">
+            <span className="ta-date-icone"><i className="fa-regular fa-calendar" aria-hidden="true" /></span>
+            <span className="ta-date-textes">
+              <small className={jour === jourISO() ? 'is-aujourdhui' : ''}>{jourRelatif(jour)}</small>
+              <strong>{dateLongue(`${jour}T12:00:00Z`)}</strong>
+            </span>
+            <input type="date" className="ta-date-cache" aria-label="Choisir un jour" value={jour}
               onClick={(e) => { try { e.currentTarget.showPicker?.() } catch { /* deja ouvert */ } }}
               onChange={(e) => e.target.value && setJour(e.target.value)} />
           </label>
-          <button className="manager-icon-button" type="button" aria-label="Jour suivant" onClick={() => setJour((j) => decalerJour(j, 1))}>
+          <button type="button" className="ta-date-fleche" aria-label="Jour suivant" onClick={() => setJour((j) => decalerJour(j, 1))}>
             <i className="fa-solid fa-chevron-right" aria-hidden="true" />
           </button>
-          {jour !== jourISO() && (
-            <button className="manager-button manager-button-quiet" type="button" onClick={() => setJour(jourISO())}>Aujourd’hui</button>
-          )}
         </div>
+        {jour !== jourISO() && (
+          <button type="button" className="ta-date-retour" onClick={() => setJour(jourISO())}>
+            <i className="fa-solid fa-rotate-left" aria-hidden="true" /> Aujourd’hui
+          </button>
+        )}
         {dispos && dispos.length > 1 && (
           <label className="ta-filtre-terrain">
             <i className="fa-solid fa-filter" aria-hidden="true" />
