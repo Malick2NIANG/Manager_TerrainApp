@@ -20,12 +20,10 @@ jobs:
         run: npm run lint
       - name: Tests unitaires
         run: npm test
-      # Bloquant : seulement ce qui est livre aux utilisateurs (dependencies).
-      - name: Vulnerabilites des dependances de production (npm audit)
-        run: npm audit --omit=dev --audit-level=high
-      # Outils de developpement (vite, vitest, eslint) : rapport sans bloquer,
-      # une alerte sans version corrigee ne doit pas arreter les PR.
-      - name: Vulnerabilites des outils de developpement (npm audit, informatif)
-        run: npm audit --audit-level=high
-        continue-on-error: true
+      # Bloquant, toutes gravites, dev compris : objectif 0 vulnerabilite.
+      # picomatch est remplace par vendor/picomatch (correctif de
+      # GHSA-fc5q-39xc-vjpf, aucune version corrigee publiee) : voir
+      # vendor/picomatch/CORRECTIF.md.
+      - name: Vulnerabilites des dependances (npm audit)
+        run: npm audit
       - run: npm run build

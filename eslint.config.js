@@ -5,7 +5,8 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 
 export default [
-  { ignores: ['dist', 'node_modules', 'public/sw.js'] },
+  // vendor/ : dependances embarquees telles quelles (ex. picomatch corrige).
+  { ignores: ['dist', 'node_modules', 'public/sw.js', 'vendor'] },
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
