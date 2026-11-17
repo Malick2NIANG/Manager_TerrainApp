@@ -12,9 +12,9 @@ const ZONE_CAMERA_ID = 'scan-ticket-camera'
 const PAUSE_APRES_SCAN_MS = 3000
 const CLE_CAMERA = 'terrainapp_scan_camera'
 
-/** Choix retenu sur ce poste : camera allumee ou eteinte (allumee par defaut). */
+/** Choix retenu sur ce poste : camera allumee ou eteinte (eteinte par defaut). */
 function cameraRetenue() {
-  try { return localStorage.getItem(CLE_CAMERA) !== 'eteinte' } catch { return true }
+  try { return localStorage.getItem(CLE_CAMERA) === 'allumee' } catch { return false }
 }
 
 export const VERDICTS = {
