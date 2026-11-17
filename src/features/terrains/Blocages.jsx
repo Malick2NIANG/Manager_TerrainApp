@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
+import usePagination from '../../hooks/usePagination.jsx'
 import Layout from '../../components/Layout.jsx'
 import Toast from '../../components/Toast.jsx'
 import ConfirmModal from '../../components/crud/ConfirmModal.jsx'
 import { apiDelete, apiGet, apiPost } from '../../api/client.js'
 import { dateCourte, decalerJour, heure, instantDe, jourISO } from '../../utils/dates.js'
 import '../../styles/terrains.css'
+import EnTetePage from '../../components/EnTetePage.jsx'
+import { AIDES } from '../../components/aidesPages.js'
 
 // Fermer une periode a la reservation (entretien, evenement prive) : un
 // terrain ou tout le complexe. Les reservations deja prises ne sont pas
@@ -15,6 +18,8 @@ export default function Blocages() {
   const [erreur, setErreur] = useState(null)
   const [toast, setToast] = useState(null)
   const [levee, setLevee] = useState(null)
+  // Le formulaire ne s'ouvre qu'a la demande : la liste d'abord.
+  const [formulaire, setFormulaire] = useState(false)
   const aujourdhui = jourISO()
   const [f, setF] = useState({ terrainId: '', jourDebut: aujourdhui, heureDebut: '08:00', jourFin: aujourdhui, heureFin: '12:00', motif: '' })
   const notifier = (type, message) => setToast({ id: Date.now(), type, message })
@@ -45,6 +50,7 @@ export default function Blocages() {
       await apiPost('/blocages', { terrainId: f.terrainId ? Number(f.terrainId) : null, debut, fin, motif: f.motif.trim() || null })
       notifier('success', 'Période fermée à la réservation.')
       setF((x) => ({ ...x, motif: '' }))
+      setFormulaire(false)
       charger()
     } catch (err) {
       notifier('error', err.message)
@@ -56,26 +62,28 @@ export default function Blocages() {
     setLevee(null)
     try {
       await apiDelete(`/blocages/${b.id}`)
-      notifier('success', 'Blocage levé : les créneaux sont de nouveau réservables.')
+      notifier('success', 'Fermeture levée : les créneaux sont de nouveau réservables.')
       charger()
     } catch (err) {
       notifier('error', err.message)
     }
   }
 
+  const { visibles: blocagesPage, barre: paginationBlocages } = usePagination(blocages || [])
   const nomTerrain = (id) => (id == null ? 'Tout le complexe' : terrains.find((t) => t.id === id)?.nom || `Terrain ${id}`)
   const maj = (champ) => (e) => setF((x) => ({ ...x, [champ]: e.target.value }))
 
   return (
     <Layout>
-      <section className="dashboard-intro">
-        <div>
-          <p className="manager-eyebrow">Planning</p>
-          <h1>Blocages</h1>
-          <p>Fermez un terrain ou tout le complexe à la réservation (entretien, événement).</p>
-        </div>
-      </section>
+      <EnTetePage groupe="planning"
+        aide={AIDES.fermetures}
+        actions={!formulaire && (
+          <button className="manager-button manager-button-primary" type="button" onClick={() => setFormulaire(true)}>
+            <i className="fa-solid fa-plus" aria-hidden="true" /> Fermer une période
+          </button>
+        )} />
 
+      {formulaire && (
       <form className="ta-form scan-panneau" onSubmit={bloquer} style={{ marginBottom: 20 }}>
         <div className="ta-form-ligne">
           <label>Terrain
@@ -94,17 +102,21 @@ export default function Blocages() {
           <label>Au<input type="date" value={f.jourFin} onChange={maj('jourFin')} /></label>
           <label>à<input type="time" value={f.heureFin} onChange={maj('heureFin')} /></label>
         </div>
-        <div><button className="manager-button manager-button-primary" type="submit">Fermer cette période</button></div>
+        <div className="ta-gps-actions">
+          <button className="manager-button manager-button-primary" type="submit">Fermer cette période</button>
+          <button className="manager-button manager-button-quiet" type="button" onClick={() => setFormulaire(false)}>Annuler</button>
+        </div>
       </form>
+      )}
 
       {erreur && <p className="ta-form-erreur" role="alert">{erreur}</p>}
-      {blocages?.length === 0 && <p className="planning-vide">Aucun blocage dans les 90 prochains jours.</p>}
+      {blocages?.length === 0 && <p className="planning-vide">Aucune fermeture prévue dans les 90 prochains jours : tout est réservable.</p>}
       {blocages?.length > 0 && (
         <div className="ta-table-wrap">
           <table className="ta-table">
             <thead><tr><th>Terrain</th><th>Début</th><th>Fin</th><th>Motif</th><th /></tr></thead>
             <tbody>
-              {blocages.map((b) => (
+              {blocagesPage.map((b) => (
                 <tr key={b.id}>
                   <td>{nomTerrain(b.terrainId)}</td>
                   <td style={{ textTransform: 'capitalize' }}>{dateCourte(b.debut)} {heure(b.debut)}</td>
@@ -117,10 +129,11 @@ export default function Blocages() {
           </table>
         </div>
       )}
+      {paginationBlocages}
 
       {levee && (
-        <ConfirmModal title="Lever ce blocage ?" message={`${nomTerrain(levee.terrainId)} redevient réservable sur cette période.`}
-          confirmLabel="Lever le blocage" onConfirm={lever} onCancel={() => setLevee(null)} />
+        <ConfirmModal title="Lever cette fermeture ?" message={`${nomTerrain(levee.terrainId)} redevient réservable sur cette période.`}
+          confirmLabel="Lever la fermeture" onConfirm={lever} onCancel={() => setLevee(null)} />
       )}
       <Toast toast={toast} onClose={() => setToast(null)} />
     </Layout>

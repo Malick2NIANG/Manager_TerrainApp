@@ -5,11 +5,15 @@ export const DOMAINES_AUDIT = {
   TERRAIN: { label: 'Terrains', icon: 'fa-futbol' },
   SPORT: { label: 'Sports', icon: 'fa-medal' },
   BLOCAGE: { label: 'Blocages', icon: 'fa-ban' },
+  ANNONCE: { label: 'Annonces', icon: 'fa-bullhorn' },
   OFFRE: { label: 'Offres', icon: 'fa-tags' },
   PERSONNEL: { label: 'Personnel', icon: 'fa-user-gear' },
   PAIEMENT: { label: 'Paiements', icon: 'fa-credit-card' },
   REGLAGE: { label: 'Réglages', icon: 'fa-sliders' },
 }
+
+/** Domaine d'une entree du journal (repli si le backend en ajoute un nouveau). */
+export const domaineAudit = (code) => DOMAINES_AUDIT[code] || { label: code || 'Autre', icon: 'fa-circle-info' }
 
 const ACTEURS = {
   awa: { nom: 'Awa Ndiaye', role: 'GERANT' },

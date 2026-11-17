@@ -22,9 +22,12 @@ export const ROUTE_ROLES = {
   '/dashboard': ROLES,
   '/planning': ['GERANT', 'ACCUEIL', 'CONTROLEUR'],
   '/scan': ['GERANT', 'ACCUEIL', 'CONTROLEUR'],
+  '/abonnements': ['GERANT', 'ACCUEIL'],
   '/blocages': ['GERANT', 'ACCUEIL'],
   '/terrains': ['GERANT'],
-  '/horaires': ['GERANT'],
+  '/annonces': ['GERANT'],
+  '/avis': ['GERANT'],
+  '/historique': ['GERANT'],
   // Le Gerant gere l'Accueil et les Controleurs ; l'Admin gere les Gerants
   // et consulte le reste de l'equipe (meme partage que SenYummies).
   '/personnel': ['GERANT'],

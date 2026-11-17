@@ -3,7 +3,8 @@ import { SUPPORT_EMAIL, SUPPORT_TELEPHONE, telephoneLisible } from '../config/su
 import { marque } from '../config/marque.js'
 import './pied-de-page.css'
 
-// Pied de page discret : version a gauche, lien "Besoin d'aide ?" a droite
+// Pied de page discret : copyright a gauche, version au milieu, lien
+// "Besoin d'aide ?" a droite
 // (meme couleur). Le lien ouvre une feuille du bas sur smartphone, une
 // fenetre centree ailleurs, avec deux lignes cliquables : appeler (tel:) et
 // ecrire (mailto:). Meme fonctionnement que l'app Client (AideSheet.jsx).
@@ -13,7 +14,8 @@ export default function PiedDePage({ className = '' }) {
   return (
     <>
       <footer className={`pied-de-page ${className}`}>
-        <span>v{__APP_VERSION__}</span>
+        <span className="pied-de-page-copyright">© {new Date().getFullYear()} SSD Consulting</span>
+        <span className="pied-de-page-version">v{__APP_VERSION__}</span>
         <button type="button" className="pied-de-page-aide" aria-haspopup="dialog" onClick={() => setOuvert(true)}>
           Besoin d’aide ?
         </button>

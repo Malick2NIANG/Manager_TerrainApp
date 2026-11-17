@@ -20,9 +20,23 @@ function createImage(url) {
 // into a multi-MB JPEG once cropped — plenty for how product photos are shown.
 const MAX_OUTPUT_WIDTH = 1200
 
-export async function getCroppedImageUrl(imageSrc, pixelCrop) {
+/**
+ * Photo entiere, reduite a COTE_MAX sur son plus grand cote (le serveur refuse
+ * plus de 2 Mo et redimensionne de toute facon a 1600 px).
+ */
+const COTE_MAX = 1600
+
+export async function getResizedImageUrl(imageSrc) {
   const image = await createImage(imageSrc)
-  const scale = pixelCrop.width > MAX_OUTPUT_WIDTH ? MAX_OUTPUT_WIDTH / pixelCrop.width : 1
+  const largeur = image.naturalWidth
+  const hauteur = image.naturalHeight
+  return getCroppedImageUrl(imageSrc, { x: 0, y: 0, width: largeur, height: hauteur },
+    Math.min(1, COTE_MAX / Math.max(largeur, hauteur)), image)
+}
+
+export async function getCroppedImageUrl(imageSrc, pixelCrop, echelle, dejaChargee) {
+  const image = dejaChargee || await createImage(imageSrc)
+  const scale = echelle ?? (pixelCrop.width > MAX_OUTPUT_WIDTH ? MAX_OUTPUT_WIDTH / pixelCrop.width : 1)
   const canvas = document.createElement('canvas')
   canvas.width = Math.round(pixelCrop.width * scale)
   canvas.height = Math.round(pixelCrop.height * scale)

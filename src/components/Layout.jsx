@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { tempsEcoule, useNotifications } from '../notifications/NotificationsContext.jsx'
 import { ROLE_LABELS } from '../auth/roles.js'
+import { dansGroupe } from './navigation.js'
 import { useAuth } from '../auth/AuthContext.jsx'
 import Toast from './Toast.jsx'
 import { Initiales, NomMarque } from './Marque.jsx'
@@ -9,13 +10,15 @@ import ConfirmModal from './crud/ConfirmModal.jsx'
 import '../styles/manager.css'
 import PiedDePage from './PiedDePage.jsx'
 
+// Menu : une entree par tache. Les pages liees (onglets) sont regroupees :
+// Planning (reservations, fermetures, scanner), Mon complexe (terrains,
+// horaires), Annonces — voir components/navigation.js.
 const NAV_ITEMS = [
   { path: '/dashboard', label: 'Tableau de bord', icon: 'fa-gauge-high', roles: ['GERANT', 'ACCUEIL', 'CONTROLEUR', 'ADMIN'] },
-  { path: '/planning', label: 'Planning', icon: 'fa-calendar-days', roles: ['GERANT', 'ACCUEIL', 'CONTROLEUR'] },
-  { path: '/scan', label: 'Scanner un ticket', icon: 'fa-qrcode', roles: ['GERANT', 'ACCUEIL', 'CONTROLEUR'] },
-  { path: '/blocages', label: 'Blocages', icon: 'fa-ban', roles: ['GERANT', 'ACCUEIL'] },
-  { path: '/terrains', label: 'Terrains et tarifs', icon: 'fa-futbol', roles: ['GERANT'] },
-  { path: '/horaires', label: 'Horaires', icon: 'fa-clock', roles: ['GERANT'] },
+  { path: '/planning', label: 'Planning', icon: 'fa-calendar-days', roles: ['GERANT', 'ACCUEIL', 'CONTROLEUR'], groupe: 'planning' },
+  { path: '/terrains', label: 'Mon complexe', icon: 'fa-futbol', roles: ['GERANT'], groupe: 'complexe' },
+  { path: '/annonces', label: 'Annonces', icon: 'fa-bullhorn', roles: ['GERANT'], groupe: 'vitrine' },
+  { path: '/historique', label: 'Historique', icon: 'fa-clock-rotate-left', roles: ['GERANT'] },
   {
     path: '/journal-audit',
     label: 'Journal d’audit',
@@ -31,7 +34,7 @@ const NAV_ITEMS = [
   // L'Admin gere les comptes Gerant (et consulte le reste de l'equipe) ;
   // le Gerant gere l'Accueil et les Controleurs.
   { path: '/equipe', label: 'Personnel', icon: 'fa-users', roles: ['ADMIN'] },
-  { path: '/personnel', label: 'Utilisateurs', icon: 'fa-users', roles: ['GERANT'] },
+  { path: '/personnel', label: 'Équipe', icon: 'fa-users', roles: ['GERANT'] },
 ]
 
 function initials(username, role) {
@@ -83,13 +86,19 @@ const BOTTOM_TAB_LABELS = {
   '/dashboard': 'Accueil',
   '/planning': 'Planning',
   '/scan': 'Scanner',
-  '/blocages': 'Blocages',
-  '/terrains': 'Terrains',
-  '/horaires': 'Horaires',
+  '/blocages': 'Fermetures',
+  '/abonnements': 'Abonnements',
+  '/terrains': 'Complexe',
   '/journal-audit': 'Journal',
   '/personnel': 'Équipe',
   '/equipe': 'Équipe',
+  '/annonces': 'Annonces',
+  '/avis': 'Avis',
+  '/historique': 'Historique',
 }
+
+// Telephone : 4 onglets dans la barre du bas, le reste dans "Plus".
+const ONGLETS_MAX = 4
 
 const SIDEBAR_COLLAPSED_KEY = 'terrainapp_manager_sidebar_collapsed'
 const TABLETTE_QUERY = '(min-width: 761px) and (max-width: 1199px)'
@@ -203,7 +212,7 @@ export default function Layout({ children }) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   // Notifications reelles (flux temps reel du planning, voir NotificationsContext).
-  const { notifications, marquerLue, toutMarquerLu, supprimer } = useNotifications()
+  const { notifications, marquerLue, toutMarquerLu, marquerLuesPour, supprimer } = useNotifications()
   const navigate = useNavigate()
   const [notificationPage, setNotificationPage] = useState(0)
   const [expandedNotificationIds, setExpandedNotificationIds] = useState([])
@@ -212,6 +221,9 @@ export default function Layout({ children }) {
   const [now, setNow] = useState(() => new Date())
   const [toast, setToast] = useState(null)
   const location = useLocation()
+  // Ouvrir la page d'une notification la marque vue : le badge rouge du menu
+  // disparait (y compris pour celles qui arrivent pendant qu'on y est).
+  useEffect(() => { marquerLuesPour(location.pathname) }, [location.pathname, notifications, marquerLuesPour])
   // Groupes de nav depliables (voir NAV_ITEMS : "children") - ouverts par
   // defaut si on est deja sur une de leurs sous-pages au montage.
   const [openGroups, setOpenGroups] = useState(() => {
@@ -275,6 +287,7 @@ export default function Layout({ children }) {
   }, [])
 
   const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(role))
+  const [plusOpen, setPlusOpen] = useState(false)
   const unreadNotifications = notifications.filter((notification) => notification.unread)
 
   const formattedDate = new Intl.DateTimeFormat('fr-FR', {
@@ -391,7 +404,7 @@ export default function Layout({ children }) {
 
             return (
               <NavLink
-                className={({ isActive }) => `manager-nav-link ${isActive ? 'is-active' : ''}`}
+                className={({ isActive }) => `manager-nav-link ${isActive || (item.groupe && dansGroupe(item.groupe, location.pathname)) ? 'is-active' : ''}`}
                 key={item.path}
                 to={item.path}
                 onClick={() => setMobileOpen(false)}
@@ -462,9 +475,11 @@ export default function Layout({ children }) {
                                 onClick={() => {
                                   marquerLue(notification.id)
                                   // Ouvre l'ecran concerne (planning, journal...).
-                                  if (notification.target && notification.target !== location.pathname) {
+                                  // Lien precis (jour du match + fiche de la reservation) si connu.
+                                  const lien = notification.lien || (notification.reservationId ? `/planning?reservation=${notification.reservationId}` : notification.target)
+                                  if (lien && lien !== location.pathname + location.search) {
                                     setNotificationsOpen(false)
-                                    navigate(notification.target)
+                                    navigate(lien)
                                   } else if (isLong) {
                                     toggleNotification(notification.id)
                                   }
@@ -533,21 +548,47 @@ export default function Layout({ children }) {
         <PiedDePage className="manager-workarea-footer" />
       </div>
       <nav className="manager-bottom-tabbar" aria-label={`Navigation ${ROLE_LABELS[role]}`}>
-        {visibleItems.map((item) => {
+        {(visibleItems.length > ONGLETS_MAX + 1 ? visibleItems.slice(0, ONGLETS_MAX) : visibleItems).map((item) => {
           const target = item.children ? item.children[0].path : item.path
-          const isGroupActive = item.children && location.pathname.startsWith(item.path)
+          const isGroupActive = (item.children && location.pathname.startsWith(item.path)) || (item.groupe && dansGroupe(item.groupe, location.pathname))
           return (
             <NavLink
               key={item.path}
               to={target}
               className={({ isActive }) => `manager-bottom-tabbar-link ${isActive || isGroupActive ? 'is-active' : ''}`}
             >
-              <span className="manager-bottom-tabbar-icon" aria-hidden="true"><i className={`fa-solid ${item.icon}`} /></span>
+              <span className="manager-bottom-tabbar-icon" aria-hidden="true"><i className={`fa-solid ${item.icon}`} />
+                {unreadFor(item.path) > 0 && <span className="manager-bottom-tabbar-badge">{unreadFor(item.path)}</span>}
+              </span>
               <span className="manager-bottom-tabbar-label">{BOTTOM_TAB_LABELS[item.path] || item.label}</span>
             </NavLink>
           )
         })}
+        {visibleItems.length > ONGLETS_MAX + 1 && (
+          <button type="button" aria-expanded={plusOpen} onClick={() => setPlusOpen((o) => !o)}
+            className={`manager-bottom-tabbar-link ${visibleItems.slice(ONGLETS_MAX).some((i) => location.pathname.startsWith(i.path)) ? 'is-active' : ''}`}>
+            <span className="manager-bottom-tabbar-icon" aria-hidden="true"><i className="fa-solid fa-ellipsis" />
+              {visibleItems.slice(ONGLETS_MAX).reduce((n, i) => n + unreadFor(i.path), 0) > 0 && (
+                <span className="manager-bottom-tabbar-badge">{visibleItems.slice(ONGLETS_MAX).reduce((n, i) => n + unreadFor(i.path), 0)}</span>
+              )}
+            </span>
+            <span className="manager-bottom-tabbar-label">Plus</span>
+          </button>
+        )}
       </nav>
+      {plusOpen && (
+        <>
+          <button className="ta-plus-fond" type="button" aria-label="Fermer le menu" onClick={() => setPlusOpen(false)} />
+          <nav className="ta-plus-feuille" aria-label="Plus de pages">
+            {visibleItems.slice(ONGLETS_MAX).map((item) => (
+              <NavLink key={item.path} to={item.children ? item.children[0].path : item.path} onClick={() => setPlusOpen(false)}
+                className={({ isActive }) => (isActive || location.pathname.startsWith(item.path) ? 'is-active' : '')}>
+                <i className={`fa-solid ${item.icon}`} aria-hidden="true" /> {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        </>
+      )}
       {mobileOpen && <button className="manager-mobile-backdrop" aria-label="Fermer la navigation" type="button" onClick={() => setMobileOpen(false)} />}
       {passwordOpen && <ChangePasswordModal onClose={() => setPasswordOpen(false)} onNotice={showNotice} />}
       <Toast toast={toast} onClose={() => setToast(null)} />

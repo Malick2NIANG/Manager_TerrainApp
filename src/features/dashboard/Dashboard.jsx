@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import usePagination from '../../hooks/usePagination.jsx'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import { ROLE_LABELS } from '../../auth/roles.js'
@@ -9,13 +10,8 @@ import useFluxPlanning from '../../hooks/useFluxPlanning.js'
 import { formatFCFA, heure, jourISO } from '../../utils/dates.js'
 import { BadgeStatut, reservationDuCreneau } from '../planning/statuts.jsx'
 import '../../styles/terrains.css'
-
-const INTRO = {
-  GERANT: { eyebrow: 'Gérance', description: 'Réservations, recettes et occupation du jour en un coup d’œil.' },
-  ACCUEIL: { eyebrow: 'Accueil', description: 'Les réservations du jour et les prochains matchs.' },
-  CONTROLEUR: { eyebrow: 'Entrée', description: 'Les prochains matchs à accueillir.' },
-  ADMIN: { eyebrow: 'Administration', description: 'L’équipe et les dernières actions du personnel.' },
-}
+import EnTetePage from '../../components/EnTetePage.jsx'
+import { AIDES } from '../../components/aidesPages.js'
 
 /** Indicateurs du jour a partir du planning et des disponibilites. */
 export function indicateursDuJour(reservations, dispos, maintenant = Date.now()) {
@@ -48,6 +44,7 @@ function TableauDuJour() {
   useFluxPlanning(() => charger())
 
   const k = useMemo(() => (donnees ? indicateursDuJour(donnees.r, donnees.d) : null), [donnees])
+  const prochaines = usePagination(k?.prochaines || [], { options: [5, 10, 25], parPage: 5 })
   if (erreur) return <p className="ta-form-erreur" role="alert">{erreur}</p>
   if (!k) return <p className="planning-vide">Chargement…</p>
 
@@ -66,7 +63,7 @@ function TableauDuJour() {
         </div>
         {k.prochaines.length === 0 ? <p className="planning-vide">Plus aucun match prévu aujourd’hui.</p> : (
           <div className="planning-creneaux">
-            {k.prochaines.map((r) => (
+            {prochaines.visibles.map((r) => (
               <div className="planning-creneau" key={r.id}>
                 <span className="planning-creneau-heure">{heure(r.debut)}</span>
                 <span className="planning-creneau-corps"><strong>{r.clientNom}</strong><small>{r.terrain} · {r.reference}</small></span>
@@ -75,6 +72,7 @@ function TableauDuJour() {
             ))}
           </div>
         )}
+        {prochaines.barre}
       </section>
     </>
   )
@@ -121,17 +119,9 @@ function TableauAdmin() {
 
 export default function Dashboard() {
   const { role } = useAuth()
-  const intro = INTRO[role] || INTRO.ACCUEIL
   return (
     <Layout>
-      <section className="dashboard-intro">
-        <div>
-          <p className="manager-eyebrow">{intro.eyebrow}</p>
-          <h1>Tableau de bord</h1>
-          <p>{intro.description}</p>
-        </div>
-        <span className="dashboard-role-badge">{ROLE_LABELS[role]}</span>
-      </section>
+      <EnTetePage titre="Tableau de bord" aide={AIDES.dashboard[role] || AIDES.dashboard.ACCUEIL} />
       {role === 'ADMIN' ? <TableauAdmin /> : <TableauDuJour />}
     </Layout>
   )
