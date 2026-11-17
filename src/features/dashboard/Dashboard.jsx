@@ -12,6 +12,7 @@ import { formatFCFA, heure, jourISO } from '../../utils/dates.js'
 import { BadgeStatut, reservationDuCreneau } from '../planning/statuts.jsx'
 import '../../styles/terrains.css'
 import EnTetePage from '../../components/EnTetePage.jsx'
+import PlanningLecture from './PlanningLecture.jsx'
 import { AIDES } from '../../components/aidesPages.js'
 
 /** Indicateurs du jour a partir du planning et des disponibilites. */
@@ -95,6 +96,7 @@ function TableauAdmin() {
         {ROLES_EQUIPE_ACTIFS && <KpiCard icon="fa-users" accent="blue" label="Accueil et contrôleurs" value={equipe ? compte('ACCUEIL') + compte('CONTROLEUR') : '…'} to="/equipe" />}
         <KpiCard icon="fa-clipboard-list" accent="gold" label="Actions aujourd’hui" value={actions ? actions.length : '…'} to="/journal-audit" />
       </div>
+      <PlanningLecture />
       <section className="dashboard-panel" style={{ marginTop: 20 }}>
         <div className="dashboard-panel-heading ta-toolbar">
           <div><p className="manager-eyebrow">Monitoring</p><h2>Dernières actions</h2></div>

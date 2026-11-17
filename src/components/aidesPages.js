@@ -7,7 +7,7 @@ export const AIDES = {
       'Les chiffres se mettent à jour à chaque visite.'],
     ACCUEIL: ['Les réservations du jour et les prochains matchs.', 'Pour réserver ou encaisser, allez dans Planning.'],
     CONTROLEUR: ['Les prochains matchs à accueillir.', 'Pour contrôler une entrée, ouvrez « Scanner un ticket ».'],
-    ADMIN: ['Vos gérants et leurs dernières actions.', 'Le détail est dans Équipe et Journal.'],
+    ADMIN: ['Vos gérants, le planning du complexe et les dernières actions.', 'Le planning est en lecture seule : touchez une réservation pour voir sa fiche.', 'Le détail est dans Équipe et Journal.'],
   },
   planning: ['Toutes les réservations du jour : une colonne par terrain, les heures de haut en bas.',
     'Bloc plein : une réservation. Touchez-le pour voir le client, encaisser, imprimer le reçu ou annuler.',

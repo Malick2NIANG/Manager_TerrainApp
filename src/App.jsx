@@ -39,8 +39,9 @@ function RoleHome() {
 // le planning, le tableau de bord et la cloche) et les notifications.
 function ServicesSession({ children }) {
   const { role } = useAuth()
+  // Flux temps reel du planning : aussi pour l'Admin (grille du tableau de bord, lecture seule).
   return (
-    <FluxPlanningProvider actif={Boolean(role) && role !== 'ADMIN'}>
+    <FluxPlanningProvider actif={Boolean(role)}>
       <NotificationsProvider>{children}</NotificationsProvider>
     </FluxPlanningProvider>
   )
