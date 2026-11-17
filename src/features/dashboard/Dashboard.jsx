@@ -91,10 +91,10 @@ function TableauAdmin() {
   const compte = (role) => (equipe || []).filter((u) => u.role === role && u.active).length
   return (
     <>
-      <div className="dashboard-kpi-grid">
+      <div className={`dashboard-kpi-grid ${ROLES_EQUIPE_ACTIFS ? '' : 'is-2col'}`}>
         <KpiCard icon="fa-user-tie" accent="green" label="Gérants actifs" value={equipe ? compte('GERANT') : '…'} to="/equipe" />
         {ROLES_EQUIPE_ACTIFS && <KpiCard icon="fa-users" accent="blue" label="Accueil et contrôleurs" value={equipe ? compte('ACCUEIL') + compte('CONTROLEUR') : '…'} to="/equipe" />}
-        <KpiCard icon="fa-clipboard-list" accent="gold" label="Actions aujourd’hui" value={actions ? actions.length : '…'} to="/journal-audit" />
+        <KpiCard icon="fa-clipboard-list" accent="amber" label="Actions aujourd’hui" value={actions ? actions.length : '…'} to="/journal-audit" />
       </div>
       <PlanningLecture />
       <section className="dashboard-panel" style={{ marginTop: 20 }}>
