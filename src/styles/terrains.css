@@ -399,3 +399,47 @@ button.pg-bloc.is-libre:hover, button.pg-bloc.is-libre:focus-visible { backgroun
 .an-remboursement { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid #f3c9c5; border-radius: 10px; background: #fdf1f0; font-size: 13px; line-height: 1.45; cursor: pointer; }
 .an-remboursement input { margin-top: 3px; }
 .manager-button-danger:disabled, .manager-button-primary:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+
+/* Moyens de paiement avec logos */
+.mp-choix { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+.mp-option { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1.5px solid #e3e3e0; border-radius: 12px; background: #fff; font: inherit; font-size: 13px; font-weight: 700; color: inherit; cursor: pointer; text-align: left; }
+.mp-option:hover { border-color: #c9c9c5; }
+.mp-option.is-actif { border-color: var(--marque); background: var(--marque-pale); box-shadow: 0 0 0 1px var(--marque); }
+.mp-choix.is-compact { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+.mp-choix.is-compact .mp-option { padding: 6px 10px; }
+.mp-logo { display: grid; flex: none; width: 32px; height: 32px; place-items: center; overflow: hidden; border-radius: 50%; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 6%); }
+.mp-logo img { width: 100%; height: 100%; object-fit: cover; }
+.mp-logo.is-wave { background: #1dc3f3; }
+.mp-logo.is-wave img { transform: scale(1.1); }
+.mp-logo.is-om { background: #fff; }
+.mp-logo.is-om svg { width: 22px; height: 22px; }
+.mp-logo.is-mixx { background: #003881; padding: 5px; }
+.mp-logo.is-mixx img { object-fit: contain; }
+.mp-logo.is-especes { background: #e2f2ec; color: #1f6f57; font-size: 14px; }
+/* Caisse especes */
+.caisse-total { margin-bottom: 10px; }
+.caisse { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 14px; margin-top: 12px; padding: 12px; border: 1px dashed #c9d9d1; border-radius: 12px; background: #fbfcfb; }
+.caisse-recu { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 700; }
+.caisse-recu input { border: 1px solid #d8d8d8; border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 18px; font-weight: 700; }
+.caisse-rendu { display: flex; flex-direction: column; justify-content: center; padding: 8px 12px; border-radius: 10px; background: var(--marque-pale); }
+.caisse-rendu span { color: #5b5b5f; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.caisse-rendu strong { color: var(--marque); font-size: 22px; }
+.caisse-rendu.is-manque { background: #fbe4e2; }
+.caisse-rendu.is-manque strong { color: #b3261e; }
+.caisse-rapides { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+.caisse-rapides button { padding: 6px 12px; border: 1px solid #d8d8d8; border-radius: 999px; background: #fff; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; color: inherit; }
+.caisse-rapides button.is-actif { border-color: var(--marque); background: var(--marque); color: #fff; }
+.caisse-ok { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0 4px; text-align: center; }
+.caisse-ok h2 { margin: 6px 0 0; font-size: 18px; }
+.caisse-ok p { margin: 0; color: #5b5b5f; }
+.caisse-ok-icone { display: grid; width: 52px; height: 52px; place-items: center; border-radius: 50%; background: var(--marque-pale); color: var(--marque); font-size: 22px; }
+.caisse-ok-montants { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 12px 0 0; }
+.caisse-ok-montants div { min-width: 120px; padding: 8px 12px; border-radius: 10px; background: #f6f6f4; }
+.caisse-ok-montants dt { color: #5b5b5f; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.caisse-ok-montants dd { margin: 2px 0 0; font-size: 17px; font-weight: 800; }
+.caisse-ok-montants .is-rendu { background: var(--marque-pale); }
+.caisse-ok-montants .is-rendu dd { color: var(--marque); font-size: 20px; }
+.ab-encaisser { flex-direction: column; align-items: stretch; width: 100%; }
+.ab-encaisser.is-fait { flex-direction: row; align-items: center; flex-wrap: wrap; color: #1f6f57; font-weight: 700; }
+.fiche-actions-droite { display: inline-flex; gap: 8px; margin-left: auto; }
+@media (max-width: 760px) { .caisse { grid-template-columns: 1fr; } }

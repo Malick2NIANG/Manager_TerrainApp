@@ -2,6 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { apiGet, apiPostAvecEntetes } from '../../api/client.js'
 import { decalerJour, formatFCFA, heure, jourISO } from '../../utils/dates.js'
 import { MOYENS, MOYENS_COMPTOIR } from './statuts.jsx'
+import MoyensPaiement from '../caisse/MoyensPaiement.jsx'
+import CaisseEspeces from '../caisse/CaisseEspeces.jsx'
+import { imprimerRecu, monnaie } from '../caisse/caisse.js'
+import { useAuth } from '../../auth/AuthContext.jsx'
+import { marque } from '../../config/marque.js'
 
 function nouvelleCle() {
   return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `cle-${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -34,6 +39,9 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
   const [nom, setNom] = useState('')
   const [telephone, setTelephone] = useState('')
   const [moyen, setMoyen] = useState('especes')
+  const [recu, setRecu] = useState('')
+  const [cree, setCree] = useState(null) // reservation enregistree : ecran du recu
+  const { username } = useAuth()
   const [envoi, setEnvoi] = useState(false)
   const [erreur, setErreur] = useState(null)
   const cle = useRef(nouvelleCle())
@@ -60,7 +68,8 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
     const probleme = !creneau ? 'Choisissez un créneau.'
       : prenom.trim().length < 2 ? 'Indiquez le prénom du client.'
         : nom.trim().length < 2 ? 'Indiquez le nom du client.'
-          : !tel ? 'Numéro à 9 chiffres (ex. 77 123 45 67).' : null
+          : !tel ? 'Numéro à 9 chiffres (ex. 77 123 45 67).'
+            : moyen === 'especes' && recu !== '' && monnaie(recu, creneau.prix) < 0 ? 'La somme reçue ne couvre pas le montant.' : null
     if (probleme) {
       setErreur(probleme)
       return
@@ -70,14 +79,42 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
     try {
       const r = await apiPostAvecEntetes('/reservations/comptoir', {
         terrainId: Number(terrainId), debut: creneau.debut, clientNom: `${prenom.trim()} ${nom.trim()}`, clientTelephone: tel,
-        moyenPaiement: moyen,
+        moyenPaiement: moyen, especesRecues: moyen === 'especes' ? Number(recu || creneau.prix) : null,
       }, { 'Idempotency-Key': cle.current })
-      onCree(r.reservation)
+      setEnvoi(false)
+      setCree(r.reservation)
     } catch (err) {
       setEnvoi(false)
       if (err.status) cle.current = nouvelleCle()
       setErreur(err.message)
     }
+  }
+
+  const imprimer = (r) => imprimerRecu(r, { etablissement: marque.etablissement || marque.nom, moyens: MOYENS, caissier: username })
+
+  if (cree) {
+    return (
+      <div className="manager-modal-backdrop" role="presentation">
+        <section className="manager-modal" role="dialog" aria-modal="true" aria-labelledby="comptoir-ok-titre">
+          <div className="caisse-ok">
+            <span className="caisse-ok-icone" aria-hidden="true"><i className="fa-solid fa-check" /></span>
+            <h2 id="comptoir-ok-titre">Réservation {cree.reference} enregistrée</h2>
+            <p>{cree.clientNom} · {cree.terrain} · {heure(cree.debut)}</p>
+            <dl className="caisse-ok-montants">
+              <div><dt>Payé ({MOYENS[cree.moyenPaiement]})</dt><dd>{formatFCFA(cree.montant)}</dd></div>
+              {cree.especesRecues != null && <div><dt>Reçu</dt><dd>{formatFCFA(cree.especesRecues)}</dd></div>}
+              {cree.monnaieRendue != null && <div className="is-rendu"><dt>À rendre</dt><dd>{formatFCFA(cree.monnaieRendue)}</dd></div>}
+            </dl>
+          </div>
+          <div className="manager-modal-actions">
+            <button className="manager-button manager-button-quiet" type="button" onClick={() => onCree(cree)}>Terminer</button>
+            <button className="manager-button manager-button-primary" type="button" onClick={() => imprimer(cree)} autoFocus>
+              <i className="fa-solid fa-print" aria-hidden="true" /> Imprimer le reçu
+            </button>
+          </div>
+        </section>
+      </div>
+    )
   }
 
   return (
@@ -141,18 +178,11 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
 
           <fieldset>
             <legend>Encaissement</legend>
-            <div className="ta-choix" role="radiogroup" aria-label="Moyen de paiement">
-              {MOYENS_COMPTOIR.map((m) => (
-                <button key={m} type="button" role="radio" aria-checked={moyen === m} className={moyen === m ? 'is-actif' : ''} onClick={() => setMoyen(m)}>
-                  {MOYENS[m]}
-                </button>
-              ))}
-            </div>
+            {creneau && <div className="ta-total caisse-total"><span>À encaisser</span><strong>{formatFCFA(creneau.prix)}</strong></div>}
+            <MoyensPaiement valeur={moyen} onChange={setMoyen} moyens={MOYENS_COMPTOIR} />
+            {moyen === 'especes' && creneau && <CaisseEspeces montant={creneau.prix} recu={recu} onRecu={setRecu} />}
           </fieldset>
 
-          {creneau && (
-            <div className="ta-total"><span>À encaisser</span><strong>{formatFCFA(creneau.prix)}</strong></div>
-          )}
           {erreur && <p className="ta-form-erreur" role="alert">{erreur}</p>}
 
           <div className="manager-modal-actions">

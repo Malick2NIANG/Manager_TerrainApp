@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { apiGet, apiPost } from '../../api/client.js'
 import { dateCourte, decalerJour, formatFCFA, heure, jourISO } from '../../utils/dates.js'
-import { MOYENS, MOYENS_COMPTOIR } from '../planning/statuts.jsx'
+import { MOYENS_COMPTOIR } from '../planning/statuts.jsx'
+import MoyensPaiement from '../caisse/MoyensPaiement.jsx'
 import { formaterSaisieLocale, normaliserTelephone } from '../planning/ComptoirModal.jsx'
 import Volet from '../../components/Volet.jsx'
 import { FREQUENCES, REGLEMENTS, libelleRegle, refusRemise } from './abonnements.js'
@@ -210,13 +211,7 @@ export default function AbonnementModal({ terrains, onFermer, onCree }) {
               ))}
             </div>
             {reglement === 'AVANCE' ? (
-              <div className="ta-choix ab-moyens" role="radiogroup" aria-label="Moyen de paiement">
-                {MOYENS_COMPTOIR.map((m) => (
-                  <button key={m} type="button" role="radio" aria-checked={moyen === m} className={moyen === m ? 'is-actif' : ''} onClick={() => setMoyen(m)}>
-                    {MOYENS[m]}
-                  </button>
-                ))}
-              </div>
+              <div className="ab-moyens"><MoyensPaiement valeur={moyen} onChange={setMoyen} moyens={MOYENS_COMPTOIR} /></div>
             ) : (
               <span className="ta-form-aide">Chaque séance est encaissée le jour J, depuis le planning ou cette page.</span>
             )}

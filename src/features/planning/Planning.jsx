@@ -8,6 +8,8 @@ import { dateLongue, decalerJour, formatFCFA, heure, jourISO, jourRelatif, plage
 import { BadgeStatut, MOYENS, telephoneLisible } from './statuts.jsx'
 import ComptoirModal from './ComptoirModal.jsx'
 import AnnulationModal, { refusAnnulation } from './AnnulationModal.jsx'
+import { imprimerRecu } from '../caisse/caisse.js'
+import { marque } from '../../config/marque.js'
 import PlanningGrille from './PlanningGrille.jsx'
 import { correspond, filtrerTerrains, terrainsParSport } from './grille.js'
 import useEcranEtroit from '../../hooks/useEcranEtroit.js'
@@ -21,7 +23,7 @@ import EnTetePage from '../../components/EnTetePage.jsx'
 // Mis a jour en direct par le flux du planning (reservations en ligne,
 // annulations, entrees scannees), avec un rafraichissement de secours.
 export default function Planning() {
-  const { role } = useAuth()
+  const { role, username } = useAuth()
   const peutReserver = role === 'GERANT' || role === 'ACCUEIL'
   const [jour, setJour] = useState(jourISO())
   const [dispos, setDispos] = useState(null)
@@ -236,6 +238,7 @@ export default function Planning() {
               <dt>Téléphone</dt><dd><a href={`tel:${fiche.clientTelephone}`}>{telephoneLisible(fiche.clientTelephone)}</a></dd>
               <dt>Jour</dt><dd style={{ textTransform: 'capitalize' }}>{dateLongue(fiche.debut)}</dd>
               <dt>Montant</dt><dd>{formatFCFA(fiche.montant)}</dd>
+              {fiche.especesRecues != null && <><dt>Espèces</dt><dd>reçu {formatFCFA(fiche.especesRecues)} · rendu {formatFCFA(fiche.monnaieRendue)}</dd></>}
               <dt>Paiement</dt><dd>{aEncaisser(fiche) ? 'À encaisser (séance d’abonnement)'
                 : `${MOYENS[fiche.moyenPaiement] || fiche.moyenPaiement} · ${fiche.canal === 'COMPTOIR' ? 'au comptoir' : 'en ligne'}`}</dd>
               {fiche.abonnementId && <><dt>Abonnement</dt><dd>Séance d’un abonnement (onglet Abonnements)</dd></>}
@@ -264,7 +267,15 @@ export default function Planning() {
                     </button>
                   )
               })()}
-              <button className="manager-button manager-button-primary" type="button" onClick={() => setFiche(null)}>Fermer</button>
+              <span className="fiche-actions-droite">
+                {fiche.payeeLe && fiche.canal === 'COMPTOIR' && (
+                  <button className="manager-button manager-button-quiet" type="button"
+                    onClick={() => imprimerRecu(fiche, { etablissement: marque.etablissement || marque.nom, moyens: MOYENS, caissier: username })}>
+                    <i className="fa-solid fa-print" aria-hidden="true" /> Reçu
+                  </button>
+                )}
+                <button className="manager-button manager-button-primary" type="button" onClick={() => setFiche(null)}>Fermer</button>
+              </span>
             </div>
           </section>
         </div>
