@@ -34,7 +34,8 @@ export default function Avis() {
   const [avis, setAvis] = useState(null)
   const [terrains, setTerrains] = useState({})
   const [filtre, setFiltre] = useState('TOUS')
-  const [terrain, setTerrain] = useState('')
+  // ?terrain=ID : ouvert depuis la note d'une carte terrain.
+  const [terrain, setTerrain] = useState(() => new URLSearchParams(window.location.search).get('terrain') || '')
   const [erreur, setErreur] = useState(null)
   const [toast, setToast] = useState(null)
 
@@ -67,7 +68,7 @@ export default function Avis() {
 
   return (
     <Layout>
-      <EnTetePage groupe="vitrine"
+      <EnTetePage groupe="complexe" titre="Avis des joueurs"
         resume={note !== null ? `Note moyenne : ${String(note).replace('.', ',')} / 5 · ${compte.VISIBLES} avis visibles` : null}
         aide={AIDES.avis} />
 

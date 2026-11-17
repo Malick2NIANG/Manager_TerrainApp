@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { urlTerrainClient } from '../../config/appClient.js'
 import { positionCadrage } from '../gerant/cadrage.js'
 import Layout from '../../components/Layout.jsx'
@@ -171,12 +172,12 @@ export default function Terrains() {
                 {t.photoUrl && estVideo(t.photoUrl) && <video src={t.photoUrl} muted playsInline preload="metadata" aria-label="Vidéo de couverture" />}
                 {!t.photoUrl && <i className="fa-solid fa-futbol" aria-hidden="true" />}
                 <span className="ta-carte-statut"><StatusBadge statut={statutTerrain(t)} label={LIBELLES_STATUT[statutTerrain(t)]} /></span>
-                <span className={`ta-carte-note ${t.nombreAvis > 0 ? '' : 'is-nouveau'}`}
-                  aria-label={t.nombreAvis > 0 ? `Note des joueurs ${String(t.noteMoyenne).replace('.', ',')} sur 5, ${t.nombreAvis} avis` : 'Pas encore d’avis'}>
-                  {t.nombreAvis > 0
-                    ? <><i className="fa-solid fa-star" aria-hidden="true" /> {String(t.noteMoyenne).replace('.', ',')} <small>({t.nombreAvis} avis)</small></>
-                    : 'Pas encore d’avis'}
-                </span>
+                {t.nombreAvis > 0 ? (
+                <Link to={`/avis?terrain=${t.id}`} className="ta-carte-note" title="Voir les avis de ce terrain"
+                  aria-label={`Note des joueurs ${String(t.noteMoyenne).replace('.', ',')} sur 5, ${t.nombreAvis} avis : voir les avis`}>
+                  <i className="fa-solid fa-star" aria-hidden="true" /> {String(t.noteMoyenne).replace('.', ',')} <small>({t.nombreAvis} avis)</small>
+                </Link>
+                ) : <span className="ta-carte-note is-nouveau">Pas encore d’avis</span>}
                 <span className="ta-carte-nb-photos">
                   <i className="fa-solid fa-images" aria-hidden="true" /> {t.photos?.length || 0}
                 </span>

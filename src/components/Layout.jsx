@@ -12,12 +12,12 @@ import PiedDePage from './PiedDePage.jsx'
 
 // Menu : une entree par tache. Les pages liees (onglets) sont regroupees :
 // Planning (reservations, fermetures, scanner), Mon complexe (terrains,
-// horaires), Vitrine (annonces, avis) — voir components/navigation.js.
+// horaires), Annonces — voir components/navigation.js.
 const NAV_ITEMS = [
   { path: '/dashboard', label: 'Tableau de bord', icon: 'fa-gauge-high', roles: ['GERANT', 'ACCUEIL', 'CONTROLEUR', 'ADMIN'] },
   { path: '/planning', label: 'Planning', icon: 'fa-calendar-days', roles: ['GERANT', 'ACCUEIL', 'CONTROLEUR'], groupe: 'planning' },
   { path: '/terrains', label: 'Mon complexe', icon: 'fa-futbol', roles: ['GERANT'], groupe: 'complexe' },
-  { path: '/annonces', label: 'Vitrine', icon: 'fa-store', roles: ['GERANT'], groupe: 'vitrine' },
+  { path: '/annonces', label: 'Annonces', icon: 'fa-bullhorn', roles: ['GERANT'], groupe: 'vitrine' },
   {
     path: '/journal-audit',
     label: 'Journal d’audit',
@@ -91,7 +91,7 @@ const BOTTOM_TAB_LABELS = {
   '/journal-audit': 'Journal',
   '/personnel': 'Équipe',
   '/equipe': 'Équipe',
-  '/annonces': 'Vitrine',
+  '/annonces': 'Annonces',
   '/avis': 'Avis',
 }
 

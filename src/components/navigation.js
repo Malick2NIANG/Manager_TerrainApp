@@ -15,20 +15,21 @@ export const GROUPES = {
     label: 'Mon complexe',
     onglets: [
       { path: '/terrains', label: 'Terrains et tarifs', icon: 'fa-futbol', roles: ['GERANT'], accent: 'var(--marque)', accentBg: 'var(--marque-pale)', stat: 'Terrains' },
+      // Avis : ouverts depuis la note posee sur chaque carte terrain, pas en carte.
+      { path: '/avis', label: 'Avis des joueurs', icon: 'fa-star', roles: ['GERANT'], horsCartes: true },
     ],
   },
   vitrine: {
-    label: 'Vitrine',
+    label: 'Annonces',
     onglets: [
       { path: '/annonces', label: 'Annonces', icon: 'fa-bullhorn', roles: ['GERANT'], accent: '#9c6b0c', accentBg: '#f6ecd9', stat: 'Annonces en ligne' },
-      { path: '/avis', label: 'Avis des joueurs', icon: 'fa-star', roles: ['GERANT'], accent: '#2f6fed', accentBg: '#e8eefc', stat: 'Avis des joueurs' },
     ],
   },
 }
 
 /** Onglets d'un groupe visibles pour ce role. */
 export function ongletsPour(groupe, role) {
-  return (GROUPES[groupe]?.onglets || []).filter((o) => o.roles.includes(role))
+  return (GROUPES[groupe]?.onglets || []).filter((o) => o.roles.includes(role) && !o.horsCartes)
 }
 
 /** Le chemin courant appartient-il a ce groupe ? */
