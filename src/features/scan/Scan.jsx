@@ -140,9 +140,14 @@ export default function Scan() {
           ) : (
             <>
               <div className={`scan-verdict ${v.ton}`}>
+                <button type="button" className="scan-verdict-fermer" aria-label="Effacer le résultat" title="Effacer"
+                  onClick={() => setResultat(null)}>
+                  <i className="fa-solid fa-xmark" aria-hidden="true" />
+                </button>
                 <i className={`fa-solid ${v.icone}`} aria-hidden="true" />
                 <h2>{v.titre}</h2>
-                <p>{resultat.message}</p>
+                {/* Le message n'apparait que s'il dit plus que le titre. */}
+                {resultat.message && resultat.message.replace(/\.$/, '') !== v.titre && <p>{resultat.message}</p>}
               </div>
               {r && (
                 <dl className="ta-fiche" style={{ marginTop: 16 }}>
