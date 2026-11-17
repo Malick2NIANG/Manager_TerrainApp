@@ -6,8 +6,9 @@ import { apiGet, apiPost } from '../../api/client.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import useFluxPlanning from '../../hooks/useFluxPlanning.js'
 import { dateLongue, decalerJour, formatFCFA, heure, jourISO, plage } from '../../utils/dates.js'
-import { BadgeStatut, MOYENS, reservationDuCreneau, telephoneLisible } from './statuts.jsx'
+import { BadgeStatut, MOYENS, telephoneLisible } from './statuts.jsx'
 import ComptoirModal from './ComptoirModal.jsx'
+import PlanningGrille from './PlanningGrille.jsx'
 import EncaisserSeance from '../abonnements/EncaisserSeance.jsx'
 import { aEncaisser } from '../abonnements/abonnements.js'
 import '../../styles/terrains.css'
@@ -28,6 +29,14 @@ export default function Planning() {
   const [comptoir, setComptoir] = useState(null) // { terrainId, debut } ou {}
   const [fiche, setFiche] = useState(null)
   const [annulation, setAnnulation] = useState(null)
+  // Filtre : tous les terrains, ou un seul (retenu pour la session).
+  const [filtre, setFiltre] = useState(() => {
+    try { return sessionStorage.getItem('terrainapp_planning_terrain') || 'tous' } catch { return 'tous' }
+  })
+  const choisirFiltre = (v) => {
+    setFiltre(v)
+    try { sessionStorage.setItem('terrainapp_planning_terrain', v) } catch { /* facultatif */ }
+  }
 
   const charger = useCallback(async () => {
     try {
@@ -53,6 +62,12 @@ export default function Planning() {
     return () => clearInterval(t)
   }, [charger, connecte])
 
+  const visibles = useMemo(() => {
+    if (!dispos) return dispos
+    const un = dispos.filter((t) => String(t.terrainId) === filtre)
+    return un.length ? un : dispos
+  }, [dispos, filtre])
+
   const stats = useMemo(() => {
     const actives = reservations.filter((r) => ['CONFIRMEE', 'HONOREE'].includes(r.statut))
     return { nombre: actives.length, montant: actives.reduce((s, r) => s + r.montant, 0) }
@@ -75,7 +90,7 @@ export default function Planning() {
     <Layout>
       <EnTetePage groupe="planning"
         resume={`${stats.nombre} réservation${stats.nombre > 1 ? 's' : ''} confirmée${stats.nombre > 1 ? 's' : ''} · ${formatFCFA(stats.montant)}`}
-        aide="Touchez une réservation pour voir le client, le paiement ou l’annuler. Les créneaux libres apparaissent sous chaque terrain : touchez-en un pour réserver au comptoir."
+        aide="Une colonne par terrain, les heures de haut en bas. Touchez un bloc plein pour voir la réservation (client, paiement, annulation), un bloc « + » pour réserver au comptoir. La ligne rouge indique l’heure actuelle."
         actions={peutReserver && (
           <button className="manager-button manager-button-primary" type="button" onClick={() => setComptoir({})}>
             <i className="fa-solid fa-plus" aria-hidden="true" /> Nouvelle réservation
@@ -87,15 +102,29 @@ export default function Planning() {
           <button className="manager-icon-button" type="button" aria-label="Jour précédent" onClick={() => setJour((j) => decalerJour(j, -1))}>
             <i className="fa-solid fa-chevron-left" aria-hidden="true" />
           </button>
-          <span className="ta-jour-libelle">{dateLongue(`${jour}T12:00:00Z`)}</span>
+          <label className="ta-jour-libelle ta-jour-choix" title="Choisir un jour">
+            {dateLongue(`${jour}T12:00:00Z`)} <i className="fa-regular fa-calendar" aria-hidden="true" />
+            <input type="date" className="ta-jour-cache" aria-label="Choisir un jour" value={jour}
+              onClick={(e) => { try { e.currentTarget.showPicker?.() } catch { /* deja ouvert */ } }}
+              onChange={(e) => e.target.value && setJour(e.target.value)} />
+          </label>
           <button className="manager-icon-button" type="button" aria-label="Jour suivant" onClick={() => setJour((j) => decalerJour(j, 1))}>
             <i className="fa-solid fa-chevron-right" aria-hidden="true" />
           </button>
-          <input type="date" aria-label="Choisir un jour" value={jour} onChange={(e) => e.target.value && setJour(e.target.value)} />
           {jour !== jourISO() && (
             <button className="manager-button manager-button-quiet" type="button" onClick={() => setJour(jourISO())}>Aujourd’hui</button>
           )}
         </div>
+        {dispos && dispos.length > 1 && (
+          <label className="ta-filtre-terrain">
+            <i className="fa-solid fa-filter" aria-hidden="true" />
+            <select value={visibles?.length === 1 ? String(visibles[0].terrainId) : 'tous'} onChange={(e) => choisirFiltre(e.target.value)}
+              aria-label="Terrain affiché">
+              <option value="tous">Tous les terrains ({dispos.length})</option>
+              {dispos.map((t) => <option key={t.terrainId} value={t.terrainId}>{t.terrain} · {t.sport}</option>)}
+            </select>
+          </label>
+        )}
         <span className="ta-toolbar-spacer" />
         <span className={`ta-live ${connecte ? 'is-on' : ''}`}>{connecte ? 'En direct' : 'Hors direct'}</span>
       </div>
@@ -104,66 +133,18 @@ export default function Planning() {
       {dispos === null && !erreur && <p className="planning-vide">Chargement du planning…</p>}
       {dispos && dispos.length === 0 && <p className="planning-vide">Aucun terrain : créez-en un dans « Terrains et tarifs ».</p>}
 
-      {dispos && (
-        <div className="planning-grille">
-          {dispos.map((t) => (
-            <section className="planning-terrain" key={t.terrainId} aria-label={t.terrain}>
-              <header className="planning-terrain-tete">
-                <h2>{t.terrain}</h2>
-                <span>{t.sport}</span>
-              </header>
-              {t.creneaux.length === 0 ? (
-                <p className="planning-vide">Fermé ce jour-là.</p>
-              ) : (() => {
-                // L'essentiel d'abord : reservations et fermetures ; les
-                // creneaux libres a venir en une ligne d'heures ; les
-                // creneaux libres deja passes ne s'affichent pas.
-                const occupes = t.creneaux.map((c) => ({ c, r: reservationDuCreneau(reservations, t.terrainId, c.debut, c.fin) }))
-                  .filter(({ c, r }) => r || c.etat === 'BLOQUE')
-                const libres = t.creneaux.filter((c) => c.etat === 'LIBRE' && !reservationDuCreneau(reservations, t.terrainId, c.debut, c.fin))
-                return (
-                  <>
-                    {occupes.length === 0 && <p className="planning-vide">Aucune réservation.</p>}
-                    {occupes.length > 0 && (
-                      <div className="planning-creneaux">
-                        {occupes.map(({ c, r }) => (r ? (
-                          <button key={c.debut} type="button" className="planning-creneau is-reserve" onClick={() => setFiche(r)}>
-                            <span className="planning-creneau-heure">{heure(c.debut)}</span>
-                            <span className="planning-creneau-corps">
-                              <strong>{r.clientNom}</strong>
-                              <small>
-                                {r.abonnementId ? <span className="planning-tag"><i className="fa-solid fa-repeat" aria-hidden="true" /> Abonnement</span>
-                                  : `${r.reference} · ${r.canal === 'COMPTOIR' ? 'Comptoir' : 'En ligne'}`}
-                                {aEncaisser(r) && <> <span className="planning-tag is-du">À encaisser</span></>}
-                              </small>
-                            </span>
-                            <BadgeStatut statut={r.statut} />
-                          </button>
-                        ) : (
-                          <div key={c.debut} className="planning-creneau is-bloque">
-                            <span className="planning-creneau-heure">{heure(c.debut)}</span>
-                            <span className="planning-creneau-corps"><strong>Fermé</strong></span>
-                          </div>
-                        )))}
-                      </div>
-                    )}
-                    {libres.length > 0 && (
-                      <div className="planning-libres">
-                        <span className="planning-libres-titre">{libres.length} libre{libres.length > 1 ? 's' : ''}</span>
-                        <div className="planning-libres-heures">
-                          {libres.map((c) => (peutReserver ? (
-                            <button key={c.debut} type="button" title={`Réserver ${heure(c.debut)} · ${formatFCFA(c.prix)}`}
-                              onClick={() => setComptoir({ terrainId: t.terrainId, debut: c.debut })}>{heure(c.debut)}</button>
-                          ) : <span key={c.debut}>{heure(c.debut)}</span>))}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )
-              })()}
-            </section>
-          ))}
-        </div>
+      {dispos && dispos.length > 0 && (
+        <>
+          <div className="pg-legende" aria-label="Légende">
+            <span><i className="pg-pastille is-confirmee" /> Réservé</span>
+            <span><i className="pg-pastille is-attente" /> Paiement en attente</span>
+            <span><i className="pg-pastille is-honoree" /> Entrée validée</span>
+            <span><i className="pg-pastille is-libre" /> Libre{peutReserver ? ' : touchez pour réserver' : ''}</span>
+            <span><i className="pg-pastille is-bloque" /> Fermé</span>
+          </div>
+          <PlanningGrille jour={jour} dispos={visibles} reservations={reservations} peutReserver={peutReserver}
+            onReserver={setComptoir} onOuvrir={setFiche} />
+        </>
       )}
 
       {fiche && (
