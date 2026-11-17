@@ -64,7 +64,7 @@ export default function Abonnements() {
           ? <span className="planning-badge is-attente">{a.seancesAEncaisser} à encaisser</span>
           : <span className="planning-badge is-confirmee">{a.reglement === 'AVANCE' ? 'Payé' : 'À jour'}</span>}
       </span>
-      <span className="ab-carte-regle"><i className="fa-solid fa-repeat" aria-hidden="true" /> {libelleRegle(a.frequence, a.premiereSeance)}</span>
+      <span className="ab-carte-regle"><i className="fa-solid fa-repeat" aria-hidden="true" /> {libelleRegle(a.frequence, a.premiereSeance, a.jours, a.seances.length)}</span>
       <span className="ab-carte-detail">{a.terrain} · {a.sport}</span>
       <span className="ab-progression" aria-label={`${a.seancesJouees} séances passées sur ${a.seances.filter((s) => s.statut !== 'ANNULEE').length}`}>
         <span style={{ width: `${Math.round((100 * a.seancesJouees) / Math.max(1, a.seances.filter((s) => s.statut !== 'ANNULEE').length))}%` }} />
@@ -116,7 +116,7 @@ export default function Abonnements() {
               </button>
             </div>
             <dl className="ta-fiche">
-              <dt>Créneau</dt><dd>{libelleRegle(fiche.frequence, fiche.premiereSeance)}</dd>
+              <dt>Créneau</dt><dd>{libelleRegle(fiche.frequence, fiche.premiereSeance, fiche.jours, fiche.seances.length)}</dd>
               <dt>Terrain</dt><dd>{fiche.terrain} · {fiche.sport}</dd>
               <dt>Téléphone</dt><dd><a href={`tel:${fiche.clientTelephone}`}>{telephoneLisible(fiche.clientTelephone)}</a></dd>
               <dt>Montant</dt><dd>{formatFCFA(fiche.montantTotal)}{fiche.remise > 0 && <small className="ta-form-aide"> (remise {formatFCFA(fiche.remise)})</small>}</dd>

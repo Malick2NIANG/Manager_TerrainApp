@@ -5,7 +5,7 @@ import { MOYENS_COMPTOIR } from '../planning/statuts.jsx'
 import MoyensPaiement from '../caisse/MoyensPaiement.jsx'
 import { formaterSaisieLocale, normaliserTelephone } from '../planning/ComptoirModal.jsx'
 import Volet from '../../components/Volet.jsx'
-import { FREQUENCES, REGLEMENTS, libelleRegle, refusRemise } from './abonnements.js'
+import { FREQUENCES, JOURS_SEMAINE, REGLEMENTS, jourDe, libelleRegle, refusRemise } from './abonnements.js'
 
 // Nouvel abonnement au comptoir. L'essentiel d'abord (terrain, premiere
 // seance, frequence, nombre, client) ; l'apercu des dates montre les
@@ -17,6 +17,9 @@ export default function AbonnementModal({ terrains, onFermer, onCree }) {
   const [debut, setDebut] = useState(null)
   const [frequence, setFrequence] = useState('HEBDOMADAIRE')
   const [nombre, setNombre] = useState(4)
+  const [jours, setJours] = useState([]) // hebdomadaire : jours en plus de celui de la 1re seance
+  const [dates, setDates] = useState([]) // dates au choix (en plus de la 1re seance)
+  const [dateAjout, setDateAjout] = useState('')
   const [prenom, setPrenom] = useState('')
   const [nom, setNom] = useState('')
   const [telephone, setTelephone] = useState('')
@@ -49,20 +52,27 @@ export default function AbonnementModal({ terrains, onFermer, onCree }) {
   }, [terrainId, jour])
 
   useEffect(() => {
-    if (!terrainId || !debut || !nombre) {
+    const nb = frequence === 'PERSONNALISEE' ? dates.length + 1 : nombre
+    if (!terrainId || !debut || !nb || (frequence === 'PERSONNALISEE' && !dates.length)) {
       setApercu(null)
       return undefined
     }
     let actif = true
     const t = setTimeout(() => {
-      apiPost('/abonnements/apercu', { terrainId: Number(terrainId), premiereSeance: debut, frequence, nombreSeances: Number(nombre) })
+      apiPost('/abonnements/apercu', { terrainId: Number(terrainId), premiereSeance: debut, frequence, nombreSeances: Number(nb), ...regleEnPlus })
         .then((a) => actif && setApercu(a))
         .catch((e) => { if (actif) { setApercu(null); setErreur(e.message) } })
     }, 250)
     return () => { actif = false; clearTimeout(t) }
-  }, [terrainId, debut, frequence, nombre])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [terrainId, debut, frequence, nombre, jours.join(), dates.join()])
 
   const max = FREQUENCES[frequence].max
+  const jourPremiere = debut ? jourDe(debut) : null
+  // Jours de la semaine envoyes : celui de la 1re seance + ceux coches.
+  const joursChoisis = jourPremiere ? [...new Set([jourPremiere, ...jours])].sort() : jours
+  const regleEnPlus = frequence === 'HEBDOMADAIRE' && joursChoisis.length > 1 ? { jours: joursChoisis }
+    : frequence === 'PERSONNALISEE' ? { dates } : {}
   const total = apercu?.total ?? 0
   const net = Math.max(0, total - (Number(remise) || 0))
   const sautees = apercu ? apercu.seances.length - apercu.disponibles : 0
@@ -85,7 +95,8 @@ export default function AbonnementModal({ terrains, onFermer, onCree }) {
     setErreur(null)
     try {
       const a = await apiPost('/abonnements', {
-        terrainId: Number(terrainId), premiereSeance: debut, frequence, nombreSeances: Number(nombre),
+        terrainId: Number(terrainId), premiereSeance: debut, frequence, ...regleEnPlus,
+        nombreSeances: Number(frequence === 'PERSONNALISEE' ? dates.length + 1 : nombre),
         clientNom: `${prenom.trim()} ${nom.trim()}`, clientTelephone: tel, reglement,
         moyenPaiement: reglement === 'AVANCE' ? moyen : null, remise: Number(remise) || 0,
       })
@@ -149,6 +160,7 @@ export default function AbonnementModal({ terrains, onFermer, onCree }) {
                 ))}
               </div>
             </fieldset>
+            {frequence !== 'PERSONNALISEE' && (
             <label>Nombre de séances
               <input type="number" min={2} max={max} value={nombre}
                 onChange={(e) => setNombre(Math.max(0, Math.min(max, Number(e.target.value) || 0)))} />
@@ -158,18 +170,63 @@ export default function AbonnementModal({ terrains, onFermer, onCree }) {
                 ))}
               </span>
             </label>
+            )}
           </div>
+
+          {frequence === 'HEBDOMADAIRE' && (
+            <fieldset>
+              <legend>Jours de la semaine <span className="ta-form-aide">la même heure chaque jour coché</span></legend>
+              <div className="ta-jours" role="group" aria-label="Jours de la semaine">
+                {JOURS_SEMAINE.map((j) => {
+                  const premier = j.n === jourPremiere
+                  const coche = premier || jours.includes(j.n)
+                  return (
+                    <button key={j.n} type="button" aria-pressed={coche} className={coche ? 'is-actif' : ''} disabled={premier || !debut}
+                      title={premier ? 'Jour de la première séance' : undefined}
+                      onClick={() => setJours((js) => (js.includes(j.n) ? js.filter((x) => x !== j.n) : [...js, j.n]))}>
+                      {j.court}
+                    </button>
+                  )
+                })}
+              </div>
+            </fieldset>
+          )}
+
+          {frequence === 'PERSONNALISEE' && (
+            <fieldset>
+              <legend>Autres dates <span className="ta-form-aide">à la même heure que la première séance</span></legend>
+              <div className="ab-ajout-date">
+                <input type="date" value={dateAjout} min={jour} onChange={(e) => setDateAjout(e.target.value)} aria-label="Date à ajouter" />
+                <button type="button" className="manager-button manager-button-quiet" disabled={!dateAjout || dateAjout === jour || dates.includes(dateAjout)}
+                  onClick={() => { setDates((ds) => [...ds, dateAjout].sort()); setDateAjout('') }}>
+                  <i className="fa-solid fa-plus" aria-hidden="true" /> Ajouter
+                </button>
+              </div>
+              {dates.length > 0 ? (
+                <div className="ab-dates-choisies">
+                  {dates.map((d) => (
+                    <span key={d} className="ab-date-choisie">
+                      {dateCourte(`${d}T12:00:00Z`)}
+                      <button type="button" aria-label={`Retirer le ${d}`} onClick={() => setDates((ds) => ds.filter((x) => x !== d))}>
+                        <i className="fa-solid fa-xmark" aria-hidden="true" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : <span className="ta-form-aide">Ajoutez au moins une date en plus de la première séance.</span>}
+            </fieldset>
+          )}
 
           {debut && apercu && (
             <div className="ab-apercu">
               <p className="ab-apercu-regle">
-                <i className="fa-solid fa-repeat" aria-hidden="true" /> {libelleRegle(frequence, debut)}
+                <i className="fa-solid fa-repeat" aria-hidden="true" /> {libelleRegle(frequence, debut, joursChoisis, (apercu?.seances.length) || dates.length + 1)}
               </p>
               <p>
                 <strong>{apercu.disponibles} séance{apercu.disponibles > 1 ? 's' : ''} réservée{apercu.disponibles > 1 ? 's' : ''}</strong>
                 {sautees > 0 && <span className="ab-sautees"> · {sautees} sautée{sautees > 1 ? 's' : ''} (déjà prise{sautees > 1 ? 's' : ''} ou fermée{sautees > 1 ? 's' : ''})</span>}
               </p>
-              <Volet key={`${debut}-${frequence}-${nombre}`} titre="Voir les dates" icone="fa-calendar-days" ouvertParDefaut={sautees > 0}
+              <Volet key={`${debut}-${frequence}-${nombre}-${jours.join()}-${dates.join()}`} titre="Voir les dates" icone="fa-calendar-days" ouvertParDefaut={sautees > 0}
                 resume={`Du ${dateCourte(apercu.seances[0].debut)} au ${dateCourte(apercu.seances[apercu.seances.length - 1].debut)}`}>
                 <ul className="ab-dates">
                   {apercu.seances.map((s) => (

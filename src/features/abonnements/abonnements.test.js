@@ -7,6 +7,9 @@ describe('abonnements', () => {
     expect(libelleRegle('MENSUELLE', '2026-11-07T18:00:00Z')).toBe('Le 1er samedi du mois à 18:00')
     expect(libelleRegle('MENSUELLE', '2026-11-28T10:00:00Z')).toBe('Le 4e samedi du mois à 10:00')
     expect(libelleRegle('MENSUELLE', '2026-11-30T10:00:00Z')).toBe('Le dernier lundi du mois à 10:00')
+    expect(libelleRegle('HEBDOMADAIRE', '2026-11-17T18:00:00Z', [2, 4])).toBe('Chaque mardi et jeudi à 18:00')
+    expect(libelleRegle('HEBDOMADAIRE', '2026-11-16T18:00:00Z', [1, 3, 5])).toBe('Chaque lundi, mercredi et vendredi à 18:00')
+    expect(libelleRegle('PERSONNALISEE', '2026-11-16T18:00:00Z', [], 5)).toBe('5 dates au choix à 18:00')
   })
 
   it('seance a encaisser', () => {

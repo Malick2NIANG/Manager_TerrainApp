@@ -449,3 +449,9 @@ button.pg-bloc.is-libre:hover, button.pg-bloc.is-libre:focus-visible { backgroun
 .pg-imprimer { position: absolute; top: 50%; right: 5px; transform: translateY(-50%); display: grid; width: 26px; height: 26px; place-items: center; border: 0; border-radius: 7px; background: rgb(255 255 255 / 22%); color: inherit; font-size: 12px; cursor: pointer; }
 .pg-imprimer:hover, .pg-imprimer:focus-visible { background: #fff; color: var(--marque); outline: none; }
 .pg-bloc.is-attente .pg-imprimer { background: rgb(0 0 0 / 8%); }
+.ab-ajout-date { display: flex; gap: 8px; align-items: center; }
+.ab-ajout-date input { border: 1px solid #d8d8d8; border-radius: 8px; padding: 8px 10px; font: inherit; }
+.ab-dates-choisies { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ab-date-choisie { display: inline-flex; align-items: center; gap: 4px; padding: 4px 6px 4px 10px; border-radius: 999px; background: var(--marque-pale); color: var(--marque); font-size: 12px; font-weight: 700; text-transform: capitalize; }
+.ab-date-choisie button { border: 0; background: none; color: inherit; cursor: pointer; padding: 2px 4px; }
+.ta-jours button:disabled.is-actif { opacity: 1; cursor: default; }
