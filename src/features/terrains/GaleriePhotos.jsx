@@ -89,8 +89,8 @@ export default function GaleriePhotos({ photos, onChange }) {
       {refus && <p className="ta-form-erreur" role="alert">{refus}</p>}
       <input ref={entree} type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" multiple hidden onChange={choisir} />
       {file.length > 0 && (
-        <ImageCropModal key={file[0]} imageSrc={file[0]} aspect={3 / 2}
-          eyebrow={file.length > 1 ? `Photo du terrain · encore ${file.length - 1} après celle-ci` : 'Photo du terrain'}
+        <ImageCropModal key={file[0]} imageSrc={file[0]} aspect={4 / 3}
+          eyebrow={file.length > 1 ? `Cadre identique à l'app · encore ${file.length - 1} après celle-ci` : "Cadre identique à l'app joueur"}
           onCancel={() => suivant(null)}
           onConfirm={(url) => suivant(url)} />
       )}
