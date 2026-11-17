@@ -14,7 +14,6 @@ import { estVideo } from '../annonces/annonces.js'
 import EnTetePage from '../../components/EnTetePage.jsx'
 import useChangementsPublics from '../../hooks/useChangementsPublics.js'
 import { AIDES } from '../../components/aidesPages.js'
-import Volet from '../../components/Volet.jsx'
 import StatFilterCards from '../../components/crud/StatFilterCards.jsx'
 import HorairesModal, { resumeOuverture } from './HorairesModal.jsx'
 import { LIBELLES_STATUT, STATUTS_TERRAIN, statutTerrain } from './statutTerrain.js'
@@ -32,6 +31,7 @@ export default function Terrains() {
   const [suppression, setSuppression] = useState(null)
   const [horaires, setHoraires] = useState(null)
   const [horairesOuverts, setHorairesOuverts] = useState(false)
+  const [sportsOuverts, setSportsOuverts] = useState(false)
   const [filtre, setFiltre] = useState(null) // null : le 1er statut qui a des terrains
   const [changement, setChangement] = useState(null) // { terrain, statut } a confirmer
   const [sportEdite, setSportEdite] = useState(null) // { id, nom } en cours de renommage
@@ -143,6 +143,9 @@ export default function Terrains() {
             <button className="manager-button manager-button-quiet ta-bouton-horaires" type="button" onClick={() => setHorairesOuverts(true)}>
               <i className="fa-solid fa-clock" aria-hidden="true" /> Horaires
             </button>
+            <button className="manager-button manager-button-quiet ta-bouton-horaires" type="button" onClick={() => setSportsOuverts(true)}>
+              <i className="fa-solid fa-medal" aria-hidden="true" /> Sports
+            </button>
             {sports.length > 0 && (
               <button className="manager-button manager-button-primary" type="button" onClick={() => setEdition({})}>
                 <i className="fa-solid fa-plus" aria-hidden="true" /> Nouveau terrain
@@ -161,7 +164,7 @@ export default function Terrains() {
       )}
       {erreur && <p className="ta-form-erreur" role="alert">{erreur}</p>}
       {terrains === null && !erreur && <p className="planning-vide">Chargement…</p>}
-      {terrains?.length === 0 && <p className="planning-vide">{sports.length ? 'Aucun terrain pour le moment.' : 'Ajoutez d’abord un sport.'}</p>}
+      {terrains?.length === 0 && <p className="planning-vide">{sports.length ? 'Aucun terrain pour le moment.' : <>Ajoutez d’abord un sport : <button type="button" className="ta-lien" onClick={() => setSportsOuverts(true)}>gérer les sports</button></>}</p>}
 
       {terrains?.length > 0 && affiches.length === 0 && (
         <p className="planning-vide">{STATUTS_TERRAIN.find((d) => d.key === statut)?.vide}</p>
@@ -233,39 +236,6 @@ export default function Terrains() {
       )}
       {paginationTerrains}
 
-      <div style={{ marginTop: 22 }}>
-        <Volet key={sports.length ? 'sports' : 'aucun-sport'} titre="Sports proposés" icone="fa-medal" ouvertParDefaut={!sports.length}
-          resume={sports.length ? sports.map((s) => s.nom).join(' · ') : 'Ajoutez un sport pour créer vos terrains'}>
-          <div className="ta-sports">
-            {sports.map((s) => (sportEdite?.id === s.id ? (
-              <form key={s.id} className="ta-sport is-edition" onSubmit={renommerSport}>
-                <input value={sportEdite.nom} onChange={(e) => setSportEdite({ ...sportEdite, nom: e.target.value })} maxLength={60}
-                  aria-label={`Nouveau nom de ${s.nom}`} autoFocus onKeyDown={(e) => e.key === 'Escape' && setSportEdite(null)} />
-                <button type="submit" aria-label="Enregistrer le nom" title="Enregistrer"><i className="fa-solid fa-check" aria-hidden="true" /></button>
-                <button type="button" aria-label="Annuler" title="Annuler" onClick={() => setSportEdite(null)}><i className="fa-solid fa-xmark" aria-hidden="true" /></button>
-              </form>
-            ) : (
-              <span className={`ta-sport ${s.actif ? '' : 'ta-inactif'}`} key={s.id}>
-                {s.nom}
-                <button type="button" title="Renommer" aria-label={`Renommer ${s.nom}`} onClick={() => setSportEdite({ id: s.id, nom: s.nom })}>
-                  <i className="fa-solid fa-pen" aria-hidden="true" />
-                </button>
-                <button type="button" title={s.actif ? 'Masquer ce sport' : 'Réafficher ce sport'} aria-label={s.actif ? `Masquer ${s.nom}` : `Réafficher ${s.nom}`} onClick={() => basculerSport(s)}>
-                  <i className={`fa-solid ${s.actif ? 'fa-eye' : 'fa-eye-slash'}`} aria-hidden="true" />
-                </button>
-                <button type="button" title="Supprimer" aria-label={`Supprimer ${s.nom}`} onClick={() => setSuppression(s)}>
-                  <i className="fa-solid fa-trash" aria-hidden="true" />
-                </button>
-              </span>
-            )))}
-            <form className="ta-form" style={{ flexDirection: 'row', gap: 8 }} onSubmit={ajouterSport}>
-              <input value={nouveauSport} onChange={(e) => setNouveauSport(e.target.value)} placeholder="Nouveau sport (ex. Padel)" aria-label="Nouveau sport" maxLength={60} />
-              <button className="manager-button manager-button-quiet" type="submit" disabled={!nouveauSport.trim()}>Ajouter</button>
-            </form>
-          </div>
-
-        </Volet>
-      </div>
 
       {changement && (() => {
         const t = changement.terrain
@@ -280,6 +250,52 @@ export default function Terrains() {
             tone={textes.ton} icon={textes.icone} onConfirm={() => changerStatut(t, changement.statut)} onCancel={() => setChangement(null)} />
         )
       })()}
+      {sportsOuverts && (
+        <div className="manager-modal-backdrop is-sheet" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && setSportsOuverts(false)}>
+          <section className="manager-modal manager-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="sports-titre">
+            <span className="sheet-poignee" aria-hidden="true" />
+            <div className="manager-modal-header">
+              <div>
+                <p className="manager-eyebrow">Mon complexe</p>
+                <h2 id="sports-titre">Sports proposés</h2>
+              </div>
+              <button className="manager-icon-button" type="button" aria-label="Fermer" onClick={() => setSportsOuverts(false)}>
+                <i className="fa-solid fa-xmark" aria-hidden="true" />
+              </button>
+            </div>
+            <p className="ta-form-aide" style={{ marginTop: -10 }}>
+              Chaque terrain appartient à un sport. Un sport masqué disparaît des filtres de l’app ; on ne peut supprimer qu’un sport sans terrain.
+            </p>
+              <div className="ta-sports">
+                {sports.map((s) => (sportEdite?.id === s.id ? (
+                  <form key={s.id} className="ta-sport is-edition" onSubmit={renommerSport}>
+                    <input value={sportEdite.nom} onChange={(e) => setSportEdite({ ...sportEdite, nom: e.target.value })} maxLength={60}
+                      aria-label={`Nouveau nom de ${s.nom}`} autoFocus onKeyDown={(e) => e.key === 'Escape' && setSportEdite(null)} />
+                    <button type="submit" aria-label="Enregistrer le nom" title="Enregistrer"><i className="fa-solid fa-check" aria-hidden="true" /></button>
+                    <button type="button" aria-label="Annuler" title="Annuler" onClick={() => setSportEdite(null)}><i className="fa-solid fa-xmark" aria-hidden="true" /></button>
+                  </form>
+                ) : (
+                  <span className={`ta-sport ${s.actif ? '' : 'ta-inactif'}`} key={s.id}>
+                    {s.nom}
+                    <button type="button" title="Renommer" aria-label={`Renommer ${s.nom}`} onClick={() => setSportEdite({ id: s.id, nom: s.nom })}>
+                      <i className="fa-solid fa-pen" aria-hidden="true" />
+                    </button>
+                    <button type="button" title={s.actif ? 'Masquer ce sport' : 'Réafficher ce sport'} aria-label={s.actif ? `Masquer ${s.nom}` : `Réafficher ${s.nom}`} onClick={() => basculerSport(s)}>
+                      <i className={`fa-solid ${s.actif ? 'fa-eye' : 'fa-eye-slash'}`} aria-hidden="true" />
+                    </button>
+                    <button type="button" title="Supprimer" aria-label={`Supprimer ${s.nom}`} onClick={() => setSuppression(s)}>
+                      <i className="fa-solid fa-trash" aria-hidden="true" />
+                    </button>
+                  </span>
+                )))}
+                <form className="ta-form" style={{ flexDirection: 'row', gap: 8 }} onSubmit={ajouterSport}>
+                  <input value={nouveauSport} onChange={(e) => setNouveauSport(e.target.value)} placeholder="Nouveau sport (ex. Padel)" aria-label="Nouveau sport" maxLength={60} />
+                  <button className="manager-button manager-button-quiet" type="submit" disabled={!nouveauSport.trim()}>Ajouter</button>
+                </form>
+              </div>
+          </section>
+        </div>
+      )}
       {horairesOuverts && (
         <HorairesModal onFermer={() => setHorairesOuverts(false)}
           onEnregistre={(h) => { setHoraires(h); setHorairesOuverts(false); notifier('success', 'Horaires enregistrés : les créneaux sont mis à jour.') }} />
