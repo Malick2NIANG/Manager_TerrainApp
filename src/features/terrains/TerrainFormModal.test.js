@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { erreursFormulaire, versApi } from './TerrainFormModal.jsx'
+import { erreursFormulaire, resumeHoraires, versApi } from './TerrainFormModal.jsx'
 
 const base = {
   sportId: '2', nom: ' Terrain A ', description: '', surface: 'Gazon', capacite: '10', equipements: 'Éclairage, , Vestiaires',
@@ -22,5 +22,15 @@ describe('formulaire terrain', () => {
     expect(erreursFormulaire({ ...base, nom: ' ', tarifHeure: '' })).toEqual(['le nom', 'le tarif horaire'])
     expect(erreursFormulaire({ ...base, plages: [{ ...base.plages[0], jours: [] }] })).toEqual(['la plage tarifaire n°1'])
     expect(erreursFormulaire({ ...base, gps: 'pas une position' })[0]).toMatch(/position GPS/)
+  })
+})
+
+describe('horaires propres au terrain', () => {
+  const jours = (o) => [1, 2, 3, 4, 5, 6, 7].map((jour) => ({ jour, ouvert: true, ouverture: '10:00', fermeture: '22:00', ...o(jour) }))
+  it('resume lisible', () => {
+    expect(resumeHoraires(null)).toBe('Mêmes horaires que le complexe')
+    expect(resumeHoraires(jours(() => ({})))).toBe('Tous les jours 10:00–22:00')
+    expect(resumeHoraires(jours((j) => ({ ouvert: j < 6 })))).toBe('5 jours sur 7, 10:00–22:00')
+    expect(resumeHoraires(jours((j) => (j === 6 ? { fermeture: '00:00' } : {})))).toBe('7 jours sur 7, horaires propres')
   })
 })

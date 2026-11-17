@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { apiGet } from '../../api/client.js'
 import GaleriePhotos from './GaleriePhotos.jsx'
 import Volet from '../../components/Volet.jsx'
 import { gpsEnTexte, lireGps } from './gps.js'
@@ -30,7 +31,21 @@ export function versApi(f) {
     plages: f.plages.map((p) => ({ libelle: p.libelle.trim(), jours: p.jours, debut: p.debut, fin: p.fin, tarifHeure: Number(p.tarifHeure) })),
     actif: f.actif,
     ordre: Number(f.ordre) || 0,
+    // null : horaires du complexe ; sinon les 7 jours du terrain.
+    horaires: f.horaires ? f.horaires.map(({ jour, ouvert, ouverture, fermeture }) => ({ jour, ouvert, ouverture, fermeture })) : [],
   }
+}
+
+/** "Mêmes horaires que le complexe", "Tous les jours 10:00–22:00", ou "5 jours ouverts, horaires propres". */
+export function resumeHoraires(horaires) {
+  if (!horaires) return 'Mêmes horaires que le complexe'
+  const ouverts = horaires.filter((h) => h.ouvert)
+  if (!ouverts.length) return 'Fermé tous les jours'
+  const memes = ouverts.every((h) => h.ouverture === ouverts[0].ouverture && h.fermeture === ouverts[0].fermeture)
+  const plage = `${ouverts[0].ouverture}–${ouverts[0].fermeture}`
+  if (memes && ouverts.length === 7) return `Tous les jours ${plage}`
+  if (memes) return `${ouverts.length} jours sur 7, ${plage}`
+  return `${ouverts.length} jours sur 7, horaires propres`
 }
 
 /** Champs manquants ou invalides, en clair. */
@@ -41,6 +56,7 @@ export function erreursFormulaire(f) {
   if (!(Number(f.capacite) > 0)) e.push('la capacité')
   if (f.gps?.trim() && !lireGps(f.gps)) e.push('la position GPS (ex. 14.7256, -17.4569 ou un lien Google Maps)')
   if (!(Number(f.tarifHeure) >= 0) || f.tarifHeure === '') e.push('le tarif horaire')
+  if (f.horaires?.some((h) => h.ouvert && (!h.ouverture || !h.fermeture || h.ouverture === h.fermeture))) e.push('les horaires du terrain')
   f.plages.forEach((p, i) => {
     if (!p.libelle.trim() || !p.jours.length || !p.debut || !p.fin || p.debut === p.fin || p.tarifHeure === '') {
       e.push(`la plage tarifaire n°${i + 1}`)
@@ -56,14 +72,27 @@ function depuis(terrain, sports) {
     photos: terrain.photos || (terrain.photoUrl ? [terrain.photoUrl] : []),
     dureeCreneauMinutes: terrain.dureeCreneauMinutes, tarifHeure: terrain.tarifHeure,
     plages: terrain.plages.map((p) => ({ ...p, debut: hhmm(p.debut), fin: hhmm(p.fin) })), actif: terrain.actif, ordre: terrain.ordre,
+    horaires: terrain.horaires?.length ? terrain.horaires.map((h) => ({ ...h, ouverture: hhmm(h.ouverture), fermeture: hhmm(h.fermeture) })) : null,
   } : {
     sportId: sports[0]?.id || '', nom: '', description: '', localite: '', gps: '', surface: 'Gazon synthétique', capacite: 10,
     equipements: 'Éclairage, Vestiaires', photos: [], dureeCreneauMinutes: 60, tarifHeure: '', plages: [], actif: true, ordre: 0,
+    horaires: null,
   }
 }
 
 export default function TerrainFormModal({ terrain, sports, onFermer, onEnregistrer }) {
   const [f, setF] = useState(() => depuis(terrain, sports))
+  // Horaires du complexe : point de depart quand le terrain prend les siens.
+  const [horairesComplexe, setHorairesComplexe] = useState(null)
+  useEffect(() => {
+    apiGet('/horaires').then((h) => setHorairesComplexe(h.map((x) => ({ jour: x.jour, ouvert: x.ouvert, ouverture: hhmm(x.ouverture), fermeture: hhmm(x.fermeture) }))))
+      .catch(() => setHorairesComplexe(null))
+  }, [])
+  const horairesPropres = (oui) => setF((x) => ({
+    ...x,
+    horaires: oui ? (horairesComplexe || JOURS.map((j) => ({ jour: j.n, ouvert: true, ouverture: '08:00', fermeture: '23:00' }))) : null,
+  }))
+  const majHoraire = (jour, champ, valeur) => setF((x) => ({ ...x, horaires: x.horaires.map((h) => (h.jour === jour ? { ...h, [champ]: valeur } : h)) }))
   const [envoi, setEnvoi] = useState(false)
   const [erreur, setErreur] = useState(null)
   const [localisation, setLocalisation] = useState(null)
@@ -215,6 +244,35 @@ export default function TerrainFormModal({ terrain, sports, onFermer, onEnregist
                     </button>
                   </div>
                 </div>
+            </Volet>
+            <Volet titre="Horaires du terrain" icone="fa-clock" resume={resumeHoraires(f.horaires)}>
+              <label className="ta-case">
+                <input type="checkbox" checked={Boolean(f.horaires)} onChange={(e) => horairesPropres(e.target.checked)} />
+                Ce terrain a ses propres horaires
+              </label>
+              {!f.horaires ? (
+                <span className="ta-form-aide">Ses créneaux suivent les horaires du complexe (Mon complexe › Horaires).</span>
+              ) : (
+                <div className="ta-table-wrap">
+                  <table className="ta-table">
+                    <thead><tr><th>Jour</th><th>Ouvert</th><th>Ouverture</th><th>Fermeture</th></tr></thead>
+                    <tbody>
+                      {f.horaires.map((h) => (
+                        <tr key={h.jour}>
+                          <td><strong>{JOURS[h.jour - 1]?.court}</strong></td>
+                          <td><input type="checkbox" aria-label={`Ouvert ${JOURS[h.jour - 1]?.court}`} checked={h.ouvert}
+                            onChange={(e) => majHoraire(h.jour, 'ouvert', e.target.checked)} /></td>
+                          <td><input type="time" aria-label={`Ouverture ${JOURS[h.jour - 1]?.court}`} value={h.ouverture} disabled={!h.ouvert}
+                            onChange={(e) => majHoraire(h.jour, 'ouverture', e.target.value)} /></td>
+                          <td><input type="time" aria-label={`Fermeture ${JOURS[h.jour - 1]?.court}`} value={h.fermeture} disabled={!h.ouvert}
+                            onChange={(e) => majHoraire(h.jour, 'fermeture', e.target.value)} />
+                            {h.ouvert && h.fermeture <= h.ouverture && <small className="ta-form-aide"> après minuit</small>}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </Volet>
             <Volet titre="Caractéristiques" icone="fa-list-check"
               resume={[`${f.capacite} joueurs`, f.surface, f.equipements].filter(Boolean).join(' · ')}>

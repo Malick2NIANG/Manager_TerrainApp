@@ -62,7 +62,18 @@ export default function PlanningGrille({ jour, dispos, reservations, peutReserve
         {dispos.map((t) => (
           <div key={t.terrainId} className="pg-colonne" aria-label={t.terrain}>
             {heures.map((h, i) => <span key={h + i} className="pg-ligne" style={{ top: i * 60 * MINUTE_PX }} />)}
-            {t.creneaux.length === 0 && <span className="pg-ferme">Fermé</span>}
+            {t.creneaux.length === 0 && <span className="pg-hors" style={{ top: 0, height: hauteur }}><small>Fermé ce jour-là</small></span>}
+            {t.creneaux.length > 0 && (() => {
+              // Hors des horaires du terrain (il ouvre plus tard ou ferme plus tot que les autres).
+              const ouvre = (minutesDepuis(jour, t.creneaux[0].debut) - axe.debut) * MINUTE_PX
+              const ferme = (minutesDepuis(jour, t.creneaux[t.creneaux.length - 1].fin) - axe.debut) * MINUTE_PX
+              return (
+                <>
+                  {ouvre > 0 && <span className="pg-hors" style={{ top: 0, height: ouvre }} />}
+                  {ferme < hauteur && <span className="pg-hors" style={{ top: ferme, height: hauteur - ferme }}><small>Fermé</small></span>}
+                </>
+              )
+            })()}
             {t.creneaux.map((c) => {
               const r = reservationDuCreneau(reservations, t.terrainId, c.debut, c.fin)
               const brut = position(jour, axe, c.debut, c.fin)

@@ -285,7 +285,6 @@
 .pg-heures span:first-child { transform: none; top: 2px !important; }
 .pg-colonne { position: relative; border-left: 1px solid #f0f0ef; }
 .pg-ligne { position: absolute; left: 0; right: 0; border-top: 1px solid #f3f3f2; }
-.pg-ferme { position: absolute; inset: 12px 8px auto; color: #8a8a8e; font-size: 12px; text-align: center; }
 .pg-bloc { position: absolute; left: 4px; right: 4px; display: flex; flex-direction: column; justify-content: center; gap: 1px; padding: 3px 8px; border: 0; border-radius: 8px; font: inherit; text-align: left; overflow: hidden; color: inherit; box-sizing: border-box; }
 .pg-bloc strong { font-size: 13px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pg-bloc small { display: flex; align-items: center; gap: 6px; font-size: 11px; white-space: nowrap; }
@@ -382,3 +381,7 @@ button.pg-bloc.is-libre:hover, button.pg-bloc.is-libre:focus-visible { backgroun
 .pg-pager-titre small { color: #6b6b6b; font-size: 11px; }
 .pg-pager-mode { flex: none; padding: 8px 10px; border: 1px solid #d8d8d8; border-radius: 999px; background: #fff; font: inherit; font-size: 12px; font-weight: 700; color: inherit; cursor: pointer; }
 .manager-shell.is-dark .pg-pager, .manager-shell.is-dark .pg-pager-mode { background: #18181b; border-color: #2a2a2e; }
+
+.pg-hors { position: absolute; left: 0; right: 0; display: flex; justify-content: center; padding-top: 8px; background: repeating-linear-gradient(-45deg, #f3f3f2 0 6px, #fafaf9 6px 12px); color: #9a9a9e; font-size: 11px; font-weight: 600; }
+.manager-shell.is-dark .pg-hors { background: repeating-linear-gradient(-45deg, #1f1f23 0 6px, #18181b 6px 12px); }
+.ta-case { display: flex !important; flex-direction: row !important; align-items: center; gap: 8px; font-weight: 600; }
