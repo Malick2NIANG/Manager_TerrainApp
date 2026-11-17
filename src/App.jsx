@@ -21,7 +21,6 @@ const PAGES = {
   '/abonnements': lazy(() => import('./features/abonnements/Abonnements.jsx')),
   '/blocages': lazy(() => import('./features/terrains/Blocages.jsx')),
   '/terrains': lazy(() => import('./features/terrains/Terrains.jsx')),
-  '/horaires': lazy(() => import('./features/terrains/Horaires.jsx')),
   '/annonces': lazy(() => import('./features/annonces/Annonces.jsx')),
   '/avis': lazy(() => import('./features/avis/Avis.jsx')),
   '/personnel': lazy(() => import('./features/gerant/Personnel.jsx')),

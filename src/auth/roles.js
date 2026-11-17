@@ -25,7 +25,6 @@ export const ROUTE_ROLES = {
   '/abonnements': ['GERANT', 'ACCUEIL'],
   '/blocages': ['GERANT', 'ACCUEIL'],
   '/terrains': ['GERANT'],
-  '/horaires': ['GERANT'],
   '/annonces': ['GERANT'],
   '/avis': ['GERANT'],
   // Le Gerant gere l'Accueil et les Controleurs ; l'Admin gere les Gerants

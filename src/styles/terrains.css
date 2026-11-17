@@ -490,3 +490,29 @@ button.pg-bloc.is-libre:hover, button.pg-bloc.is-libre:focus-visible { backgroun
 .scan-verdict-fermer { position: absolute; top: 10px; right: 10px; display: grid; width: 34px; height: 34px; place-items: center; border: 0; border-radius: 50%; background: rgb(255 255 255 / 70%); color: inherit; font-size: 15px; cursor: pointer; }
 .scan-verdict-fermer i { font-size: 15px !important; margin: 0 !important; }
 .scan-verdict-fermer:hover, .scan-verdict-fermer:focus-visible { background: #fff; outline: none; }
+
+/* Horaires : fenetre (ordinateur), feuille du bas (telephone) */
+.horaires-liste { list-style: none; margin: 0 0 6px; padding: 0; border: 1px solid #ebebeb; border-radius: 12px; }
+.horaires-liste li { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; padding: 8px 12px; border-bottom: 1px solid #f0f0ee; }
+.horaires-liste li:last-child { border-bottom: 0; }
+.horaires-liste li.is-ferme { background: #fafaf9; }
+.horaires-jour { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.horaires-jour input { width: 18px; height: 18px; accent-color: var(--marque); }
+.horaires-heures { display: flex; align-items: center; gap: 6px; color: #6b6b6b; }
+.horaires-heures input { border: 1px solid #d8d8d8; border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 14px; }
+.horaires-ferme { color: #9a9a9e; font-size: 13px; font-weight: 600; }
+.horaires-partout { text-decoration: none; color: var(--marque); }
+.sheet-poignee { display: none; }
+.ta-bouton-horaires { display: inline-flex; align-items: center; gap: 8px; text-align: left; }
+.ta-bouton-horaires span { display: flex; flex-direction: column; line-height: 1.15; }
+.ta-bouton-horaires small { color: #6b6b6b; font-size: 11px; font-weight: 600; }
+.ta-a-completer { color: #9c6b0c !important; font-weight: 600; }
+.manager-modal-sheet { width: min(100%, 520px); }
+@media (max-width: 760px) {
+  .manager-modal-backdrop.is-sheet { align-items: flex-end; padding: 0; }
+  .manager-modal-sheet { width: 100%; max-height: 88vh; border-radius: 20px 20px 0 0; padding: 12px 18px calc(18px + env(safe-area-inset-bottom, 0px)); animation: sheet-monte 220ms ease-out; }
+  .sheet-poignee { display: block; width: 44px; height: 5px; margin: 0 auto 12px; border-radius: 999px; background: rgb(0 0 0 / 15%); }
+  .horaires-liste li { flex-wrap: wrap; }
+  .horaires-heures input { padding: 6px; }
+}
+@keyframes sheet-monte { from { transform: translateY(100%); } to { transform: translateY(0); } }

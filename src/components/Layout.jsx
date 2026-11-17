@@ -88,7 +88,6 @@ const BOTTOM_TAB_LABELS = {
   '/blocages': 'Fermetures',
   '/abonnements': 'Abonnements',
   '/terrains': 'Complexe',
-  '/horaires': 'Horaires',
   '/journal-audit': 'Journal',
   '/personnel': 'Équipe',
   '/equipe': 'Équipe',

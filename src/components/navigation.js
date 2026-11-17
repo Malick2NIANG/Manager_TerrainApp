@@ -15,7 +15,6 @@ export const GROUPES = {
     label: 'Mon complexe',
     onglets: [
       { path: '/terrains', label: 'Terrains et tarifs', icon: 'fa-futbol', roles: ['GERANT'], accent: 'var(--marque)', accentBg: 'var(--marque-pale)', stat: 'Terrains' },
-      { path: '/horaires', label: 'Horaires', icon: 'fa-clock', roles: ['GERANT'], accent: '#9c6b0c', accentBg: '#f6ecd9', stat: 'Jours ouverts / 7' },
     ],
   },
   vitrine: {

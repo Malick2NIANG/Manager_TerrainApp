@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Layout from '../../components/Layout.jsx'
 import Toast from '../../components/Toast.jsx'
 import ConfirmModal from '../../components/crud/ConfirmModal.jsx'
@@ -9,6 +9,9 @@ import '../../styles/terrains.css'
 import { estVideo } from '../annonces/annonces.js'
 import EnTetePage from '../../components/EnTetePage.jsx'
 import Volet from '../../components/Volet.jsx'
+import StatFilterCards from '../../components/crud/StatFilterCards.jsx'
+import HorairesModal, { resumeOuverture } from './HorairesModal.jsx'
+import { STATUTS_TERRAIN, statutTerrain } from './statutTerrain.js'
 
 // Sports et terrains du complexe (gerant) : tarifs, plages tarifaires,
 // duree de creneau, photo, ouverture a la reservation.
@@ -20,14 +23,18 @@ export default function Terrains() {
   const [edition, setEdition] = useState(null) // null | { terrain? }
   const [nouveauSport, setNouveauSport] = useState('')
   const [suppression, setSuppression] = useState(null)
+  const [horaires, setHoraires] = useState(null)
+  const [horairesOuverts, setHorairesOuverts] = useState(false)
+  const [filtre, setFiltre] = useState(null) // null : le 1er statut qui a des terrains
 
   const notifier = (type, message) => setToast({ id: Date.now(), type, message })
 
   const charger = useCallback(async () => {
     try {
-      const [s, t] = await Promise.all([apiGet('/sports'), apiGet('/terrains')])
+      const [s, t, h] = await Promise.all([apiGet('/sports'), apiGet('/terrains'), apiGet('/horaires')])
       setSports(s)
       setTerrains(t)
+      setHoraires(h)
       setErreur(null)
     } catch (e) {
       setErreur(e.message)
@@ -70,6 +77,10 @@ export default function Terrains() {
     }
   }
 
+  const comptes = useMemo(() => Object.fromEntries(STATUTS_TERRAIN.map((d) => [d.key, (terrains || []).filter((t) => statutTerrain(t) === d.key).length])), [terrains])
+  const statut = filtre || STATUTS_TERRAIN.find((d) => comptes[d.key] > 0)?.key || 'ACTIF'
+  const affiches = (terrains || []).filter((t) => statutTerrain(t) === statut)
+
   async function enregistrer(corps) {
     if (edition.terrain) await apiPut(`/terrains/${edition.terrain.id}`, corps)
     else await apiPost('/terrains', corps)
@@ -83,20 +94,38 @@ export default function Terrains() {
       <EnTetePage groupe="complexe"
         resume={terrains ? `${terrains.length} terrain${terrains.length > 1 ? 's' : ''} · ${sports.length} sport${sports.length > 1 ? 's' : ''}` : null}
         aide="Chaque terrain est une annonce dans l’app : photos, tarif à l’heure, tarifs particuliers (soirée, week-end) et durée des créneaux. Les sports servent de filtre aux clients."
-        actions={sports.length > 0 && (
-          <button className="manager-button manager-button-primary" type="button" onClick={() => setEdition({})}>
-            <i className="fa-solid fa-plus" aria-hidden="true" /> Nouveau terrain
-          </button>
+        actions={(
+          <>
+            <button className="manager-button manager-button-quiet ta-bouton-horaires" type="button" onClick={() => setHorairesOuverts(true)}>
+              <i className="fa-solid fa-clock" aria-hidden="true" />
+              <span>Horaires{horaires && <small>{resumeOuverture(horaires)}</small>}</span>
+            </button>
+            {sports.length > 0 && (
+              <button className="manager-button manager-button-primary" type="button" onClick={() => setEdition({})}>
+                <i className="fa-solid fa-plus" aria-hidden="true" /> Nouveau terrain
+              </button>
+            )}
+          </>
         )} />
 
-      <h2 className="dashboard-section-heading" style={{ fontSize: 16 }}>Sports</h2>
+      {terrains?.length > 0 && (
+        <StatFilterCards
+          items={STATUTS_TERRAIN.map((d) => ({ ...d, value: comptes[d.key] }))}
+          selected={statut}
+          onSelect={setFiltre}
+          ariaLabel="Filtrer les terrains par statut"
+        />
+      )}
       {erreur && <p className="ta-form-erreur" role="alert">{erreur}</p>}
       {terrains === null && !erreur && <p className="planning-vide">Chargement…</p>}
       {terrains?.length === 0 && <p className="planning-vide">{sports.length ? 'Aucun terrain pour le moment.' : 'Ajoutez d’abord un sport.'}</p>}
 
-      {terrains?.length > 0 && (
+      {terrains?.length > 0 && affiches.length === 0 && (
+        <p className="planning-vide">{STATUTS_TERRAIN.find((d) => d.key === statut)?.vide}</p>
+      )}
+      {affiches.length > 0 && (
         <div className="ta-liste">
-          {terrains.map((t) => (
+          {affiches.map((t) => (
             <article className={`ta-carte ${t.actif ? '' : 'ta-inactif'}`} key={t.id}>
               <div className="ta-carte-photo" style={t.photoUrl && !estVideo(t.photoUrl) ? { backgroundImage: `url(${t.photoUrl})` } : undefined}>
                 {t.photoUrl && estVideo(t.photoUrl) && <video src={t.photoUrl} muted playsInline preload="metadata" aria-label="Vidéo de couverture" />}
@@ -117,7 +146,8 @@ export default function Terrains() {
                 <p><strong>{formatFCFA(t.tarifHeure)} / h</strong>
                   {t.plages.length > 0 && <span title={t.plages.map((p) => `${p.libelle} ${formatFCFA(p.tarifHeure)}`).join(' · ')}>
                     {` · ${t.plages.length} tarif${t.plages.length > 1 ? 's' : ''} particulier${t.plages.length > 1 ? 's' : ''}`}</span>}</p>
-                {!t.actif && <p>Non réservable</p>}
+                {!t.actif && <p>Non réservable : visible ici seulement</p>}
+                {t.actif && !(t.photos?.length) && <p className="ta-a-completer"><i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> Ajoutez une photo : elle rassure les clients</p>}
               </div>
               <div className="ta-carte-actions">
                 <button className="manager-button manager-button-quiet" type="button" onClick={() => setEdition({ terrain: t })}>
@@ -153,6 +183,10 @@ export default function Terrains() {
         </Volet>
       </div>
 
+      {horairesOuverts && (
+        <HorairesModal onFermer={() => setHorairesOuverts(false)}
+          onEnregistre={(h) => { setHoraires(h); setHorairesOuverts(false); notifier('success', 'Horaires enregistrés : les créneaux sont mis à jour.') }} />
+      )}
       {edition && <TerrainFormModal terrain={edition.terrain} sports={sports} onFermer={() => setEdition(null)} onEnregistrer={enregistrer} />}
       {suppression && (
         <ConfirmModal title={`Supprimer le sport « ${suppression.nom} » ?`}
