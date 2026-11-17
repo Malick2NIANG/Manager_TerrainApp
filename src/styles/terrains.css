@@ -322,3 +322,17 @@ button.pg-bloc.is-libre:hover, button.pg-bloc.is-libre:focus-visible { backgroun
 .ta-filtre-terrain select { appearance: auto; min-width: 0; max-width: 260px; padding: 9px 10px 9px 32px; border: 1px solid #d8d8d8; border-radius: 999px; background: #fff; font: inherit; font-size: 13px; font-weight: 600; color: inherit; cursor: pointer; }
 .ta-filtre-terrain select:focus-visible { outline: 2px solid var(--marque); outline-offset: 1px; }
 .manager-shell.is-dark .ta-filtre-terrain select { background: #18181b; border-color: #2a2a2e; }
+
+/* Pages d'un groupe en cartes chiffrees (meme forme que les filtres) */
+.crud-filter-grid.ta-cartes-groupe { margin: 16px 0 18px; gap: 12px; }
+.crud-filter-grid.ta-cartes-groupe.is-2col { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 640px; }
+.ta-cartes-groupe .crud-filter-card { padding: 14px 16px; }
+.ta-cartes-groupe .crud-filter-card strong { font-size: 24px; }
+@media (max-width: 760px) {
+  .crud-filter-grid.ta-cartes-groupe { gap: 8px; }
+  .ta-cartes-groupe .crud-filter-card { padding: 10px 12px; gap: 4px; }
+  .ta-cartes-groupe .crud-filter-icon { width: 28px; height: 28px; font-size: 12px; }
+  .ta-cartes-groupe .crud-filter-card strong { font-size: 20px; }
+  .ta-cartes-groupe .crud-filter-label { font-size: 11px; }
+  .ta-cartes-groupe .crud-filter-selected { display: none; }
+}

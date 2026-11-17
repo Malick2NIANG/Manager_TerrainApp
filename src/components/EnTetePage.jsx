@@ -1,15 +1,21 @@
 import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import StatFilterCards from './crud/StatFilterCards.jsx'
+import useCompteurs from './useCompteurs.js'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { GROUPES, ongletsPour } from './navigation.js'
 
 // En-tete commun des pages : un titre court, une ligne de resume (les
 // chiffres utiles), l'aide repliee derriere « ? », les actions principales a
-// droite, puis les onglets du groupe (pages liees de la meme tache).
+// droite, puis les pages du groupe en cartes chiffrees cliquables (la
+// carte de la page courante est selectionnee).
 export default function EnTetePage({ groupe, titre, resume, aide, actions }) {
   const { role } = useAuth()
   const [aideOuverte, setAideOuverte] = useState(false)
   const onglets = groupe ? ongletsPour(groupe, role) : []
+  const compteurs = useCompteurs(onglets.length > 1 ? onglets : [])
+  const { pathname } = useLocation()
+  const naviguer = useNavigate()
   return (
     <header className="ta-entete">
       <div className="ta-entete-ligne">
@@ -27,13 +33,16 @@ export default function EnTetePage({ groupe, titre, resume, aide, actions }) {
       {resume && <p className="ta-entete-resume">{resume}</p>}
       {aideOuverte && <p className="ta-entete-aide" role="note">{aide}</p>}
       {onglets.length > 1 && (
-        <nav className="ta-onglets" aria-label={GROUPES[groupe].label}>
-          {onglets.map((o) => (
-            <NavLink key={o.path} to={o.path} end className={({ isActive }) => `ta-onglet ${isActive ? 'is-actif' : ''}`}>
-              <i className={`fa-solid ${o.icon}`} aria-hidden="true" /> <span>{o.label}</span>
-            </NavLink>
-          ))}
-        </nav>
+        <StatFilterCards
+          className={`ta-cartes-groupe is-${onglets.length}col`}
+          ariaLabel={GROUPES[groupe].label}
+          selected={onglets.find((o) => pathname === o.path || pathname.startsWith(`${o.path}/`))?.path}
+          onSelect={(chemin) => chemin !== pathname && naviguer(chemin)}
+          items={onglets.map((o) => ({
+            key: o.path, icon: o.icon, label: o.stat || o.label, accent: o.accent, accentBg: o.accentBg,
+            value: compteurs[o.path] ?? '…',
+          }))}
+        />
       )}
     </header>
   )
