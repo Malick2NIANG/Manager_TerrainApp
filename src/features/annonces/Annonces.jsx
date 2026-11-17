@@ -190,7 +190,7 @@ export default function Annonces() {
                       <i className="fa-solid fa-trash" aria-hidden="true" /> Supprimer
                     </button>
                   )}
-                  {chaine.statut === 'ACTIF' && (
+                  {chaine.statut === 'BROUILLON' && (
                     <button className="crud-action is-accent-red" type="button" onClick={() => setModal({ kind: 'confirm-archive-annonce', chaine })}>
                       <i className="fa-solid fa-box-archive" aria-hidden="true" /> Archiver
                     </button>

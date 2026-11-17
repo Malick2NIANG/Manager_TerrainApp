@@ -47,6 +47,7 @@ window.__TERRAINAPP_CONFIG__ = {
   API_BASE_URL: "$(echapper "${API_BASE_URL:-}")",
   SUPPORT_TELEPHONE: "$(echapper "${SUPPORT_TELEPHONE:-}")",
   SUPPORT_EMAIL: "$(echapper "${SUPPORT_EMAIL:-}")",
+  URL_APP_CLIENT: "$(echapper "${URL_APP_CLIENT:-}")",
   MARQUE_NOM: "$(echapper "${MARQUE_NOM:-}")",
   MARQUE_NOM_ACCENT: "$(echapper "${MARQUE_NOM_ACCENT:-}")",
   MARQUE_INITIALES: "$(echapper "${MARQUE_INITIALES:-}")",

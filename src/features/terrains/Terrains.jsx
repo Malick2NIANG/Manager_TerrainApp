@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { urlTerrainClient } from '../../config/appClient.js'
 import { positionCadrage } from '../gerant/cadrage.js'
 import Layout from '../../components/Layout.jsx'
 import Toast from '../../components/Toast.jsx'
@@ -170,6 +171,12 @@ export default function Terrains() {
                 {t.photoUrl && estVideo(t.photoUrl) && <video src={t.photoUrl} muted playsInline preload="metadata" aria-label="Vidéo de couverture" />}
                 {!t.photoUrl && <i className="fa-solid fa-futbol" aria-hidden="true" />}
                 <span className="ta-carte-statut"><StatusBadge statut={statutTerrain(t)} label={LIBELLES_STATUT[statutTerrain(t)]} /></span>
+                <span className={`ta-carte-note ${t.nombreAvis > 0 ? '' : 'is-nouveau'}`}
+                  aria-label={t.nombreAvis > 0 ? `Note des joueurs ${String(t.noteMoyenne).replace('.', ',')} sur 5, ${t.nombreAvis} avis` : 'Pas encore d’avis'}>
+                  {t.nombreAvis > 0
+                    ? <><i className="fa-solid fa-star" aria-hidden="true" /> {String(t.noteMoyenne).replace('.', ',')} <small>({t.nombreAvis} avis)</small></>
+                    : 'Pas encore d’avis'}
+                </span>
                 <span className="ta-carte-nb-photos">
                   <i className="fa-solid fa-images" aria-hidden="true" /> {t.photos?.length || 0}
                 </span>
@@ -178,11 +185,6 @@ export default function Terrains() {
                 <h3>{t.nom}</h3>
                 <p>{t.sport} · {t.capacite} joueurs · créneaux de {t.dureeCreneauMinutes} min</p>
                 {t.localite && <p><i className="fa-solid fa-location-dot" aria-hidden="true" /> {t.localite}</p>}
-                <p>
-                  {t.nombreAvis > 0
-                    ? <><i className="fa-solid fa-star ta-etoile" aria-hidden="true" /> {String(t.noteMoyenne).replace('.', ',')} · {t.nombreAvis} avis</>
-                    : <span className="ta-form-aide">Pas encore d’avis</span>}
-                </p>
                 <p><strong>{formatFCFA(t.tarifHeure)} / h</strong>
                   {t.plages.length > 0 && <span title={t.plages.map((p) => `${p.libelle} ${formatFCFA(p.tarifHeure)}`).join(' · ')}>
                     {` · ${t.plages.length} tarif${t.plages.length > 1 ? 's' : ''} particulier${t.plages.length > 1 ? 's' : ''}`}</span>}</p>
@@ -199,6 +201,12 @@ export default function Terrains() {
                   <button className="crud-action is-publish" type="button" onClick={() => changerStatut(t, 'ACTIF')}>
                     <i className="fa-solid fa-upload" aria-hidden="true" /> Publier
                   </button>
+                )}
+                {statutTerrain(t) === 'ACTIF' && urlTerrainClient(t.id) && (
+                  <a className="crud-action is-accent-green" href={urlTerrainClient(t.id)} target="_blank" rel="noopener noreferrer"
+                    title="Ouvrir la fiche du terrain dans l'app joueur">
+                    <i className="fa-solid fa-eye" aria-hidden="true" /> Aperçu
+                  </a>
                 )}
                 {statutTerrain(t) === 'ACTIF' && (
                   <button className="crud-action is-accent-orange" type="button" onClick={() => setChangement({ terrain: t, statut: 'BROUILLON' })}>

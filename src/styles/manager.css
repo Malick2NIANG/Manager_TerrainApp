@@ -1215,3 +1215,4 @@
 
 .crud-crop-aide { display: flex; gap: 8px; align-items: flex-start; margin: 0; color: #6b6b6b; font-size: 13px; line-height: 1.45; }
 .crud-crop-aide i { margin-top: 2px; color: var(--marque); }
+a.crud-action { text-decoration: none; }
