@@ -18,6 +18,7 @@ const PAGES = {
   '/dashboard': lazy(() => import('./features/dashboard/Dashboard.jsx')),
   '/planning': lazy(() => import('./features/planning/Planning.jsx')),
   '/scan': lazy(() => import('./features/scan/Scan.jsx')),
+  '/abonnements': lazy(() => import('./features/abonnements/Abonnements.jsx')),
   '/blocages': lazy(() => import('./features/terrains/Blocages.jsx')),
   '/terrains': lazy(() => import('./features/terrains/Terrains.jsx')),
   '/horaires': lazy(() => import('./features/terrains/Horaires.jsx')),

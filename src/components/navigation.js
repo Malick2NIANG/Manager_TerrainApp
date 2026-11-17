@@ -6,6 +6,7 @@ export const GROUPES = {
     label: 'Planning',
     onglets: [
       { path: '/planning', label: 'Réservations', icon: 'fa-calendar-days', roles: ['GERANT', 'ACCUEIL', 'CONTROLEUR'] },
+      { path: '/abonnements', label: 'Abonnements', icon: 'fa-repeat', roles: ['GERANT', 'ACCUEIL'] },
       { path: '/blocages', label: 'Fermetures', icon: 'fa-ban', roles: ['GERANT', 'ACCUEIL'] },
       { path: '/scan', label: 'Scanner un ticket', icon: 'fa-qrcode', roles: ['GERANT', 'ACCUEIL', 'CONTROLEUR'] },
     ],

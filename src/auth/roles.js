@@ -22,6 +22,7 @@ export const ROUTE_ROLES = {
   '/dashboard': ROLES,
   '/planning': ['GERANT', 'ACCUEIL', 'CONTROLEUR'],
   '/scan': ['GERANT', 'ACCUEIL', 'CONTROLEUR'],
+  '/abonnements': ['GERANT', 'ACCUEIL'],
   '/blocages': ['GERANT', 'ACCUEIL'],
   '/terrains': ['GERANT'],
   '/horaires': ['GERANT'],

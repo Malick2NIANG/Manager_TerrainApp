@@ -225,3 +225,40 @@
 .planning-libres-heures button:hover { background: var(--marque); color: #fff; border-color: var(--marque); }
 .manager-shell.is-dark .planning-libres { border-color: #2a2a2e; }
 .manager-shell.is-dark .planning-libres-heures > * { background: #16251d; border-color: #24402f; color: var(--marque-vif); }
+
+/* Abonnements */
+.ab-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.ab-carte { display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px solid #ebebeb; border-radius: 12px; background: #fff; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.ab-carte:hover { border-color: var(--marque); }
+.ab-carte-tete { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.ab-carte-tete strong { font-size: 15px; }
+.ab-carte-regle { font-weight: 600; font-size: 14px; }
+.ab-carte-regle i { color: var(--marque); margin-right: 4px; }
+.ab-carte-detail { color: #5b5b5f; font-size: 13px; }
+.ab-progression { display: block; height: 6px; border-radius: 999px; background: #ececea; overflow: hidden; }
+.ab-progression span { display: block; height: 100%; background: var(--marque); }
+.ab-presets { margin-top: 6px; }
+.ab-presets button { padding: 4px 12px; }
+.ab-moyens { margin-top: 10px; }
+.ab-remise { max-width: 220px; }
+.ab-apercu { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 10px; background: #f7f7f5; font-size: 14px; }
+.ab-apercu p { margin: 0; }
+.ab-apercu-regle { font-weight: 700; }
+.ab-apercu-regle i { color: var(--marque); margin-right: 4px; }
+.ab-sautees { color: #8e700f; }
+.ab-dates { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.ab-dates li { display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; align-items: center; font-size: 13px; }
+.ab-dates li i { color: var(--marque); }
+.ab-dates li.is-sautee { color: #8a8a8e; text-decoration: line-through; }
+.ab-dates li.is-sautee i { color: #b3261e; }
+.ab-dates li small { text-decoration: none; }
+.ab-titre-seances { margin: 18px 0 8px; font-size: 15px; }
+.ab-seances { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid #ebebeb; border-radius: 10px; max-height: 46vh; overflow-y: auto; }
+.ab-seances li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; border-bottom: 1px solid #ebebeb; }
+.ab-seances li:last-child { border-bottom: 0; }
+.ab-seance-date { display: flex; flex-direction: column; flex: 1; min-width: 160px; }
+.ab-seance-date small { color: #5b5b5f; }
+.ab-encaisser { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.ab-encaisser select { border: 1px solid #d8d8d8; border-radius: 8px; padding: 8px; font: inherit; font-size: 13px; }
+.planning-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--marque-pale); color: var(--marque); }
+.planning-tag.is-du { background: #fcf7e5; color: #8e700f; }

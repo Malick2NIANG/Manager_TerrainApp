@@ -23,14 +23,6 @@ export function formaterSaisieLocale(saisie) {
   return [c.slice(0, 2), c.slice(2, 5), c.slice(5, 7), c.slice(7, 9)].filter(Boolean).join(' ')
 }
 
-/** Code PIN facultatif au comptoir : vide, ou 4 chiffres pas trop evidents. */
-export function refusPin(pin) {
-  if (!pin) return null
-  if (!/^\d{4}$/.test(pin)) return 'Le code PIN fait 4 chiffres.'
-  if (/^(\d)\1{3}$/.test(pin) || ['1234', '4321', '0123', '9876'].includes(pin)) return 'Code PIN trop facile à deviner.'
-  return null
-}
-
 // Reservation saisie au comptoir : encaissee sur place (especes ou paiement
 // mobile verifie par l'accueil), confirmee aussitot.
 export default function ComptoirModal({ jour: jourInitial, terrains, initial, onFermer, onCree }) {
@@ -41,7 +33,6 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
   const [prenom, setPrenom] = useState('')
   const [nom, setNom] = useState('')
   const [telephone, setTelephone] = useState('')
-  const [pin, setPin] = useState('')
   const [moyen, setMoyen] = useState('especes')
   const [envoi, setEnvoi] = useState(false)
   const [erreur, setErreur] = useState(null)
@@ -69,8 +60,7 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
     const probleme = !creneau ? 'Choisissez un créneau.'
       : prenom.trim().length < 2 ? 'Indiquez le prénom du client.'
         : nom.trim().length < 2 ? 'Indiquez le nom du client.'
-          : !tel ? 'Numéro à 9 chiffres (ex. 77 123 45 67).'
-            : refusPin(pin)
+          : !tel ? 'Numéro à 9 chiffres (ex. 77 123 45 67).' : null
     if (probleme) {
       setErreur(probleme)
       return
@@ -80,7 +70,7 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
     try {
       const r = await apiPostAvecEntetes('/reservations/comptoir', {
         terrainId: Number(terrainId), debut: creneau.debut, clientNom: `${prenom.trim()} ${nom.trim()}`, clientTelephone: tel,
-        moyenPaiement: moyen, pin: pin || null,
+        moyenPaiement: moyen,
       }, { 'Idempotency-Key': cle.current })
       onCree(r.reservation)
     } catch (err) {
@@ -145,11 +135,7 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
                 <input value={telephone} onChange={(e) => setTelephone(formaterSaisieLocale(e.target.value))} inputMode="numeric"
                   placeholder="77 123 45 67" maxLength={12} autoComplete="off" aria-label="Numéro" />
               </span>
-            </label>
-            <label>Code PIN du client <span className="ta-form-aide">facultatif</span>
-              <input value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric"
-                placeholder="4 chiffres" autoComplete="off" />
-              <span className="ta-form-aide">Choisi par le client : il retrouvera cette réservation, son ticket et son reçu dans l’app.</span>
+              <span className="ta-form-aide">Le client retrouvera sa réservation et son ticket dans l’app avec ce numéro (code par SMS).</span>
             </label>
           </div>
 

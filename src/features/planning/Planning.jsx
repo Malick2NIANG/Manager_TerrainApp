@@ -8,6 +8,8 @@ import useFluxPlanning from '../../hooks/useFluxPlanning.js'
 import { dateLongue, decalerJour, formatFCFA, heure, jourISO, plage } from '../../utils/dates.js'
 import { BadgeStatut, MOYENS, reservationDuCreneau, telephoneLisible } from './statuts.jsx'
 import ComptoirModal from './ComptoirModal.jsx'
+import EncaisserSeance from '../abonnements/EncaisserSeance.jsx'
+import { aEncaisser } from '../abonnements/abonnements.js'
 import '../../styles/terrains.css'
 import EnTetePage from '../../components/EnTetePage.jsx'
 
@@ -129,7 +131,11 @@ export default function Planning() {
                             <span className="planning-creneau-heure">{heure(c.debut)}</span>
                             <span className="planning-creneau-corps">
                               <strong>{r.clientNom}</strong>
-                              <small>{r.reference} · {r.canal === 'COMPTOIR' ? 'Comptoir' : 'En ligne'}</small>
+                              <small>
+                                {r.abonnementId ? <span className="planning-tag"><i className="fa-solid fa-repeat" aria-hidden="true" /> Abonnement</span>
+                                  : `${r.reference} · ${r.canal === 'COMPTOIR' ? 'Comptoir' : 'En ligne'}`}
+                                {aEncaisser(r) && <> <span className="planning-tag is-du">À encaisser</span></>}
+                              </small>
                             </span>
                             <BadgeStatut statut={r.statut} />
                           </button>
@@ -178,9 +184,21 @@ export default function Planning() {
               <dt>Téléphone</dt><dd><a href={`tel:${fiche.clientTelephone}`}>{telephoneLisible(fiche.clientTelephone)}</a></dd>
               <dt>Jour</dt><dd style={{ textTransform: 'capitalize' }}>{dateLongue(fiche.debut)}</dd>
               <dt>Montant</dt><dd>{formatFCFA(fiche.montant)}</dd>
-              <dt>Paiement</dt><dd>{MOYENS[fiche.moyenPaiement] || fiche.moyenPaiement} · {fiche.canal === 'COMPTOIR' ? 'au comptoir' : 'en ligne'}</dd>
+              <dt>Paiement</dt><dd>{aEncaisser(fiche) ? 'À encaisser (séance d’abonnement)'
+                : `${MOYENS[fiche.moyenPaiement] || fiche.moyenPaiement} · ${fiche.canal === 'COMPTOIR' ? 'au comptoir' : 'en ligne'}`}</dd>
+              {fiche.abonnementId && <><dt>Abonnement</dt><dd>Séance d’un abonnement (onglet Abonnements)</dd></>}
               {fiche.scanneLe && <><dt>Entrée</dt><dd>validée à {heure(fiche.scanneLe)}</dd></>}
             </dl>
+            {peutReserver && aEncaisser(fiche) && (
+              <div style={{ marginTop: 14 }}>
+                <EncaisserSeance seance={fiche} onErreur={(m) => setToast({ id: Date.now(), type: 'error', message: m })}
+                  onFait={(r) => {
+                    setFiche(null)
+                    setToast({ id: Date.now(), type: 'success', message: `Séance ${r.reference} encaissée (${formatFCFA(r.montant)}).` })
+                    charger()
+                  }} />
+              </div>
+            )}
             <div className="manager-modal-actions">
               {peutReserver && ['CONFIRMEE', 'EN_ATTENTE_PAIEMENT'].includes(fiche.statut) && (
                 <button className="manager-button manager-button-danger" type="button" onClick={() => setAnnulation(fiche)}>
