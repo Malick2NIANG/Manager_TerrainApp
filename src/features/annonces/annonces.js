@@ -1,4 +1,5 @@
 import { apiEnvoyerFichier } from '../../api/client.js'
+import { urlMediaSure } from '../../utils/urlMedia.js'
 import { imageEnvoyee } from '../../hooks/useRessourceApi.js'
 
 // Cycle d'une annonce, comme le backend (StatutAnnonce).
@@ -30,7 +31,7 @@ export function dureeVideo(url) {
     v.preload = 'metadata'
     v.onloadedmetadata = () => resolve(Number.isFinite(v.duration) ? v.duration : null)
     v.onerror = () => resolve(null)
-    v.src = url
+    v.src = urlMediaSure(url)
   })
 }
 
