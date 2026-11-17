@@ -532,3 +532,7 @@ button.pg-bloc.is-libre:hover, button.pg-bloc.is-libre:focus-visible { backgroun
 .ta-entete-aide ul { margin: 6px 0 0; padding-left: 20px; }
 .ta-entete-aide li { margin: 3px 0; }
 .manager-shell.is-dark .ta-entete-aide-titre { color: #f2f2f2; }
+
+.ta-sport.is-edition { padding: 4px 4px 4px 8px; border-color: var(--marque); }
+.ta-sport.is-edition input { width: 140px; border: 0; outline: none; font: inherit; font-weight: 600; background: transparent; }
+.ta-sport.is-edition button[type='submit'] { color: var(--marque); }

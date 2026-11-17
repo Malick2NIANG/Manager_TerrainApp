@@ -29,6 +29,7 @@ export default function Terrains() {
   const [horairesOuverts, setHorairesOuverts] = useState(false)
   const [filtre, setFiltre] = useState(null) // null : le 1er statut qui a des terrains
   const [changement, setChangement] = useState(null) // { terrain, statut } a confirmer
+  const [sportEdite, setSportEdite] = useState(null) // { id, nom } en cours de renommage
 
   const notifier = (type, message) => setToast({ id: Date.now(), type, message })
 
@@ -62,6 +63,21 @@ export default function Terrains() {
   async function basculerSport(s) {
     try {
       await apiPut(`/sports/${s.id}`, { nom: s.nom, ordre: s.ordre, actif: !s.actif })
+      charger()
+    } catch (err) {
+      notifier('error', err.message)
+    }
+  }
+
+  async function renommerSport(e) {
+    e.preventDefault()
+    const s = sports.find((x) => x.id === sportEdite.id)
+    const nom = sportEdite.nom.trim()
+    if (!nom || nom === s.nom) { setSportEdite(null); return }
+    try {
+      await apiPut(`/sports/${s.id}`, { nom, ordre: s.ordre, actif: s.actif })
+      setSportEdite(null)
+      notifier('success', `Sport renommé en « ${nom} ».`)
       charger()
     } catch (err) {
       notifier('error', err.message)
@@ -205,17 +221,27 @@ export default function Terrains() {
         <Volet key={sports.length ? 'sports' : 'aucun-sport'} titre="Sports proposés" icone="fa-medal" ouvertParDefaut={!sports.length}
           resume={sports.length ? sports.map((s) => s.nom).join(' · ') : 'Ajoutez un sport pour créer vos terrains'}>
           <div className="ta-sports">
-            {sports.map((s) => (
+            {sports.map((s) => (sportEdite?.id === s.id ? (
+              <form key={s.id} className="ta-sport is-edition" onSubmit={renommerSport}>
+                <input value={sportEdite.nom} onChange={(e) => setSportEdite({ ...sportEdite, nom: e.target.value })} maxLength={60}
+                  aria-label={`Nouveau nom de ${s.nom}`} autoFocus onKeyDown={(e) => e.key === 'Escape' && setSportEdite(null)} />
+                <button type="submit" aria-label="Enregistrer le nom" title="Enregistrer"><i className="fa-solid fa-check" aria-hidden="true" /></button>
+                <button type="button" aria-label="Annuler" title="Annuler" onClick={() => setSportEdite(null)}><i className="fa-solid fa-xmark" aria-hidden="true" /></button>
+              </form>
+            ) : (
               <span className={`ta-sport ${s.actif ? '' : 'ta-inactif'}`} key={s.id}>
                 {s.nom}
+                <button type="button" title="Renommer" aria-label={`Renommer ${s.nom}`} onClick={() => setSportEdite({ id: s.id, nom: s.nom })}>
+                  <i className="fa-solid fa-pen" aria-hidden="true" />
+                </button>
                 <button type="button" title={s.actif ? 'Masquer ce sport' : 'Réafficher ce sport'} aria-label={s.actif ? `Masquer ${s.nom}` : `Réafficher ${s.nom}`} onClick={() => basculerSport(s)}>
                   <i className={`fa-solid ${s.actif ? 'fa-eye' : 'fa-eye-slash'}`} aria-hidden="true" />
                 </button>
-                <button type="button" aria-label={`Supprimer ${s.nom}`} onClick={() => setSuppression(s)}>
+                <button type="button" title="Supprimer" aria-label={`Supprimer ${s.nom}`} onClick={() => setSuppression(s)}>
                   <i className="fa-solid fa-trash" aria-hidden="true" />
                 </button>
               </span>
-            ))}
+            )))}
             <form className="ta-form" style={{ flexDirection: 'row', gap: 8 }} onSubmit={ajouterSport}>
               <input value={nouveauSport} onChange={(e) => setNouveauSport(e.target.value)} placeholder="Nouveau sport (ex. Padel)" aria-label="Nouveau sport" maxLength={60} />
               <button className="manager-button manager-button-quiet" type="submit" disabled={!nouveauSport.trim()}>Ajouter</button>

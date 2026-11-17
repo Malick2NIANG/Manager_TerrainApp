@@ -87,8 +87,9 @@ export default function HorairesModal({ onFermer, onEnregistre }) {
 
         <div className="manager-modal-actions fiche-actions">
           {lignes && (
-            <button type="button" className="fiche-annuler horaires-partout" onClick={appliquerPartout}>
-              <i className="fa-solid fa-copy" aria-hidden="true" /> Lundi pour toute la semaine
+            <button type="button" className="fiche-annuler horaires-partout" onClick={appliquerPartout}
+              title="Recopie l’ouverture, la fermeture et « ouvert / fermé » du lundi sur les 7 jours">
+              <i className="fa-solid fa-copy" aria-hidden="true" /> Mêmes horaires que le lundi pour tous les jours
             </button>
           )}
           <span className="fiche-actions-droite">
