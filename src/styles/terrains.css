@@ -545,3 +545,29 @@ button.pg-bloc.is-libre:hover, button.pg-bloc.is-libre:focus-visible { backgroun
 a.ta-carte-note { text-decoration: none; }
 a.ta-carte-note:hover { background: #fff7e6; }
 .ta-lien { border: 0; padding: 0; background: none; color: var(--marque); font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+
+/* Feuille "Sports proposes" : une ligne par sport, puis l'ajout. */
+.ta-sports-liste { margin: 16px 0 12px; padding: 0; list-style: none; border: 1px solid #ebebeb; border-radius: 12px; overflow: hidden; }
+.ta-sport-ligne { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 10px 8px 14px; background: #fff; }
+.ta-sport-ligne + .ta-sport-ligne { border-top: 1px solid #ebebeb; }
+.ta-sport-ligne.is-masque .ta-sport-info strong { color: #8a8a8e; }
+.ta-sport-icone { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; border-radius: 10px; background: var(--marque-pale); color: var(--marque); font-size: 15px; }
+.ta-sport-ligne.is-masque .ta-sport-icone { background: #f2f2f2; color: #9a9a9e; }
+.ta-sport-info { display: flex; min-width: 0; flex: 1; flex-direction: column; }
+.ta-sport-info strong { font-size: 15px; }
+.ta-sport-info small { color: #6b6b6b; font-size: 12px; }
+.ta-sport-actions { display: flex; gap: 2px; }
+.ta-sport-action { display: grid; width: 36px; height: 36px; place-items: center; border: 0; border-radius: 8px; background: none; color: #5b5b5f; cursor: pointer; font-size: 14px; }
+.ta-sport-action:hover:not(:disabled) { background: #f2f2f2; }
+.ta-sport-action.is-danger:hover:not(:disabled) { background: #fbe4e2; color: #b3261e; }
+.ta-sport-action.is-ok { color: var(--marque); }
+.ta-sport-action:disabled { opacity: .3; cursor: not-allowed; }
+.ta-sport-edition { display: flex; flex: 1; align-items: center; gap: 4px; }
+.ta-sport-edition input { flex: 1; min-width: 0; height: 38px; padding: 0 10px; border: 1px solid var(--marque); border-radius: 8px; font: inherit; font-weight: 600; outline: none; }
+.ta-sport-ajout { display: flex; flex-direction: column; gap: 6px; }
+.ta-sport-ajout label { font-size: 13px; font-weight: 700; }
+.ta-sport-ajout > div { display: flex; gap: 8px; }
+.ta-sport-ajout input { flex: 1; min-width: 0; height: 44px; padding: 0 12px; border: 1px solid #dcdcdc; border-radius: 10px; font: inherit; }
+.ta-sport-ajout input:focus { border-color: var(--marque); outline: none; }
+.manager-shell.is-dark .ta-sports-liste, .manager-shell.is-dark .ta-sport-ligne + .ta-sport-ligne { border-color: #2a2a2e; }
+.manager-shell.is-dark .ta-sport-ligne { background: #17171a; }

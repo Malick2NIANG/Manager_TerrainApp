@@ -106,6 +106,7 @@ export default function Terrains() {
   const comptes = useMemo(() => Object.fromEntries(STATUTS_TERRAIN.map((d) => [d.key, (terrains || []).filter((t) => statutTerrain(t) === d.key).length])), [terrains])
   const statut = filtre || STATUTS_TERRAIN.find((d) => comptes[d.key] > 0)?.key || 'ACTIF'
   const affiches = useMemo(() => (terrains || []).filter((t) => statutTerrain(t) === statut), [terrains, statut])
+  const pageSports = usePagination(sports, { options: [5, 10, 25], parPage: 5 })
   const { visibles: terrainsPage, barre: paginationTerrains } = usePagination(affiches, { options: [6, 12, 24], cle: statut })
 
   const MESSAGES = {
@@ -266,33 +267,53 @@ export default function Terrains() {
             <p className="ta-form-aide" style={{ marginTop: -10 }}>
               Chaque terrain appartient à un sport. Un sport masqué disparaît des filtres de l’app ; on ne peut supprimer qu’un sport sans terrain.
             </p>
-              <div className="ta-sports">
-                {sports.map((s) => (sportEdite?.id === s.id ? (
-                  <form key={s.id} className="ta-sport is-edition" onSubmit={renommerSport}>
-                    <input value={sportEdite.nom} onChange={(e) => setSportEdite({ ...sportEdite, nom: e.target.value })} maxLength={60}
-                      aria-label={`Nouveau nom de ${s.nom}`} autoFocus onKeyDown={(e) => e.key === 'Escape' && setSportEdite(null)} />
-                    <button type="submit" aria-label="Enregistrer le nom" title="Enregistrer"><i className="fa-solid fa-check" aria-hidden="true" /></button>
-                    <button type="button" aria-label="Annuler" title="Annuler" onClick={() => setSportEdite(null)}><i className="fa-solid fa-xmark" aria-hidden="true" /></button>
-                  </form>
-                ) : (
-                  <span className={`ta-sport ${s.actif ? '' : 'ta-inactif'}`} key={s.id}>
-                    {s.nom}
-                    <button type="button" title="Renommer" aria-label={`Renommer ${s.nom}`} onClick={() => setSportEdite({ id: s.id, nom: s.nom })}>
-                      <i className="fa-solid fa-pen" aria-hidden="true" />
-                    </button>
-                    <button type="button" title={s.actif ? 'Masquer ce sport' : 'Réafficher ce sport'} aria-label={s.actif ? `Masquer ${s.nom}` : `Réafficher ${s.nom}`} onClick={() => basculerSport(s)}>
-                      <i className={`fa-solid ${s.actif ? 'fa-eye' : 'fa-eye-slash'}`} aria-hidden="true" />
-                    </button>
-                    <button type="button" title="Supprimer" aria-label={`Supprimer ${s.nom}`} onClick={() => setSuppression(s)}>
-                      <i className="fa-solid fa-trash" aria-hidden="true" />
-                    </button>
-                  </span>
-                )))}
-                <form className="ta-form" style={{ flexDirection: 'row', gap: 8 }} onSubmit={ajouterSport}>
-                  <input value={nouveauSport} onChange={(e) => setNouveauSport(e.target.value)} placeholder="Nouveau sport (ex. Padel)" aria-label="Nouveau sport" maxLength={60} />
-                  <button className="manager-button manager-button-quiet" type="submit" disabled={!nouveauSport.trim()}>Ajouter</button>
-                </form>
-              </div>
+              <form className="ta-sport-ajout" onSubmit={ajouterSport}>
+                <label htmlFor="nouveau-sport">Ajouter un sport</label>
+                <div>
+                  <input id="nouveau-sport" value={nouveauSport} onChange={(e) => setNouveauSport(e.target.value)} placeholder="Ex. Basket, Tennis…" maxLength={60} />
+                  <button className="manager-button manager-button-primary" type="submit" disabled={!nouveauSport.trim()}>
+                    <i className="fa-solid fa-plus" aria-hidden="true" /> Ajouter
+                  </button>
+                </div>
+              </form>
+              <ul className="ta-sports-liste">
+                {pageSports.visibles.map((s) => {
+                  const nb = (terrains || []).filter((t) => t.sportId === s.id).length
+                  return (
+                    <li key={s.id} className={`ta-sport-ligne ${s.actif ? '' : 'is-masque'}`}>
+                      <span className="ta-sport-icone" aria-hidden="true"><i className="fa-solid fa-medal" /></span>
+                      {sportEdite?.id === s.id ? (
+                        <form className="ta-sport-edition" onSubmit={renommerSport}>
+                          <input value={sportEdite.nom} onChange={(e) => setSportEdite({ ...sportEdite, nom: e.target.value })} maxLength={60}
+                            aria-label={`Nouveau nom de ${s.nom}`} autoFocus onKeyDown={(e) => e.key === 'Escape' && setSportEdite(null)} />
+                          <button type="submit" className="ta-sport-action is-ok" aria-label="Enregistrer le nom" title="Enregistrer"><i className="fa-solid fa-check" aria-hidden="true" /></button>
+                          <button type="button" className="ta-sport-action" aria-label="Annuler" title="Annuler" onClick={() => setSportEdite(null)}><i className="fa-solid fa-xmark" aria-hidden="true" /></button>
+                        </form>
+                      ) : (
+                        <>
+                          <span className="ta-sport-info">
+                            <strong>{s.nom}</strong>
+                            <small>{nb ? `${nb} terrain${nb > 1 ? 's' : ''}` : 'Aucun terrain'}{s.actif ? '' : ' · masqué dans l’app'}</small>
+                          </span>
+                          <span className="ta-sport-actions">
+                            <button type="button" className="ta-sport-action" title="Renommer" aria-label={`Renommer ${s.nom}`} onClick={() => setSportEdite({ id: s.id, nom: s.nom })}>
+                              <i className="fa-solid fa-pen" aria-hidden="true" />
+                            </button>
+                            <button type="button" className="ta-sport-action" title={s.actif ? 'Masquer ce sport' : 'Réafficher ce sport'} aria-label={s.actif ? `Masquer ${s.nom}` : `Réafficher ${s.nom}`} onClick={() => basculerSport(s)}>
+                              <i className={`fa-solid ${s.actif ? 'fa-eye' : 'fa-eye-slash'}`} aria-hidden="true" />
+                            </button>
+                            <button type="button" className="ta-sport-action is-danger" disabled={nb > 0}
+                              title={nb > 0 ? 'Utilisé par des terrains : masquez-le plutôt' : 'Supprimer'} aria-label={`Supprimer ${s.nom}`} onClick={() => setSuppression(s)}>
+                              <i className="fa-solid fa-trash" aria-hidden="true" />
+                            </button>
+                          </span>
+                        </>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+              {pageSports.barre}
           </section>
         </div>
       )}
