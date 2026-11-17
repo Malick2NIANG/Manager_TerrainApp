@@ -1,16 +1,17 @@
-// Statuts d'un terrain pour les cartes de filtre (memes cartes que les
-// produits de l'app resto) : en ligne, a completer, brouillon.
+// Statuts d'un terrain, comme les produits de l'app resto : actif (publie,
+// reservable), brouillon (en preparation ou depublie), archive (retire).
 export const STATUTS_TERRAIN = [
   { key: 'ACTIF', label: 'Actifs', icon: 'fa-circle-check', accent: '#1f6f57', accentBg: '#e2f2ec',
-    vide: 'Aucun terrain réservable avec photo.' },
-  { key: 'A_COMPLETER', label: 'À compléter', icon: 'fa-image', accent: '#9c6b0c', accentBg: '#f6ecd9',
-    vide: 'Tous les terrains réservables ont une photo.' },
-  { key: 'BROUILLON', label: 'Brouillons', icon: 'fa-pen-to-square', accent: '#5b5b5f', accentBg: '#ececea',
-    vide: 'Aucun brouillon : tous les terrains sont réservables.' },
+    vide: 'Aucun terrain publié : publiez un brouillon pour l’ouvrir à la réservation.' },
+  { key: 'BROUILLON', label: 'Brouillons', icon: 'fa-pen-to-square', accent: '#9c6b0c', accentBg: '#f6ecd9',
+    vide: 'Aucun brouillon.' },
+  { key: 'ARCHIVE', label: 'Archivés', icon: 'fa-box-archive', accent: '#5b5b5f', accentBg: '#ececea',
+    vide: 'Aucun terrain archivé.' },
 ]
 
-/** ACTIF : reservable avec photo ; A_COMPLETER : reservable sans photo ; BROUILLON : non reservable. */
+export const LIBELLES_STATUT = { ACTIF: 'Actif', BROUILLON: 'Brouillon', ARCHIVE: 'Archivé' }
+
+/** Statut du serveur (ou deduit de « actif » pour un ancien serveur). */
 export function statutTerrain(t) {
-  if (!t.actif) return 'BROUILLON'
-  return t.photos?.length || t.photoUrl ? 'ACTIF' : 'A_COMPLETER'
+  return t.statut || (t.actif ? 'ACTIF' : 'BROUILLON')
 }

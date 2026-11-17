@@ -516,3 +516,6 @@ button.pg-bloc.is-libre:hover, button.pg-bloc.is-libre:focus-visible { backgroun
   .horaires-heures input { padding: 6px; }
 }
 @keyframes sheet-monte { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.ta-carte-statut { position: absolute; top: 10px; left: 10px; }
+.ta-carte-actions.crud-card-actions { flex-wrap: wrap; gap: 6px; }

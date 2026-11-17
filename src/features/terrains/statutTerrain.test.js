@@ -3,10 +3,10 @@ import { statutTerrain } from './statutTerrain.js'
 import { resumeOuverture } from './HorairesModal.jsx'
 
 describe('statut des terrains', () => {
-  it('actif, a completer, brouillon', () => {
-    expect(statutTerrain({ actif: true, photos: ['/a.jpg'] })).toBe('ACTIF')
-    expect(statutTerrain({ actif: true, photos: [] })).toBe('A_COMPLETER')
-    expect(statutTerrain({ actif: false, photos: ['/a.jpg'] })).toBe('BROUILLON')
+  it('actif, brouillon, archive', () => {
+    expect(statutTerrain({ statut: 'ARCHIVE', actif: false })).toBe('ARCHIVE')
+    expect(statutTerrain({ actif: true })).toBe('ACTIF')
+    expect(statutTerrain({ actif: false })).toBe('BROUILLON')
   })
   it('resume des horaires', () => {
     const jours = [1, 2, 3, 4, 5, 6, 7].map((jour) => ({ jour, ouvert: true, ouverture: '08:00:00', fermeture: '23:00:00' }))

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Layout from '../../components/Layout.jsx'
 import Toast from '../../components/Toast.jsx'
 import ConfirmModal from '../../components/crud/ConfirmModal.jsx'
-import { apiDelete, apiGet, apiPost, apiPut } from '../../api/client.js'
+import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from '../../api/client.js'
 import { formatFCFA } from '../../utils/dates.js'
 import TerrainFormModal from './TerrainFormModal.jsx'
 import '../../styles/terrains.css'
@@ -11,7 +11,8 @@ import EnTetePage from '../../components/EnTetePage.jsx'
 import Volet from '../../components/Volet.jsx'
 import StatFilterCards from '../../components/crud/StatFilterCards.jsx'
 import HorairesModal, { resumeOuverture } from './HorairesModal.jsx'
-import { STATUTS_TERRAIN, statutTerrain } from './statutTerrain.js'
+import { LIBELLES_STATUT, STATUTS_TERRAIN, statutTerrain } from './statutTerrain.js'
+import StatusBadge from '../../components/crud/StatusBadge.jsx'
 
 // Sports et terrains du complexe (gerant) : tarifs, plages tarifaires,
 // duree de creneau, photo, ouverture a la reservation.
@@ -26,6 +27,7 @@ export default function Terrains() {
   const [horaires, setHoraires] = useState(null)
   const [horairesOuverts, setHorairesOuverts] = useState(false)
   const [filtre, setFiltre] = useState(null) // null : le 1er statut qui a des terrains
+  const [changement, setChangement] = useState(null) // { terrain, statut } a confirmer
 
   const notifier = (type, message) => setToast({ id: Date.now(), type, message })
 
@@ -81,6 +83,23 @@ export default function Terrains() {
   const statut = filtre || STATUTS_TERRAIN.find((d) => comptes[d.key] > 0)?.key || 'ACTIF'
   const affiches = (terrains || []).filter((t) => statutTerrain(t) === statut)
 
+  const MESSAGES = {
+    ACTIF: (t) => `« ${t.nom} » publié : réservable dans l’app.`,
+    BROUILLON: (t) => `« ${t.nom} » repassé en brouillon : il n’est plus réservable.`,
+    ARCHIVE: (t) => `« ${t.nom} » archivé.`,
+  }
+
+  async function changerStatut(t, statut) {
+    setChangement(null)
+    try {
+      await apiPatch(`/terrains/${t.id}/statut`, { statut })
+      notifier('success', statut === 'BROUILLON' && statutTerrain(t) === 'ARCHIVE' ? `« ${t.nom} » restauré en brouillon.` : MESSAGES[statut](t))
+      charger()
+    } catch (e) {
+      notifier('error', e.message)
+    }
+  }
+
   async function enregistrer(corps) {
     if (edition.terrain) await apiPut(`/terrains/${edition.terrain.id}`, corps)
     else await apiPost('/terrains', corps)
@@ -130,6 +149,7 @@ export default function Terrains() {
               <div className="ta-carte-photo" style={t.photoUrl && !estVideo(t.photoUrl) ? { backgroundImage: `url(${t.photoUrl})` } : undefined}>
                 {t.photoUrl && estVideo(t.photoUrl) && <video src={t.photoUrl} muted playsInline preload="metadata" aria-label="Vidéo de couverture" />}
                 {!t.photoUrl && <i className="fa-solid fa-futbol" aria-hidden="true" />}
+                <span className="ta-carte-statut"><StatusBadge statut={statutTerrain(t)} label={LIBELLES_STATUT[statutTerrain(t)]} /></span>
                 <span className="ta-carte-nb-photos">
                   <i className="fa-solid fa-images" aria-hidden="true" /> {t.photos?.length || 0}
                 </span>
@@ -146,13 +166,35 @@ export default function Terrains() {
                 <p><strong>{formatFCFA(t.tarifHeure)} / h</strong>
                   {t.plages.length > 0 && <span title={t.plages.map((p) => `${p.libelle} ${formatFCFA(p.tarifHeure)}`).join(' · ')}>
                     {` · ${t.plages.length} tarif${t.plages.length > 1 ? 's' : ''} particulier${t.plages.length > 1 ? 's' : ''}`}</span>}</p>
-                {!t.actif && <p>Non réservable : visible ici seulement</p>}
-                {t.actif && !(t.photos?.length) && <p className="ta-a-completer"><i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> Ajoutez une photo : elle rassure les clients</p>}
+                {statutTerrain(t) !== 'ARCHIVE' && !(t.photos?.length) && <p className="ta-a-completer"><i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> Ajoutez une photo : elle rassure les clients</p>}
               </div>
-              <div className="ta-carte-actions">
-                <button className="manager-button manager-button-quiet" type="button" onClick={() => setEdition({ terrain: t })}>
-                  <i className="fa-solid fa-pen" aria-hidden="true" /> Modifier
-                </button>
+              {/* Actions selon le statut (comme les produits de l'app resto). */}
+              <div className="ta-carte-actions crud-card-actions">
+                {statutTerrain(t) !== 'ARCHIVE' && (
+                  <button className="crud-action" type="button" onClick={() => setEdition({ terrain: t })}>
+                    <i className="fa-solid fa-pen" aria-hidden="true" /> Modifier
+                  </button>
+                )}
+                {statutTerrain(t) === 'BROUILLON' && (
+                  <button className="crud-action is-publish" type="button" onClick={() => changerStatut(t, 'ACTIF')}>
+                    <i className="fa-solid fa-upload" aria-hidden="true" /> Publier
+                  </button>
+                )}
+                {statutTerrain(t) === 'ACTIF' && (
+                  <button className="crud-action is-accent-orange" type="button" onClick={() => setChangement({ terrain: t, statut: 'BROUILLON' })}>
+                    <i className="fa-solid fa-eye-slash" aria-hidden="true" /> Dépublier
+                  </button>
+                )}
+                {statutTerrain(t) !== 'ARCHIVE' && (
+                  <button className="crud-action is-accent-red" type="button" onClick={() => setChangement({ terrain: t, statut: 'ARCHIVE' })}>
+                    <i className="fa-solid fa-box-archive" aria-hidden="true" /> Archiver
+                  </button>
+                )}
+                {statutTerrain(t) === 'ARCHIVE' && (
+                  <button className="crud-action is-archive" type="button" onClick={() => setChangement({ terrain: t, statut: 'BROUILLON' })}>
+                    <i className="fa-solid fa-clock-rotate-left" aria-hidden="true" /> Restaurer
+                  </button>
+                )}
               </div>
             </article>
           ))}
@@ -183,6 +225,19 @@ export default function Terrains() {
         </Volet>
       </div>
 
+      {changement && (() => {
+        const t = changement.terrain
+        const textes = {
+          BROUILLON: statutTerrain(t) === 'ARCHIVE'
+            ? { titre: `Restaurer « ${t.nom} » ?`, message: 'Il revient en brouillon : vérifiez-le puis publiez-le pour le rouvrir à la réservation.', bouton: 'Restaurer', ton: 'info', icone: 'fa-clock-rotate-left' }
+            : { titre: `Dépublier « ${t.nom} » ?`, message: 'Il ne sera plus réservable dans l’app ni au comptoir. Les réservations déjà prises sont conservées.', bouton: 'Dépublier', ton: 'warning', icone: 'fa-eye-slash' },
+          ARCHIVE: { titre: `Archiver « ${t.nom} » ?`, message: 'Il disparaît de l’app et du planning (restaurable plus tard). Impossible s’il a des réservations à venir.', bouton: 'Archiver', ton: 'danger', icone: 'fa-box-archive' },
+        }[changement.statut]
+        return (
+          <ConfirmModal title={textes.titre} message={textes.message} confirmLabel={textes.bouton} cancelLabel="Retour"
+            tone={textes.ton} icon={textes.icone} onConfirm={() => changerStatut(t, changement.statut)} onCancel={() => setChangement(null)} />
+        )
+      })()}
       {horairesOuverts && (
         <HorairesModal onFermer={() => setHorairesOuverts(false)}
           onEnregistre={(h) => { setHoraires(h); setHorairesOuverts(false); notifier('success', 'Horaires enregistrés : les créneaux sont mis à jour.') }} />

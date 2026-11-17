@@ -175,7 +175,7 @@ export default function TerrainFormModal({ terrain, sports, onFermer, onEnregist
             </p>
           )}
           <label style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <input type="checkbox" checked={f.actif} onChange={maj('actif')} /> Terrain réservable
+            <input type="checkbox" checked={f.actif} onChange={maj('actif')} /> Publier (réservable dans l’app)
           </label>
 
           {/* Couches suivantes : a ouvrir quand on en a besoin. */}
