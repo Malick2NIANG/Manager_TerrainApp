@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Layout from '../../components/Layout.jsx'
 import Toast from '../../components/Toast.jsx'
 import ConfirmModal from '../../components/crud/ConfirmModal.jsx'
@@ -9,7 +9,8 @@ import { dateLongue, decalerJour, formatFCFA, heure, jourISO, jourRelatif, plage
 import { BadgeStatut, MOYENS, telephoneLisible } from './statuts.jsx'
 import ComptoirModal from './ComptoirModal.jsx'
 import PlanningGrille from './PlanningGrille.jsx'
-import { correspond } from './grille.js'
+import { correspond, filtrerTerrains, terrainsParSport } from './grille.js'
+import useEcranEtroit from '../../hooks/useEcranEtroit.js'
 import EncaisserSeance from '../abonnements/EncaisserSeance.jsx'
 import { aEncaisser } from '../abonnements/abonnements.js'
 import '../../styles/terrains.css'
@@ -64,11 +65,25 @@ export default function Planning() {
   }, [charger, connecte])
 
   const [recherche, setRecherche] = useState('')
-  const visibles = useMemo(() => {
-    if (!dispos) return dispos
-    const un = dispos.filter((t) => String(t.terrainId) === filtre)
-    return un.length ? un : dispos
-  }, [dispos, filtre])
+  const visibles = useMemo(() => filtrerTerrains(dispos, filtre), [dispos, filtre])
+
+  // Telephone : un terrain a la fois (fleches ou glissement), « Tous » sur demande.
+  const etroit = useEcranEtroit()
+  const [unParUn, setUnParUn] = useState(true)
+  const [indexTerrain, setIndexTerrain] = useState(0)
+  const pagine = etroit && unParUn && (visibles?.length || 0) > 1
+  const index = visibles?.length ? Math.min(indexTerrain, visibles.length - 1) : 0
+  const affiches = pagine ? [visibles[index]] : visibles
+  const changerTerrain = (pas) => visibles?.length && setIndexTerrain((index + pas + visibles.length) % visibles.length)
+  const glisser = useRef(null)
+
+  // Recherche en mode un par un : on se place sur le terrain de la 1re trouvee.
+  useEffect(() => {
+    if (!pagine || !recherche.trim()) return
+    const r = reservations.find((x) => !['ANNULEE', 'EXPIREE'].includes(x.statut) && correspond(x, recherche)
+      && visibles.some((t) => t.terrainId === x.terrainId))
+    if (r) setIndexTerrain(visibles.findIndex((t) => t.terrainId === r.terrainId))
+  }, [recherche, pagine, reservations, visibles])
 
   const trouvees = useMemo(() => (recherche.trim()
     ? reservations.filter((r) => !['ANNULEE', 'EXPIREE'].includes(r.statut) && correspond(r, recherche)
@@ -142,10 +157,15 @@ export default function Planning() {
         {dispos && dispos.length > 1 && (
           <label className="ta-filtre-terrain">
             <i className="fa-solid fa-filter" aria-hidden="true" />
-            <select value={visibles?.length === 1 ? String(visibles[0].terrainId) : 'tous'} onChange={(e) => choisirFiltre(e.target.value)}
-              aria-label="Terrain affiché">
+            <select value={filtrerTerrains(dispos, filtre).length === dispos.length ? 'tous' : filtre}
+              onChange={(e) => { choisirFiltre(e.target.value); setIndexTerrain(0) }} aria-label="Terrains affichés">
               <option value="tous">Tous les terrains ({dispos.length})</option>
-              {dispos.map((t) => <option key={t.terrainId} value={t.terrainId}>{t.terrain} · {t.sport}</option>)}
+              {terrainsParSport(dispos).map((g) => (
+                <optgroup key={g.sport} label={g.sport}>
+                  {g.terrains.length > 1 && <option value={`sport:${g.sport}`}>Tous les {g.sport} ({g.terrains.length})</option>}
+                  {g.terrains.map((t) => <option key={t.terrainId} value={t.terrainId}>{t.terrain}</option>)}
+                </optgroup>
+              ))}
             </select>
           </label>
         )}
@@ -164,8 +184,37 @@ export default function Planning() {
             <span><i className="pg-pastille is-libre" /> Libre{peutReserver ? ' : touchez pour réserver' : ''}</span>
             <span><i className="pg-pastille is-bloque" /> Fermé</span>
           </div>
-          <PlanningGrille jour={jour} dispos={visibles} reservations={reservations} peutReserver={peutReserver} recherche={recherche}
+          {etroit && visibles.length > 1 && (
+            <div className="pg-pager">
+              {pagine ? (
+                <>
+                  <button type="button" className="pg-pager-fleche" aria-label="Terrain précédent" onClick={() => changerTerrain(-1)}>
+                    <i className="fa-solid fa-chevron-left" aria-hidden="true" />
+                  </button>
+                  <span className="pg-pager-titre">
+                    <strong>{affiches[0].terrain}</strong>
+                    <small>{affiches[0].sport} · {index + 1} / {visibles.length}</small>
+                  </span>
+                  <button type="button" className="pg-pager-fleche" aria-label="Terrain suivant" onClick={() => changerTerrain(1)}>
+                    <i className="fa-solid fa-chevron-right" aria-hidden="true" />
+                  </button>
+                </>
+              ) : <span className="pg-pager-titre"><strong>{visibles.length} terrains côte à côte</strong><small>Faites défiler de côté</small></span>}
+              <button type="button" className="pg-pager-mode" onClick={() => setUnParUn((v) => !v)}>
+                {pagine ? 'Voir tous' : 'Un par un'}
+              </button>
+            </div>
+          )}
+          <div onTouchStart={(e) => { glisser.current = e.touches[0].clientX }}
+            onTouchEnd={(e) => {
+              if (!pagine || glisser.current === null) return
+              const dx = e.changedTouches[0].clientX - glisser.current
+              glisser.current = null
+              if (Math.abs(dx) > 60) changerTerrain(dx < 0 ? 1 : -1)
+            }}>
+          <PlanningGrille enTete={!pagine} jour={jour} dispos={affiches} reservations={reservations} peutReserver={peutReserver} recherche={recherche}
             onReserver={setComptoir} onOuvrir={setFiche} />
+          </div>
         </>
       )}
 

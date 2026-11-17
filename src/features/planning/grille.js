@@ -42,3 +42,26 @@ export function correspond(r, recherche) {
   const chiffres = q.replace(/\D/g, '')
   return chiffres.length >= 3 && String(r.clientTelephone || '').replace(/\D/g, '').includes(chiffres)
 }
+
+/**
+ * Filtre du planning : "tous", "sport:<nom>" (tous les terrains d'un sport)
+ * ou l'identifiant d'un terrain. Filtre inconnu (terrain supprime) : tous.
+ */
+export function filtrerTerrains(dispos, filtre) {
+  if (!dispos) return dispos
+  const choisis = String(filtre).startsWith('sport:')
+    ? dispos.filter((t) => `sport:${t.sport}` === filtre)
+    : dispos.filter((t) => String(t.terrainId) === String(filtre))
+  return choisis.length ? choisis : dispos
+}
+
+/** Sports du jour avec leurs terrains, dans l'ordre d'apparition. */
+export function terrainsParSport(dispos) {
+  const groupes = []
+  for (const t of dispos || []) {
+    let g = groupes.find((x) => x.sport === t.sport)
+    if (!g) groupes.push(g = { sport: t.sport, terrains: [] })
+    g.terrains.push(t)
+  }
+  return groupes
+}

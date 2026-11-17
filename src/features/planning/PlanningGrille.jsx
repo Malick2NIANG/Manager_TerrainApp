@@ -9,7 +9,7 @@ import { MINUTE_PX, bornes, correspond, heuresAxe, minutesDepuis, position } fro
 // = un bloc pointille cliquable (« + ») ; une fermeture = un bloc hachure.
 // La ligne rouge marque l'heure actuelle. Defilement horizontal sur mobile,
 // heures et noms des terrains toujours visibles.
-export default function PlanningGrille({ jour, dispos, reservations, peutReserver, onReserver, onOuvrir, recherche = '' }) {
+export default function PlanningGrille({ jour, dispos, reservations, peutReserver, onReserver, onOuvrir, recherche = '', enTete = true }) {
   const zone = useRef(null)
   const axe = bornes(jour, dispos)
   const estAujourdhui = jour === jourISO()
@@ -39,6 +39,7 @@ export default function PlanningGrille({ jour, dispos, reservations, peutReserve
 
   return (
     <div className={`pg ${actif ? 'is-recherche' : ''}`} ref={zone} style={{ '--pg-colonnes': dispos.length }}>
+      {enTete && (
       <div className="pg-tete">
         <div className="pg-coin" />
         {dispos.map((t) => {
@@ -51,6 +52,8 @@ export default function PlanningGrille({ jour, dispos, reservations, peutReserve
           )
         })}
       </div>
+
+      )}
 
       <div className="pg-corps" style={{ height: hauteur }}>
         <div className="pg-heures" aria-hidden="true">

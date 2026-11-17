@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bornes, correspond, heuresAxe, minutesDepuis, position } from './grille.js'
+import { bornes, correspond, filtrerTerrains, heuresAxe, minutesDepuis, position, terrainsParSport } from './grille.js'
 
 describe('planning en grille', () => {
   const jour = '2026-11-17'
@@ -36,5 +36,21 @@ describe('recherche dans le planning', () => {
     expect(correspond(r, '77 123')).toBe(true)
     expect(correspond(r, 'fatou')).toBe(false)
     expect(correspond(r, '')).toBe(true)
+  })
+})
+
+describe('filtre des terrains', () => {
+  const dispos = [
+    { terrainId: 1, sport: 'Football 5' }, { terrainId: 2, sport: 'Padel' },
+    { terrainId: 3, sport: 'Padel' }, { terrainId: 4, sport: 'Football 5' },
+  ]
+  it('tous, un sport, un terrain', () => {
+    expect(filtrerTerrains(dispos, 'tous')).toHaveLength(4)
+    expect(filtrerTerrains(dispos, 'sport:Padel').map((t) => t.terrainId)).toEqual([2, 3])
+    expect(filtrerTerrains(dispos, '4').map((t) => t.terrainId)).toEqual([4])
+    expect(filtrerTerrains(dispos, '99')).toHaveLength(4)
+  })
+  it('groupes par sport', () => {
+    expect(terrainsParSport(dispos).map((g) => [g.sport, g.terrains.length])).toEqual([['Football 5', 2], ['Padel', 2]])
   })
 })
