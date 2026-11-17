@@ -21,6 +21,11 @@ jobs:
         with:
           languages: javascript-typescript
           queries: security-extended
+          # vendor/ = picomatch corrige (outil de build, absent du bundle) :
+          # code tiers, deja suivi par npm audit ; on analyse notre code.
+          config: |
+            paths-ignore:
+              - vendor
       - uses: github/codeql-action/analyze@9418214df1f2c4b8128c770156c409013b07d6b9 # v3.39.3
 
   semgrep:
