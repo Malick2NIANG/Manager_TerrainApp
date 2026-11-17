@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import usePagination from '../../hooks/usePagination.jsx'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import { ROLE_LABELS } from '../../auth/roles.js'
@@ -43,6 +44,7 @@ function TableauDuJour() {
   useFluxPlanning(() => charger())
 
   const k = useMemo(() => (donnees ? indicateursDuJour(donnees.r, donnees.d) : null), [donnees])
+  const prochaines = usePagination(k?.prochaines || [], { options: [5, 10, 25], parPage: 5 })
   if (erreur) return <p className="ta-form-erreur" role="alert">{erreur}</p>
   if (!k) return <p className="planning-vide">Chargement…</p>
 
@@ -61,7 +63,7 @@ function TableauDuJour() {
         </div>
         {k.prochaines.length === 0 ? <p className="planning-vide">Plus aucun match prévu aujourd’hui.</p> : (
           <div className="planning-creneaux">
-            {k.prochaines.map((r) => (
+            {prochaines.visibles.map((r) => (
               <div className="planning-creneau" key={r.id}>
                 <span className="planning-creneau-heure">{heure(r.debut)}</span>
                 <span className="planning-creneau-corps"><strong>{r.clientNom}</strong><small>{r.terrain} · {r.reference}</small></span>
@@ -70,6 +72,7 @@ function TableauDuJour() {
             ))}
           </div>
         )}
+        {prochaines.barre}
       </section>
     </>
   )

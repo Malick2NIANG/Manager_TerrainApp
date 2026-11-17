@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import usePagination from '../../hooks/usePagination.jsx'
 import Layout from '../../components/Layout.jsx'
 import Toast from '../../components/Toast.jsx'
 import ConfirmModal from '../../components/crud/ConfirmModal.jsx'
@@ -58,6 +59,9 @@ export default function Abonnements() {
   const resilies = useMemo(() => (abonnements || []).filter((a) => a.statut !== 'ACTIF'), [abonnements])
   const aEncaisserTotal = actifs.reduce((s, a) => s + a.resteAEncaisser, 0)
   const fiche = abonnements?.find((a) => a.id === ficheId) || null
+  const pageActifs = usePagination(actifs, { options: [6, 12, 24] })
+  const pageResilies = usePagination(resilies, { options: [6, 12, 24] })
+  const pageSeances = usePagination(fiche?.seances || [], { options: [10, 25, 50], parPage: 10, cle: ficheId ?? '' })
 
   const notifier = (type, message) => setToast({ id: Date.now(), type, message })
 
@@ -160,12 +164,14 @@ export default function Abonnements() {
       {abonnements && actifs.length === 0 && (
         <p className="planning-vide">Aucun abonnement en cours. Une équipe vient chaque semaine ? Créez-lui un abonnement.</p>
       )}
-      {actifs.length > 0 && <div className="ab-liste">{actifs.map(carte)}</div>}
+      {actifs.length > 0 && <div className="ab-liste">{pageActifs.visibles.map(carte)}</div>}
+      {pageActifs.barre}
 
       {resilies.length > 0 && (
         <div style={{ marginTop: 20 }}>
           <Volet titre="Abonnements résiliés" icone="fa-box-archive" resume={`${resilies.length} abonnement${resilies.length > 1 ? 's' : ''}`}>
-            <div className="ab-liste">{resilies.map(carte)}</div>
+            <div className="ab-liste">{pageResilies.visibles.map(carte)}</div>
+            {pageResilies.barre}
           </Volet>
         </div>
       )}
@@ -192,7 +198,7 @@ export default function Abonnements() {
 
             <h3 className="ab-titre-seances">Séances</h3>
             <ul className="ab-seances">
-              {fiche.seances.map((s) => (
+              {pageSeances.visibles.map((s) => (
                 <li key={s.id} className={s.statut === 'ANNULEE' ? 'ta-inactif' : ''}>
                   <span className="ab-seance-date">
                     <strong style={{ textTransform: 'capitalize' }}>{dateLongue(s.debut)}</strong>
@@ -209,6 +215,7 @@ export default function Abonnements() {
                 </li>
               ))}
             </ul>
+            {pageSeances.barre}
 
             <div className="manager-modal-actions fiche-actions">
               {fiche.statut === 'ACTIF' && fiche.seancesAVenir > 0 && (

@@ -206,7 +206,7 @@ export default function Annonces() {
           ))}
         </div>
 
-        <Pagination
+        {filtrees.length > ROWS_OPTIONS[0] && <Pagination
           page={page}
           pageCount={pageCount}
           rowsPerPage={rows}
@@ -214,7 +214,7 @@ export default function Annonces() {
           onPageChange={setPage}
           onRowsPerPageChange={(n) => { setRows(n); setPage(1) }}
           rowsOptions={ROWS_OPTIONS}
-        />
+        />}
       </section>
 
       {modal?.kind === 'annonce-form' && (

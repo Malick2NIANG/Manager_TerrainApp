@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import usePagination from '../../hooks/usePagination.jsx'
 import { Link } from 'react-router-dom'
 import { urlTerrainClient } from '../../config/appClient.js'
 import { positionCadrage } from '../gerant/cadrage.js'
@@ -104,7 +105,8 @@ export default function Terrains() {
 
   const comptes = useMemo(() => Object.fromEntries(STATUTS_TERRAIN.map((d) => [d.key, (terrains || []).filter((t) => statutTerrain(t) === d.key).length])), [terrains])
   const statut = filtre || STATUTS_TERRAIN.find((d) => comptes[d.key] > 0)?.key || 'ACTIF'
-  const affiches = (terrains || []).filter((t) => statutTerrain(t) === statut)
+  const affiches = useMemo(() => (terrains || []).filter((t) => statutTerrain(t) === statut), [terrains, statut])
+  const { visibles: terrainsPage, barre: paginationTerrains } = usePagination(affiches, { options: [6, 12, 24], cle: statut })
 
   const MESSAGES = {
     ACTIF: (t) => `« ${t.nom} » publié : réservable dans l’app.`,
@@ -166,7 +168,7 @@ export default function Terrains() {
       )}
       {affiches.length > 0 && (
         <div className="ta-liste">
-          {affiches.map((t) => (
+          {terrainsPage.map((t) => (
             <article className={`ta-carte ${t.actif ? '' : 'ta-inactif'}`} key={t.id}>
               <div className="ta-carte-photo" style={t.photoUrl && !estVideo(t.photoUrl) ? { backgroundImage: `url("${t.photoUrl}")`, backgroundPosition: positionCadrage(t.photoUrl) } : undefined}>
                 {t.photoUrl && estVideo(t.photoUrl) && <video src={t.photoUrl} muted playsInline preload="metadata" aria-label="Vidéo de couverture" />}
@@ -229,6 +231,7 @@ export default function Terrains() {
           ))}
         </div>
       )}
+      {paginationTerrains}
 
       <div style={{ marginTop: 22 }}>
         <Volet key={sports.length ? 'sports' : 'aucun-sport'} titre="Sports proposés" icone="fa-medal" ouvertParDefaut={!sports.length}

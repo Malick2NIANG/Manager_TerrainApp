@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import usePagination from '../../hooks/usePagination.jsx'
 import Layout from '../../components/Layout.jsx'
 import Toast from '../../components/Toast.jsx'
 import StatFilterCards from '../../components/crud/StatFilterCards.jsx'
@@ -53,6 +54,7 @@ export default function Avis() {
   const liste = useMemo(() => (avis || [])
     .filter((a) => filtre === 'TOUS' || (filtre === 'VISIBLES' ? a.visible : !a.visible))
     .filter((a) => !terrain || String(a.terrainId) === terrain), [avis, filtre, terrain])
+  const { visibles: avisPage, barre: paginationAvis } = usePagination(liste, { cle: `${filtre}-${terrain}` })
   const compte = { TOUS: avis?.length || 0, VISIBLES: (avis || []).filter((a) => a.visible).length, MASQUES: (avis || []).filter((a) => !a.visible).length }
   const note = moyenne((avis || []).filter((a) => a.visible && (!terrain || String(a.terrainId) === terrain)))
 
@@ -86,7 +88,7 @@ export default function Avis() {
       {avis && liste.length === 0 && <p className="planning-vide">Aucun avis pour le moment.</p>}
 
       <ul className="ta-avis-liste">
-        {liste.map((a) => (
+        {avisPage.map((a) => (
           <li key={a.id} className={`ta-avis ${a.visible ? '' : 'is-masque'}`}>
             <div className="ta-avis-entete">
               <Etoiles note={a.note} />
@@ -103,6 +105,7 @@ export default function Avis() {
           </li>
         ))}
       </ul>
+      {paginationAvis}
       <Toast toast={toast} onClose={() => setToast(null)} />
     </Layout>
   )

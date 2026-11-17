@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import usePagination from '../../hooks/usePagination.jsx'
 import Layout from '../../components/Layout.jsx'
 import Toast from '../../components/Toast.jsx'
 import ConfirmModal from '../../components/crud/ConfirmModal.jsx'
@@ -68,6 +69,7 @@ export default function Blocages() {
     }
   }
 
+  const { visibles: blocagesPage, barre: paginationBlocages } = usePagination(blocages || [])
   const nomTerrain = (id) => (id == null ? 'Tout le complexe' : terrains.find((t) => t.id === id)?.nom || `Terrain ${id}`)
   const maj = (champ) => (e) => setF((x) => ({ ...x, [champ]: e.target.value }))
 
@@ -114,7 +116,7 @@ export default function Blocages() {
           <table className="ta-table">
             <thead><tr><th>Terrain</th><th>Début</th><th>Fin</th><th>Motif</th><th /></tr></thead>
             <tbody>
-              {blocages.map((b) => (
+              {blocagesPage.map((b) => (
                 <tr key={b.id}>
                   <td>{nomTerrain(b.terrainId)}</td>
                   <td style={{ textTransform: 'capitalize' }}>{dateCourte(b.debut)} {heure(b.debut)}</td>
@@ -127,6 +129,7 @@ export default function Blocages() {
           </table>
         </div>
       )}
+      {paginationBlocages}
 
       {levee && (
         <ConfirmModal title="Lever cette fermeture ?" message={`${nomTerrain(levee.terrainId)} redevient réservable sur cette période.`}
