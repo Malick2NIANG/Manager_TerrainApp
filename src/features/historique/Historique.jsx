@@ -12,7 +12,7 @@ import { dateCourte, formatFCFA, plage } from '../../utils/dates.js'
 import { BadgeStatut, MOYENS, telephoneLisible } from '../planning/statuts.jsx'
 import { LogoMoyen } from '../caisse/MoyensPaiement.jsx'
 import { reimprimerRecu } from '../caisse/caisse.js'
-import { PERIODES, bornesPeriode, csvHistorique, requeteHistorique } from './historique.js'
+import { PERIODES, bornesPeriode, exporterHistorique, requeteHistorique } from './historique.js'
 import '../../styles/terrains.css'
 
 // Historique des reservations (gerant) : une periode (date du match), des
@@ -76,12 +76,19 @@ export default function Historique() {
     setExport(true)
     try {
       const tout = await apiGet(requeteHistorique({ ...filtres, page: 0, taille: 5000 }))
-      const url = URL.createObjectURL(new Blob([csvHistorique(tout.elements)], { type: 'text/csv;charset=utf-8' }))
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `historique-reservations_${filtres.du}_${filtres.au}.csv`
-      a.click()
-      URL.revokeObjectURL(url)
+      const date = (iso) => iso.split('-').reverse().join('/')
+      await exporterHistorique({
+        reservations: tout.elements,
+        etablissement: marque.etablissement || marque.nom,
+        nomFichier: `historique-reservations_${filtres.du}_${filtres.au}.xlsx`,
+        resume: {
+          periode: `du ${date(filtres.du)} au ${date(filtres.au)}`,
+          terrain: terrains.find((t) => String(t.id) === String(terrainId))?.nom || 'Tous',
+          statut: CARTES.find((c) => c.key === statut)?.label || 'Toutes',
+          moyen: MOYENS[moyen] || 'Tous',
+          recherche: recherche.trim() || '—',
+        },
+      })
       if (tout.total > tout.elements.length) notifier('warning', `Export limité aux ${tout.elements.length} premières réservations : réduisez la période.`)
     } catch (e) {
       notifier('error', e.message)
@@ -102,7 +109,7 @@ export default function Historique() {
         aide={AIDES.historique}
         actions={(
           <button className="manager-button manager-button-primary" type="button" onClick={exporter} disabled={export_ || !donnees?.total}>
-            <i className={`fa-solid ${export_ ? 'fa-spinner fa-spin' : 'fa-file-arrow-down'}`} aria-hidden="true" /> {export_ ? 'Export…' : 'Exporter en CSV'}
+            <i className={`fa-solid ${export_ ? 'fa-spinner fa-spin' : 'fa-file-excel'}`} aria-hidden="true" /> {export_ ? 'Export…' : 'Exporter en Excel'}
           </button>
         )} />
 

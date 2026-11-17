@@ -37,7 +37,7 @@ export const AIDES = {
     'Seules les annonces publiées sont vues par les clients.'],
   historique: ['Toutes les réservations passées et à venir, par date de match : choisissez une période (un an au plus).',
     'Les cartes filtrent par statut ; « Encaissé » additionne les réservations payées, annulations exclues, par moyen de paiement.',
-    'Cherchez un client par nom, téléphone ou référence, réimprimez un reçu, ou exportez la liste en CSV (Excel).'],
+    'Cherchez un client par nom, téléphone ou référence, réimprimez un reçu, ou exportez la liste en Excel.'],
   avis: ['Les notes et commentaires laissés par les joueurs après leur match.',
     'Masquez un avis abusif : il disparaît de l’app et ne compte plus dans la note du terrain.'],
   equipe: ['Les comptes de votre personnel : Accueil (réservations, encaissements) et Contrôleurs (entrées).',
