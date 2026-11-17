@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate, NavLink, useParams } from 'react-router-dom'
 import Layout from '../../components/Layout.jsx'
+import EnTetePage from '../../components/EnTetePage.jsx'
+import { AIDES } from '../../components/aidesPages.js'
 import Toast from '../../components/Toast.jsx'
 import Pagination from '../../components/crud/Pagination.jsx'
 import StatFilterCards from '../../components/crud/StatFilterCards.jsx'
@@ -280,13 +282,7 @@ export default function JournalAudit() {
 
   return (
     <Layout>
-      <section className="dashboard-intro">
-        <div>
-          <p className="manager-eyebrow">Traçabilité</p>
-          <h1>Journal d’audit · {ROLE_LABELS[role]}</h1>
-          <p>Toutes les actions enregistrées pour l’équipe {ROLE_LABELS[role]}, en consultation seule.</p>
-        </div>
-      </section>
+      <EnTetePage titre={`Journal · ${ROLE_LABELS[role]}`} resume={`Actions de l’équipe ${ROLE_LABELS[role]}, en consultation seule`} aide={AIDES.journal} />
 
       <section>
         <nav className="audit-role-tabs" aria-label="Choisir un rôle">

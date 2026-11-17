@@ -17,6 +17,7 @@ import EncaisserSeance from '../abonnements/EncaisserSeance.jsx'
 import { aEncaisser } from '../abonnements/abonnements.js'
 import '../../styles/terrains.css'
 import EnTetePage from '../../components/EnTetePage.jsx'
+import { AIDES } from '../../components/aidesPages.js'
 
 // Planning du jour, terrain par terrain : chaque creneau libre ouvre la
 // reservation au comptoir, chaque creneau pris ouvre la fiche (annulation).
@@ -123,7 +124,7 @@ export default function Planning() {
     <Layout>
       <EnTetePage groupe="planning"
         resume={`${stats.nombre} réservation${stats.nombre > 1 ? 's' : ''} confirmée${stats.nombre > 1 ? 's' : ''} · ${formatFCFA(stats.montant)}`}
-        aide="Une colonne par terrain, les heures de haut en bas. Touchez un bloc plein pour voir la réservation (client, paiement, annulation), un bloc « + » pour réserver au comptoir. La ligne rouge indique l’heure actuelle."
+        aide={AIDES.planning}
         actions={peutReserver && (
           <button className="manager-button manager-button-primary" type="button" onClick={() => setComptoir({})}>
             <i className="fa-solid fa-plus" aria-hidden="true" /> Nouvelle réservation

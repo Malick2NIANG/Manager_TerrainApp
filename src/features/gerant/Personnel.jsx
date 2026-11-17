@@ -1,4 +1,6 @@
 import Layout from '../../components/Layout.jsx'
+import EnTetePage from '../../components/EnTetePage.jsx'
+import { AIDES } from '../../components/aidesPages.js'
 import StaffUserSection from '../../components/staff/StaffUserSection.jsx'
 
 // Le Gerant gere l'Accueil et les Controleurs ; les comptes Gerant sont
@@ -8,13 +10,7 @@ const ROLES_GERES_PAR_GERANT = ['ACCUEIL', 'CONTROLEUR']
 export default function Personnel() {
   return (
     <Layout>
-      <section className="dashboard-intro">
-        <div>
-          <p className="manager-eyebrow">Gérance</p>
-          <h1>Utilisateurs</h1>
-          <p>Gérez les accès, les rôles et les mots de passe de l’Accueil et des Contrôleurs.</p>
-        </div>
-      </section>
+      <EnTetePage titre="Équipe" resume="Accueil et contrôleurs du complexe" aide={AIDES.equipe} />
 
       <StaffUserSection
         roles={ROLES_GERES_PAR_GERANT}

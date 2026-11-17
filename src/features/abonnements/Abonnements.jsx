@@ -3,6 +3,7 @@ import Layout from '../../components/Layout.jsx'
 import Toast from '../../components/Toast.jsx'
 import ConfirmModal from '../../components/crud/ConfirmModal.jsx'
 import EnTetePage from '../../components/EnTetePage.jsx'
+import { AIDES } from '../../components/aidesPages.js'
 import Volet from '../../components/Volet.jsx'
 import { apiDelete, apiGet, apiPost } from '../../api/client.js'
 import { dateCourte, dateLongue, formatFCFA, heure } from '../../utils/dates.js'
@@ -147,7 +148,7 @@ export default function Abonnements() {
     <Layout>
       <EnTetePage groupe="planning"
         resume={abonnements ? `${actifs.length} actif${actifs.length > 1 ? 's' : ''}${aEncaisserTotal ? ` · ${formatFCFA(aEncaisserTotal)} à encaisser` : ''}` : null}
-        aide="Un abonnement réserve le même créneau chaque semaine ou chaque mois pour un client. Les séances déjà prises ou fermées sont sautées. Le client paie tout d’avance, ou à chaque séance (encaissement ici ou depuis le planning)."
+        aide={AIDES.abonnements}
         actions={(
           <button className="manager-button manager-button-primary" type="button" onClick={() => setCreation(true)} disabled={!terrains.length}>
             <i className="fa-solid fa-plus" aria-hidden="true" /> Nouvel abonnement

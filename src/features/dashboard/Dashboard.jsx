@@ -10,13 +10,7 @@ import { formatFCFA, heure, jourISO } from '../../utils/dates.js'
 import { BadgeStatut, reservationDuCreneau } from '../planning/statuts.jsx'
 import '../../styles/terrains.css'
 import EnTetePage from '../../components/EnTetePage.jsx'
-
-const INTRO = {
-  GERANT: { eyebrow: 'Gérance', description: 'Réservations, recettes et occupation du jour en un coup d’œil.' },
-  ACCUEIL: { eyebrow: 'Accueil', description: 'Les réservations du jour et les prochains matchs.' },
-  CONTROLEUR: { eyebrow: 'Entrée', description: 'Les prochains matchs à accueillir.' },
-  ADMIN: { eyebrow: 'Administration', description: 'L’équipe et les dernières actions du personnel.' },
-}
+import { AIDES } from '../../components/aidesPages.js'
 
 /** Indicateurs du jour a partir du planning et des disponibilites. */
 export function indicateursDuJour(reservations, dispos, maintenant = Date.now()) {
@@ -122,10 +116,9 @@ function TableauAdmin() {
 
 export default function Dashboard() {
   const { role } = useAuth()
-  const intro = INTRO[role] || INTRO.ACCUEIL
   return (
     <Layout>
-      <EnTetePage titre="Tableau de bord" aide={intro.description} />
+      <EnTetePage titre="Tableau de bord" aide={AIDES.dashboard[role] || AIDES.dashboard.ACCUEIL} />
       {role === 'ADMIN' ? <TableauAdmin /> : <TableauDuJour />}
     </Layout>
   )

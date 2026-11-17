@@ -12,6 +12,7 @@ import '../../styles/terrains.css'
 import useRessourceApi from '../../hooks/useRessourceApi.js'
 import { STATUT_LABELS, countByStatut, slidesEnvoyees } from './annonces.js'
 import EnTetePage from '../../components/EnTetePage.jsx'
+import { AIDES } from '../../components/aidesPages.js'
 
 const FILTER_DEFS = [
   { key: 'ACTIF', label: 'Publiées', icon: 'fa-circle-check', accent: '#1f6f57', accentBg: '#e2f2ec' },
@@ -113,7 +114,7 @@ export default function Annonces() {
   return (
     <Layout>
       <EnTetePage groupe="vitrine"
-        aide="Nouveautés, promos, tournois : à l’ouverture de l’app, les annonces publiées défilent toutes seules (photo ou vidéo), et le client peut les faire glisser."
+        aide={AIDES.annonces}
         actions={(
           <button className="manager-button manager-button-primary" type="button" onClick={() => setModal({ kind: 'annonce-form', chaine: null })}>
             <i className="fa-solid fa-plus" aria-hidden="true" /> Nouvelle annonce

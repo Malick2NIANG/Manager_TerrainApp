@@ -5,6 +5,7 @@ import StatFilterCards from '../../components/crud/StatFilterCards.jsx'
 import { apiGet, apiPatch } from '../../api/client.js'
 import '../../styles/terrains.css'
 import EnTetePage from '../../components/EnTetePage.jsx'
+import { AIDES } from '../../components/aidesPages.js'
 
 const FILTRES = [
   { key: 'TOUS', label: 'Tous les avis', icon: 'fa-star', accent: '#9c6b0c', accentBg: '#f6ecd9' },
@@ -68,7 +69,7 @@ export default function Avis() {
     <Layout>
       <EnTetePage groupe="vitrine"
         resume={note !== null ? `Note moyenne : ${String(note).replace('.', ',')} / 5 · ${compte.VISIBLES} avis visibles` : null}
-        aide="Notes laissées par les joueurs après leur match. Masquez un avis abusif : il disparaît de l’app et de la note moyenne." />
+        aide={AIDES.avis} />
 
       <StatFilterCards items={FILTRES.map((f) => ({ ...f, value: compte[f.key] }))} selected={filtre} onSelect={setFiltre} />
 

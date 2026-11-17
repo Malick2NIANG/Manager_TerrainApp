@@ -4,6 +4,7 @@ import { apiPost } from '../../api/client.js'
 import { dateCourte, plage } from '../../utils/dates.js'
 import '../../styles/terrains.css'
 import EnTetePage from '../../components/EnTetePage.jsx'
+import { AIDES } from '../../components/aidesPages.js'
 
 // Controle a l'entree : le joueur presente le QR de son ticket (App Client),
 // le serveur rend un verdict explique. Saisie de la reference (ex. R7K3P9Q)
@@ -99,7 +100,7 @@ export default function Scan() {
   return (
     <Layout>
       <EnTetePage groupe="planning"
-        aide="Présentez le QR code du ticket devant la caméra, ou tapez sa référence. Entrée possible 30 min avant le début du créneau." />
+        aide={AIDES.scan} />
 
       <div className="scan-page">
         <div className="scan-panneau">

@@ -503,9 +503,7 @@ button.pg-bloc.is-libre:hover, button.pg-bloc.is-libre:focus-visible { backgroun
 .horaires-ferme { color: #9a9a9e; font-size: 13px; font-weight: 600; }
 .horaires-partout { text-decoration: none; color: var(--marque); }
 .sheet-poignee { display: none; }
-.ta-bouton-horaires { display: inline-flex; align-items: center; gap: 8px; text-align: left; }
-.ta-bouton-horaires span { display: flex; flex-direction: column; line-height: 1.15; }
-.ta-bouton-horaires small { color: #6b6b6b; font-size: 11px; font-weight: 600; }
+.ta-bouton-horaires { display: inline-flex; align-items: center; }
 .ta-a-completer { color: #9c6b0c !important; font-weight: 600; }
 .manager-modal-sheet { width: min(100%, 520px); }
 @media (max-width: 760px) {
@@ -520,11 +518,17 @@ button.pg-bloc.is-libre:hover, button.pg-bloc.is-libre:focus-visible { backgroun
 .ta-carte-statut { position: absolute; top: 10px; left: 10px; }
 .ta-carte-actions.crud-card-actions { flex-wrap: wrap; gap: 6px; }
 
-/* Bouton Horaires : bien visible a cote de l'action principale */
-.manager-button.ta-bouton-horaires { gap: 10px; padding: 8px 16px 8px 8px; border: 1.5px solid var(--marque); background: #fff; color: #141414; box-shadow: 0 4px 12px rgb(20 20 20 / 6%); }
-.manager-button.ta-bouton-horaires > i { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 9px; background: var(--marque-pale); color: var(--marque); font-size: 15px; }
-.manager-button.ta-bouton-horaires span { color: #141414; font-weight: 800; font-size: 14px; }
-.manager-button.ta-bouton-horaires small { color: var(--marque); font-size: 12px; font-weight: 700; }
-.manager-button.ta-bouton-horaires:hover { background: var(--marque-pale); }
-.manager-shell.is-dark .manager-button.ta-bouton-horaires { background: #18181b; }
-.manager-shell.is-dark .manager-button.ta-bouton-horaires span { color: #f2f2f2; }
+/* Bouton Horaires : bouton secondaire simple, lisible */
+.manager-button.ta-bouton-horaires { gap: 8px; border: 1px solid #d8d8d5; background: #fff; color: #141414; }
+.manager-button.ta-bouton-horaires > i { color: var(--marque); }
+.manager-button.ta-bouton-horaires:hover { border-color: #bdbdb9; background: #fafaf9; }
+.manager-shell.is-dark .manager-button.ta-bouton-horaires { background: #18181b; border-color: #2a2a2e; color: #f2f2f2; }
+
+/* Icone « i » : guide de la page */
+.ta-entete-aide-bouton { color: var(--marque) !important; background: var(--marque-pale) !important; font-size: 16px !important; }
+.ta-entete-aide-bouton:hover, .ta-entete-aide-bouton[aria-expanded="true"] { background: var(--marque) !important; color: #fff !important; }
+.ta-entete-aide-titre { margin: 0; font-weight: 700; color: #141414; }
+.ta-entete-aide-titre i { color: var(--marque); margin-right: 4px; }
+.ta-entete-aide ul { margin: 6px 0 0; padding-left: 20px; }
+.ta-entete-aide li { margin: 3px 0; }
+.manager-shell.is-dark .ta-entete-aide-titre { color: #f2f2f2; }

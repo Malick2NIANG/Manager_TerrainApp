@@ -8,6 +8,7 @@ import TerrainFormModal from './TerrainFormModal.jsx'
 import '../../styles/terrains.css'
 import { estVideo } from '../annonces/annonces.js'
 import EnTetePage from '../../components/EnTetePage.jsx'
+import { AIDES } from '../../components/aidesPages.js'
 import Volet from '../../components/Volet.jsx'
 import StatFilterCards from '../../components/crud/StatFilterCards.jsx'
 import HorairesModal, { resumeOuverture } from './HorairesModal.jsx'
@@ -111,13 +112,12 @@ export default function Terrains() {
   return (
     <Layout>
       <EnTetePage groupe="complexe"
-        resume={terrains ? `${terrains.length} terrain${terrains.length > 1 ? 's' : ''} · ${sports.length} sport${sports.length > 1 ? 's' : ''}` : null}
-        aide="Chaque terrain est une annonce dans l’app : photos, tarif à l’heure, tarifs particuliers (soirée, week-end) et durée des créneaux. Les sports servent de filtre aux clients."
+        resume={terrains ? `${terrains.length} terrain${terrains.length > 1 ? 's' : ''} · ${sports.length} sport${sports.length > 1 ? 's' : ''}${horaires ? ` · horaires : ${resumeOuverture(horaires).replace(/^./, (c) => c.toLowerCase())}` : ''}` : null}
+        aide={AIDES.complexe}
         actions={(
           <>
             <button className="manager-button manager-button-quiet ta-bouton-horaires" type="button" onClick={() => setHorairesOuverts(true)}>
-              <i className="fa-solid fa-clock" aria-hidden="true" />
-              <span>Horaires{horaires && <small>{resumeOuverture(horaires)}</small>}</span>
+              <i className="fa-solid fa-clock" aria-hidden="true" /> Horaires
             </button>
             {sports.length > 0 && (
               <button className="manager-button manager-button-primary" type="button" onClick={() => setEdition({})}>

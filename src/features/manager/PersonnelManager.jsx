@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Layout from '../../components/Layout.jsx'
+import EnTetePage from '../../components/EnTetePage.jsx'
+import { AIDES } from '../../components/aidesPages.js'
 import StaffUserSection from '../../components/staff/StaffUserSection.jsx'
 import StatFilterCards from '../../components/crud/StatFilterCards.jsx'
 import { apiGet } from '../../api/client.js'
@@ -33,13 +35,7 @@ export default function PersonnelManager() {
 
   return (
     <Layout>
-      <section className="dashboard-intro">
-        <div>
-          <p className="manager-eyebrow">Pilotage</p>
-          <h1>Personnel</h1>
-          <p>Gérez les comptes Gérant et consultez le reste de l’équipe.</p>
-        </div>
-      </section>
+      <EnTetePage titre="Personnel" resume="Comptes Gérant et reste de l’équipe" aide={AIDES.personnel} />
 
       <StatFilterCards
         items={GROUPES.map((item) => ({ ...item, value: counts[item.key] }))}

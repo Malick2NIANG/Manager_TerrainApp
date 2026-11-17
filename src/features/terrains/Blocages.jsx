@@ -6,6 +6,7 @@ import { apiDelete, apiGet, apiPost } from '../../api/client.js'
 import { dateCourte, decalerJour, heure, instantDe, jourISO } from '../../utils/dates.js'
 import '../../styles/terrains.css'
 import EnTetePage from '../../components/EnTetePage.jsx'
+import { AIDES } from '../../components/aidesPages.js'
 
 // Fermer une periode a la reservation (entretien, evenement prive) : un
 // terrain ou tout le complexe. Les reservations deja prises ne sont pas
@@ -73,7 +74,7 @@ export default function Blocages() {
   return (
     <Layout>
       <EnTetePage groupe="planning"
-        aide="Fermez un terrain ou tout le complexe à la réservation (entretien, événement privé). Les réservations déjà prises ne sont pas annulées : faites-le depuis l’onglet Réservations si besoin."
+        aide={AIDES.fermetures}
         actions={!formulaire && (
           <button className="manager-button manager-button-primary" type="button" onClick={() => setFormulaire(true)}>
             <i className="fa-solid fa-plus" aria-hidden="true" /> Fermer une période
