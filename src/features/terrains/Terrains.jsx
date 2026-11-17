@@ -105,7 +105,7 @@ export default function Terrains() {
 
   const MESSAGES = {
     ACTIF: (t) => `« ${t.nom} » publié : réservable dans l’app.`,
-    BROUILLON: (t) => `« ${t.nom} » repassé en brouillon : il n’est plus réservable.`,
+    BROUILLON: (t) => `« ${t.nom} » dépublié : vous pouvez le modifier, puis le republier.`,
     ARCHIVE: (t) => `« ${t.nom} » archivé.`,
   }
 
@@ -189,7 +189,7 @@ export default function Terrains() {
               </div>
               {/* Actions selon le statut (comme les produits de l'app resto). */}
               <div className="ta-carte-actions crud-card-actions">
-                {statutTerrain(t) !== 'ARCHIVE' && (
+                {statutTerrain(t) === 'BROUILLON' && (
                   <button className="crud-action" type="button" onClick={() => setEdition({ terrain: t })}>
                     <i className="fa-solid fa-pen" aria-hidden="true" /> Modifier
                   </button>
@@ -204,7 +204,7 @@ export default function Terrains() {
                     <i className="fa-solid fa-eye-slash" aria-hidden="true" /> Dépublier
                   </button>
                 )}
-                {statutTerrain(t) !== 'ARCHIVE' && (
+                {statutTerrain(t) === 'BROUILLON' && (
                   <button className="crud-action is-accent-red" type="button" onClick={() => setChangement({ terrain: t, statut: 'ARCHIVE' })}>
                     <i className="fa-solid fa-box-archive" aria-hidden="true" /> Archiver
                   </button>
@@ -259,7 +259,7 @@ export default function Terrains() {
         const textes = {
           BROUILLON: statutTerrain(t) === 'ARCHIVE'
             ? { titre: `Restaurer « ${t.nom} » ?`, message: 'Il revient en brouillon : vérifiez-le puis publiez-le pour le rouvrir à la réservation.', bouton: 'Restaurer', ton: 'info', icone: 'fa-clock-rotate-left' }
-            : { titre: `Dépublier « ${t.nom} » ?`, message: 'Il ne sera plus réservable dans l’app ni au comptoir. Les réservations déjà prises sont conservées.', bouton: 'Dépublier', ton: 'warning', icone: 'fa-eye-slash' },
+            : { titre: `Dépublier « ${t.nom} » ?`, message: 'Il passe en brouillon : plus réservable dans l’app ni au comptoir, les réservations déjà prises sont conservées. Vous pourrez alors le modifier, puis le republier.', bouton: 'Dépublier', ton: 'warning', icone: 'fa-eye-slash' },
           ARCHIVE: { titre: `Archiver « ${t.nom} » ?`, message: 'Il disparaît de l’app et du planning (restaurable plus tard). Impossible s’il a des réservations à venir.', bouton: 'Archiver', ton: 'danger', icone: 'fa-box-archive' },
         }[changement.statut]
         return (

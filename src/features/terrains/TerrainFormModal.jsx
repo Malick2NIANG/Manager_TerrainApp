@@ -174,9 +174,13 @@ export default function TerrainFormModal({ terrain, sports, onFermer, onEnregist
               Créneau de {f.dureeCreneauMinutes} min au tarif de base : {formatFCFA(Math.round(Number(f.tarifHeure) * Number(f.dureeCreneauMinutes) / 60))}.
             </p>
           )}
-          <label style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <input type="checkbox" checked={f.actif} onChange={maj('actif')} /> Publier (réservable dans l’app)
-          </label>
+          {/* Creation : publier tout de suite ou garder en brouillon. Modification : toujours un brouillon,
+              republie ensuite depuis sa carte. */}
+          {!terrain && (
+            <label style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <input type="checkbox" checked={f.actif} onChange={maj('actif')} /> Publier tout de suite (réservable dans l’app)
+            </label>
+          )}
 
           {/* Couches suivantes : a ouvrir quand on en a besoin. */}
           <div>
