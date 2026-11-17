@@ -317,13 +317,16 @@ export default function JournalAudit() {
           ))}
         </nav>}
 
-        <StatFilterCards
-          items={domaineItems}
-          selected={JOURNAL_PAR_SECTIONS ? section?.slug : domaine}
-          onSelect={changerDomaine}
-          ariaLabel="Filtrer par type d’action"
-          className={JOURNAL_PAR_SECTIONS ? 'is-5col' : 'is-4col'}
-        />
+        {/* Sous-pages : le sous-menu Journal suffit, pas de cartes. */}
+        {!JOURNAL_PAR_SECTIONS && (
+          <StatFilterCards
+            items={domaineItems}
+            selected={domaine}
+            onSelect={changerDomaine}
+            ariaLabel="Filtrer par type d’action"
+            className="is-4col"
+          />
+        )}
 
         <div className="crud-toolbar audit-toolbar">
           <div className="crud-search">
