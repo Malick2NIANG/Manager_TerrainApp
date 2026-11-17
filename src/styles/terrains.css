@@ -385,3 +385,17 @@ button.pg-bloc.is-libre:hover, button.pg-bloc.is-libre:focus-visible { backgroun
 .pg-hors { position: absolute; left: 0; right: 0; display: flex; justify-content: center; padding-top: 8px; background: repeating-linear-gradient(-45deg, #f3f3f2 0 6px, #fafaf9 6px 12px); color: #9a9a9e; font-size: 11px; font-weight: 600; }
 .manager-shell.is-dark .pg-hors { background: repeating-linear-gradient(-45deg, #1f1f23 0 6px, #18181b 6px 12px); }
 .ta-case { display: flex !important; flex-direction: row !important; align-items: center; gap: 8px; font-weight: 600; }
+
+/* Annulation : action discrete dans la fiche, confirmation avec motif */
+.fiche-actions { justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.fiche-annuler { display: inline-flex; align-items: center; gap: 6px; padding: 8px 4px; border: 0; background: none; color: #b3261e; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.fiche-annuler:hover { color: #8c1d17; }
+.fiche-annuler-refus { display: inline-flex; align-items: center; gap: 6px; max-width: 60%; color: #6b6b6b; font-size: 12px; }
+.manager-eyebrow.is-danger { color: #b3261e; }
+.an-resume { margin: 0 0 14px; color: #5b5b5f; font-size: 14px; }
+.an-bloc { margin: 0 0 14px; padding: 0; border: 0; }
+.an-bloc legend { margin-bottom: 8px; font-weight: 700; font-size: 14px; }
+.an-autre { width: 100%; margin-top: 10px; border: 1px solid #d8d8d8; border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 14px; }
+.an-remboursement { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid #f3c9c5; border-radius: 10px; background: #fdf1f0; font-size: 13px; line-height: 1.45; cursor: pointer; }
+.an-remboursement input { margin-top: 3px; }
+.manager-button-danger:disabled, .manager-button-primary:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }

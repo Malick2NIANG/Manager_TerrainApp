@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Layout from '../../components/Layout.jsx'
 import Toast from '../../components/Toast.jsx'
-import ConfirmModal from '../../components/crud/ConfirmModal.jsx'
 import { apiGet, apiPost } from '../../api/client.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import useFluxPlanning from '../../hooks/useFluxPlanning.js'
 import { dateLongue, decalerJour, formatFCFA, heure, jourISO, jourRelatif, plage } from '../../utils/dates.js'
 import { BadgeStatut, MOYENS, telephoneLisible } from './statuts.jsx'
 import ComptoirModal from './ComptoirModal.jsx'
+import AnnulationModal, { refusAnnulation } from './AnnulationModal.jsx'
 import PlanningGrille from './PlanningGrille.jsx'
 import { correspond, filtrerTerrains, terrainsParSport } from './grille.js'
 import useEcranEtroit from '../../hooks/useEcranEtroit.js'
@@ -95,13 +95,13 @@ export default function Planning() {
     return { nombre: actives.length, montant: actives.reduce((s, r) => s + r.montant, 0) }
   }, [reservations])
 
-  async function annuler() {
+  async function annuler(motif) {
     const r = annulation
-    setAnnulation(null)
-    setFiche(null)
     try {
-      await apiPost(`/reservations/${r.id}/annulation`)
-      setToast({ id: Date.now(), type: 'success', message: `Réservation ${r.reference} annulée : le créneau est libéré.` })
+      await apiPost(`/reservations/${r.id}/annulation`, { motif })
+      setAnnulation(null)
+      setFiche(null)
+      setToast({ id: Date.now(), type: 'success', message: `Réservation ${r.reference} annulée : créneau libéré, client prévenu par SMS.` })
       charger()
     } catch (e) {
       setToast({ id: Date.now(), type: 'error', message: e.message })
@@ -251,29 +251,27 @@ export default function Planning() {
                   }} />
               </div>
             )}
-            <div className="manager-modal-actions">
-              {peutReserver && ['CONFIRMEE', 'EN_ATTENTE_PAIEMENT'].includes(fiche.statut) && (
-                <button className="manager-button manager-button-danger" type="button" onClick={() => setAnnulation(fiche)}>
-                  Annuler la réservation
-                </button>
-              )}
-              <button className="manager-button manager-button-quiet" type="button" onClick={() => setFiche(null)}>Fermer</button>
+            {fiche.motifAnnulation && <p className="ta-form-aide">Motif de l’annulation : {fiche.motifAnnulation}</p>}
+            <div className="manager-modal-actions fiche-actions">
+              {/* Action rare et irreversible : discrete, a gauche, et jamais a cote du bouton principal. */}
+              {peutReserver && ['CONFIRMEE', 'EN_ATTENTE_PAIEMENT'].includes(fiche.statut) && (() => {
+                const refus = refusAnnulation(fiche, role)
+                return refus
+                  ? <span className="fiche-annuler-refus"><i className="fa-solid fa-lock" aria-hidden="true" /> {refus}</span>
+                  : (
+                    <button className="fiche-annuler" type="button" onClick={() => setAnnulation(fiche)}>
+                      <i className="fa-solid fa-ban" aria-hidden="true" /> Annuler la réservation…
+                    </button>
+                  )
+              })()}
+              <button className="manager-button manager-button-primary" type="button" onClick={() => setFiche(null)}>Fermer</button>
             </div>
           </section>
         </div>
       )}
 
       {annulation && (
-        <ConfirmModal
-          title={`Annuler la réservation ${annulation.reference} ?`}
-          message={`${annulation.clientNom} · ${annulation.terrain} · ${plage(annulation.debut, annulation.fin)}. Le créneau redevient libre. ${annulation.canal === 'APP' ? 'Paiement en ligne : remboursement à faire.' : ''}`}
-          confirmLabel="Annuler la réservation"
-          cancelLabel="Retour"
-          tone="danger"
-          icon="fa-ban"
-          onConfirm={annuler}
-          onCancel={() => setAnnulation(null)}
-        />
+        <AnnulationModal reservation={annulation} onConfirmer={annuler} onFermer={() => setAnnulation(null)} />
       )}
 
       {comptoir && (
