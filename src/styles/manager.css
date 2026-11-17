@@ -1216,3 +1216,7 @@
 .crud-crop-aide { display: flex; gap: 8px; align-items: flex-start; margin: 0; color: #6b6b6b; font-size: 13px; line-height: 1.45; }
 .crud-crop-aide i { margin-top: 2px; color: var(--marque); }
 a.crud-action { text-decoration: none; }
+
+/* Pastille de notifications non lues sur les onglets du bas (telephone). */
+.manager-bottom-tabbar-icon { position: relative; }
+.manager-bottom-tabbar-badge { position: absolute; top: -6px; right: -12px; display: grid; min-width: 17px; height: 17px; box-sizing: border-box; place-items: center; padding: 0 4px; border: 2px solid #fff; border-radius: 999px; background: #d93025; color: #fff; font-family: inherit; font-size: 9.5px; font-weight: 800; line-height: 1; }

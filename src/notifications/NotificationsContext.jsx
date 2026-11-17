@@ -12,6 +12,14 @@ const NotificationsContext = createContext(null)
 
 const HEURE = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Africa/Dakar', weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 
+const JOUR = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Dakar', year: 'numeric', month: '2-digit', day: '2-digit' })
+
+/** Lien qui ouvre le planning au jour du match, sur la fiche de la reservation. */
+export function lienReservation(reservation) {
+  if (!reservation?.debut) return '/planning'
+  return `/planning?date=${JOUR.format(new Date(reservation.debut))}&reservation=${reservation.id}`
+}
+
 function quand(reservation) {
   return reservation?.debut ? HEURE.format(new Date(reservation.debut)) : ''
 }
@@ -19,7 +27,7 @@ function quand(reservation) {
 /** Notification a afficher pour cet evenement et ce role, ou null. */
 export function notificationPour(role, { type, reservation } = {}) {
   if (!reservation || !['GERANT', 'ACCUEIL'].includes(role)) return null
-  const base = { cle: `${reservation.id}-${reservation.statut}`, reservationId: reservation.id }
+  const base = { cle: `${reservation.id}-${reservation.statut}`, reservationId: reservation.id, lien: lienReservation(reservation) }
   if (type === 'RESERVATION_CONFIRMEE' && reservation.canal === 'APP' && reservation.statut === 'CONFIRMEE') {
     return { ...base, kind: 'reservation', title: `Nouvelle réservation ${reservation.reference}`, text: `${reservation.terrain} · ${quand(reservation)} · ${Number(reservation.montant).toLocaleString('fr-FR')} F CFA`, target: '/planning' }
   }
@@ -27,6 +35,11 @@ export function notificationPour(role, { type, reservation } = {}) {
     return { ...base, kind: 'annulee', title: `Réservation ${reservation.reference} annulée`, text: `${reservation.terrain} · ${quand(reservation)} : créneau libéré.`, target: '/planning' }
   }
   return null
+}
+
+/** Le chemin courant est-il la page visee par une notification ? */
+export function estSurPage(chemin, cible) {
+  return chemin === cible || chemin.startsWith(`${cible}/`)
 }
 
 // "À l'instant", "Il y a 5 min", "Il y a 2 h", "Hier", "Il y a 3 j".
@@ -114,12 +127,18 @@ export function NotificationsProvider({ children }) {
 
   const marquerLue = useCallback((id) => setNotifications((l) => l.map((n) => (n.id === id ? { ...n, unread: false } : n))), [])
   const toutMarquerLu = useCallback(() => setNotifications((l) => l.map((n) => ({ ...n, unread: false }))), [])
+  // Page ouverte : ses notifications sont vues (le badge du menu s'efface).
+  const marquerLuesPour = useCallback((chemin) => setNotifications((l) => (
+    l.some((n) => n.unread && n.target && estSurPage(chemin, n.target))
+      ? l.map((n) => (n.unread && n.target && estSurPage(chemin, n.target) ? { ...n, unread: false } : n))
+      : l
+  )), [])
   const supprimer = useCallback((id) => setNotifications((l) => l.filter((n) => n.id !== id)), [])
 
-  const valeur = useMemo(() => ({ notifications, marquerLue, toutMarquerLu, supprimer }), [notifications, marquerLue, toutMarquerLu, supprimer])
+  const valeur = useMemo(() => ({ notifications, marquerLue, toutMarquerLu, marquerLuesPour, supprimer }), [notifications, marquerLue, toutMarquerLu, marquerLuesPour, supprimer])
   return <NotificationsContext.Provider value={valeur}>{children}</NotificationsContext.Provider>
 }
 
 export function useNotifications() {
-  return useContext(NotificationsContext) || { notifications: [], marquerLue: () => {}, toutMarquerLu: () => {}, supprimer: () => {} }
+  return useContext(NotificationsContext) || { notifications: [], marquerLue: () => {}, toutMarquerLu: () => {}, marquerLuesPour: () => {}, supprimer: () => {} }
 }

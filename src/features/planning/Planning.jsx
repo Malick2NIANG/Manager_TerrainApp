@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import Layout from '../../components/Layout.jsx'
 import Toast from '../../components/Toast.jsx'
 import { apiGet, apiPost } from '../../api/client.js'
@@ -23,10 +24,16 @@ import { AIDES } from '../../components/aidesPages.js'
 // reservation au comptoir, chaque creneau pris ouvre la fiche (annulation).
 // Mis a jour en direct par le flux du planning (reservations en ligne,
 // annulations, entrees scannees), avec un rafraichissement de secours.
+const JOUR_DAKAR = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Dakar', year: 'numeric', month: '2-digit', day: '2-digit' })
+const jourDakar = (instant) => JOUR_DAKAR.format(new Date(instant))
+
 export default function Planning() {
   const { role, username } = useAuth()
   const peutReserver = role === 'GERANT' || role === 'ACCUEIL'
-  const [jour, setJour] = useState(jourISO())
+  // ?date=AAAA-MM-JJ&reservation=ID : ouvert depuis une notification.
+  const [params, setParams] = useSearchParams()
+  const [jour, setJour] = useState(() => (/^\d{4}-\d{2}-\d{2}$/.test(params.get('date') || '') ? params.get('date') : jourISO()))
+  const aOuvrir = useRef(params.get('reservation'))
   const [dispos, setDispos] = useState(null)
   const [reservations, setReservations] = useState([])
   const [erreur, setErreur] = useState(null)
@@ -34,6 +41,30 @@ export default function Planning() {
   const [comptoir, setComptoir] = useState(null) // { terrainId, debut } ou {}
   const [fiche, setFiche] = useState(null)
   const [annulation, setAnnulation] = useState(null)
+
+  // Notification cliquee alors que le planning est deja ouvert : on va au
+  // jour du match, puis la fiche s'ouvre quand la reservation est chargee.
+  useEffect(() => {
+    const date = params.get('date')
+    const id = params.get('reservation')
+    if (!date && !id) return
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) setJour(date)
+    else if (id) {
+      // Sans date (notification ancienne) : le jour du match est lu sur la reservation.
+      apiGet(`/reservations/${id}`).then((r) => setJour(jourDakar(r.debut))).catch(() => {})
+    }
+    aOuvrir.current = id
+    setParams({}, { replace: true })
+  }, [params, setParams])
+
+  useEffect(() => {
+    if (!aOuvrir.current) return
+    const r = reservations.find((x) => String(x.id) === aOuvrir.current)
+    if (r) {
+      aOuvrir.current = null
+      setFiche(r)
+    }
+  }, [reservations])
   // Filtre : tous les terrains, ou un seul (retenu pour la session).
   const [filtre, setFiltre] = useState(() => {
     try { return sessionStorage.getItem('terrainapp_planning_terrain') || 'tous' } catch { return 'tous' }
