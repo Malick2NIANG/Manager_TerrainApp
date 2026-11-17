@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { positionCadrage } from '../gerant/cadrage.js'
 import ImageCropModal from '../gerant/ImageCropModal.jsx'
 import { dureeVideo, estVideo, marquerVideoLocale, refusVideo } from '../annonces/annonces.js'
 
@@ -58,7 +59,7 @@ export default function GaleriePhotos({ photos, onChange }) {
           <li key={url} className="ta-galerie-photo">
             {estVideo(url)
               ? <video src={url} muted playsInline preload="metadata" aria-label={`Vidéo ${i + 1}`} />
-              : <img src={url} alt={`Photo ${i + 1}`} />}
+              : <img src={url} alt={`Photo ${i + 1}`} style={{ objectPosition: positionCadrage(url) }} />}
             {estVideo(url) && <span className="ta-annonce-video-badge"><i className="fa-solid fa-play" aria-hidden="true" /> Vidéo</span>}
             {i === 0 && <span className="ta-galerie-couverture">Couverture</span>}
             <div className="ta-galerie-actions">
@@ -89,7 +90,7 @@ export default function GaleriePhotos({ photos, onChange }) {
       {refus && <p className="ta-form-erreur" role="alert">{refus}</p>}
       <input ref={entree} type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" multiple hidden onChange={choisir} />
       {file.length > 0 && (
-        <ImageCropModal key={file[0]} imageSrc={file[0]} aspect={4 / 3}
+        <ImageCropModal key={file[0]} imageSrc={file[0]} aspect={4 / 3} cadrageSeul title="Choisir le cadrage"
           eyebrow={file.length > 1 ? `Cadre identique à l'app · encore ${file.length - 1} après celle-ci` : "Cadre identique à l'app joueur"}
           onCancel={() => suivant(null)}
           onConfirm={(url) => suivant(url)} />

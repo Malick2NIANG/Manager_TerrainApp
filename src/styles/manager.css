@@ -1212,3 +1212,6 @@
    pied (Deconnexion) restent toujours visibles, meme sur un ecran peu haut. */
 .manager-sidebar-brand, .manager-sidebar-footer { flex-shrink: 0; }
 .manager-nav { min-height: 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgb(255 255 255 / 18%) transparent; }
+
+.crud-crop-aide { display: flex; gap: 8px; align-items: flex-start; margin: 0; color: #6b6b6b; font-size: 13px; line-height: 1.45; }
+.crud-crop-aide i { margin-top: 2px; color: var(--marque); }

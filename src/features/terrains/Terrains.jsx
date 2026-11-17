@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { positionCadrage } from '../gerant/cadrage.js'
 import Layout from '../../components/Layout.jsx'
 import Toast from '../../components/Toast.jsx'
 import ConfirmModal from '../../components/crud/ConfirmModal.jsx'
@@ -165,7 +166,7 @@ export default function Terrains() {
         <div className="ta-liste">
           {affiches.map((t) => (
             <article className={`ta-carte ${t.actif ? '' : 'ta-inactif'}`} key={t.id}>
-              <div className="ta-carte-photo" style={t.photoUrl && !estVideo(t.photoUrl) ? { backgroundImage: `url(${t.photoUrl})` } : undefined}>
+              <div className="ta-carte-photo" style={t.photoUrl && !estVideo(t.photoUrl) ? { backgroundImage: `url("${t.photoUrl}")`, backgroundPosition: positionCadrage(t.photoUrl) } : undefined}>
                 {t.photoUrl && estVideo(t.photoUrl) && <video src={t.photoUrl} muted playsInline preload="metadata" aria-label="Vidéo de couverture" />}
                 {!t.photoUrl && <i className="fa-solid fa-futbol" aria-hidden="true" />}
                 <span className="ta-carte-statut"><StatusBadge statut={statutTerrain(t)} label={LIBELLES_STATUT[statutTerrain(t)]} /></span>

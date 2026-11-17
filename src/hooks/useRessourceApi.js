@@ -163,8 +163,10 @@ export async function avecPhotoEnvoyee(data) {
 // encore que dans le navigateur (blob:/data:), gardee telle quelle sinon.
 export async function imageEnvoyee(url) {
   if (!url || !(url.startsWith('blob:') || url.startsWith('data:'))) return url
-  const fichier = await (await fetch(url)).blob()
+  // Le cadrage (#c=x,y) reste cote navigateur et suit l'adresse definitive.
+  const cadrage = /#c=\d{1,3},\d{1,3}$/.exec(url)?.[0] || ''
+  const fichier = await (await fetch(cadrage ? url.slice(0, -cadrage.length) : url)).blob()
   const extension = fichier.type === 'image/png' ? 'png' : 'jpg'
   const { url: definitive } = await apiEnvoyerFichier('/photos', 'fichier', fichier, `photo.${extension}`)
-  return definitive
+  return definitive + cadrage
 }

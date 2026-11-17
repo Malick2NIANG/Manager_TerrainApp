@@ -1,15 +1,20 @@
 import { useCallback, useState } from 'react'
 import Cropper from 'react-easy-crop'
-import { getCroppedImageUrl } from './cropImage.js'
+import { getCroppedImageUrl, getResizedImageUrl } from './cropImage.js'
+import { avecCadrage } from './cadrage.js'
 
-export default function ImageCropModal({ imageSrc, onCancel, onConfirm, aspect = 4 / 3, eyebrow = 'Photo du produit', title = 'Recadrer la photo' }) {
+export default function ImageCropModal({ imageSrc, onCancel, onConfirm, aspect = 4 / 3, eyebrow = 'Photo du produit', title = 'Recadrer la photo', cadrageSeul = false }) {
+  // cadrageSeul : la photo est gardee entiere, seul le cadre affiche sur les
+  // cartes est choisi (pas de zoom), note en #c=x,y sur son adresse.
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null)
+  const [zone, setZone] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const handleCropComplete = useCallback((_croppedArea, pixels) => {
+  const handleCropComplete = useCallback((area, pixels) => {
+    setZone(area)
     setCroppedAreaPixels(pixels)
   }, [])
 
@@ -18,6 +23,13 @@ export default function ImageCropModal({ imageSrc, onCancel, onConfirm, aspect =
     setIsSaving(true)
     setError('')
     try {
+      if (cadrageSeul) {
+        // Position en % du cadre dans la photo, comme object-position l'attend.
+        const pct = (debut, taille) => (taille >= 99.9 ? 50 : (debut / (100 - taille)) * 100)
+        const url = await getResizedImageUrl(imageSrc)
+        onConfirm(avecCadrage(url, pct(zone.x, zone.width), pct(zone.y, zone.height)))
+        return
+      }
       const url = await getCroppedImageUrl(imageSrc, croppedAreaPixels)
       onConfirm(url)
     } catch {
@@ -51,6 +63,11 @@ export default function ImageCropModal({ imageSrc, onCancel, onConfirm, aspect =
           />
         </div>
 
+        {cadrageSeul ? (
+          <p className="crud-crop-aide">
+            <i className="fa-solid fa-circle-info" aria-hidden="true" /> Déplacez la photo pour choisir ce qui s'affiche sur les cartes. La photo entière reste visible quand le joueur clique dessus.
+          </p>
+        ) : (
         <div className="crud-crop-zoom">
           <i className="fa-solid fa-magnifying-glass-minus" aria-hidden="true" />
           <input
@@ -64,6 +81,7 @@ export default function ImageCropModal({ imageSrc, onCancel, onConfirm, aspect =
           />
           <i className="fa-solid fa-magnifying-glass-plus" aria-hidden="true" />
         </div>
+        )}
 
         {error && <p className="crud-crop-error">{error}</p>}
 
@@ -72,7 +90,7 @@ export default function ImageCropModal({ imageSrc, onCancel, onConfirm, aspect =
             Annuler
           </button>
           <button className="manager-button manager-button-primary" type="button" onClick={handleValider} disabled={isSaving || !croppedAreaPixels}>
-            {isSaving ? 'Recadrage…' : 'Valider le recadrage'}
+            {isSaving ? 'Préparation…' : cadrageSeul ? 'Valider le cadrage' : 'Valider le recadrage'}
           </button>
         </div>
       </section>
