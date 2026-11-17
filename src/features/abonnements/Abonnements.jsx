@@ -4,10 +4,13 @@ import Toast from '../../components/Toast.jsx'
 import ConfirmModal from '../../components/crud/ConfirmModal.jsx'
 import EnTetePage from '../../components/EnTetePage.jsx'
 import Volet from '../../components/Volet.jsx'
-import { apiGet, apiPost } from '../../api/client.js'
+import { apiDelete, apiGet, apiPost } from '../../api/client.js'
 import { dateCourte, dateLongue, formatFCFA, heure } from '../../utils/dates.js'
 import { BadgeStatut, MOYENS, telephoneLisible } from '../planning/statuts.jsx'
 import AbonnementModal from './AbonnementModal.jsx'
+import { ClientAbonnementModal, ProlongationModal, supprimable } from './GestionAbonnementModals.jsx'
+import AnnulationModal, { refusAnnulation } from '../planning/AnnulationModal.jsx'
+import { useAuth } from '../../auth/AuthContext.jsx'
 import EncaisserSeance from './EncaisserSeance.jsx'
 import { REGLEMENTS, aEncaisser, libelleRegle } from './abonnements.js'
 import '../../styles/terrains.css'
@@ -23,6 +26,19 @@ export default function Abonnements() {
   const [creation, setCreation] = useState(false)
   const [ficheId, setFicheId] = useState(null)
   const [resiliation, setResiliation] = useState(null)
+  const [menuId, setMenuId] = useState(null)
+  const [edition, setEdition] = useState(null) // { type: 'client' | 'prolonger', abonnement }
+  const [suppression, setSuppression] = useState(null)
+  const [annulationSeance, setAnnulationSeance] = useState(null)
+  const { role } = useAuth()
+
+  // Menu ouvert : un clic ailleurs le ferme.
+  useEffect(() => {
+    if (menuId === null) return undefined
+    const fermer = () => setMenuId(null)
+    window.addEventListener('click', fermer)
+    return () => window.removeEventListener('click', fermer)
+  }, [menuId])
 
   const charger = useCallback(async () => {
     try {
@@ -56,8 +72,42 @@ export default function Abonnements() {
     }
   }
 
+  async function supprimer() {
+    const a = suppression
+    setSuppression(null)
+    try {
+      await apiDelete(`/abonnements/${a.id}`)
+      notifier('success', `Abonnement de ${a.clientNom} supprimé : ses créneaux sont libérés.`)
+      setFicheId(null)
+      charger()
+    } catch (e) {
+      notifier('error', e.message)
+    }
+  }
+
+  async function annulerSeance(motif) {
+    const s = annulationSeance
+    try {
+      await apiPost(`/reservations/${s.id}/annulation`, { motif })
+      setAnnulationSeance(null)
+      notifier('success', `Séance du ${dateCourte(s.debut)} annulée : le client est prévenu par SMS.`)
+      charger()
+    } catch (e) {
+      notifier('error', e.message)
+    }
+  }
+
+  const actionsMenu = (a) => [
+    { cle: 'voir', libelle: 'Voir les séances', icone: 'fa-list', faire: () => setFicheId(a.id) },
+    a.statut === 'ACTIF' && { cle: 'client', libelle: 'Modifier le client', icone: 'fa-pen', faire: () => setEdition({ type: 'client', abonnement: a }) },
+    a.statut === 'ACTIF' && { cle: 'prolonger', libelle: 'Prolonger', icone: 'fa-calendar-plus', faire: () => setEdition({ type: 'prolonger', abonnement: a }) },
+    a.statut === 'ACTIF' && a.seancesAVenir > 0 && { cle: 'resilier', libelle: 'Résilier', icone: 'fa-ban', danger: true, faire: () => setResiliation(a) },
+    supprimable(a) && { cle: 'supprimer', libelle: 'Supprimer (créé par erreur)', icone: 'fa-trash', danger: true, faire: () => setSuppression(a) },
+  ].filter(Boolean)
+
   const carte = (a) => (
-    <button key={a.id} type="button" className={`ab-carte ${a.statut !== 'ACTIF' ? 'ta-inactif' : ''}`} onClick={() => setFicheId(a.id)}>
+    <div key={a.id} className="ab-carte-cadre">
+    <button type="button" className={`ab-carte ${a.statut !== 'ACTIF' ? 'ta-inactif' : ''}`} onClick={() => setFicheId(a.id)}>
       <span className="ab-carte-tete">
         <strong>{a.clientNom}</strong>
         {a.seancesAEncaisser > 0
@@ -75,6 +125,22 @@ export default function Abonnements() {
           : `Résilié le ${dateCourte(a.resilieLe)}`}
       </span>
     </button>
+    <button type="button" className="ab-carte-menu-bouton" aria-label={`Actions pour ${a.clientNom}`} aria-haspopup="menu"
+      aria-expanded={menuId === a.id} onClick={(e) => { e.stopPropagation(); setMenuId((m) => (m === a.id ? null : a.id)) }}>
+      <i className="fa-solid fa-ellipsis-vertical" aria-hidden="true" />
+    </button>
+    {menuId === a.id && (
+      <ul className="ab-carte-menu" role="menu">
+        {actionsMenu(a).map((x) => (
+          <li key={x.cle} role="none">
+            <button type="button" role="menuitem" className={x.danger ? 'is-danger' : ''} onClick={() => { setMenuId(null); x.faire() }}>
+              <i className={`fa-solid ${x.icone}`} aria-hidden="true" /> {x.libelle}
+            </button>
+          </li>
+        ))}
+      </ul>
+    )}
+    </div>
   )
 
   return (
@@ -132,6 +198,9 @@ export default function Abonnements() {
                     <small>{heure(s.debut)} · {formatFCFA(s.montant)}{s.payeeLe ? ` · payé (${MOYENS[s.moyenPaiement] || s.moyenPaiement})` : ''}</small>
                   </span>
                   <BadgeStatut statut={s.statut} />
+                  {fiche.statut === 'ACTIF' && !refusAnnulation(s, role) && !aEncaisser(s) && (
+                    <button type="button" className="fiche-annuler" onClick={() => setAnnulationSeance(s)}>Annuler cette séance</button>
+                  )}
                   {aEncaisser(s) && (
                     <EncaisserSeance seance={s} onErreur={(m) => notifier('error', m)}
                       onFait={() => { notifier('success', `Séance du ${dateCourte(s.debut)} encaissée.`); charger() }} />
@@ -140,13 +209,25 @@ export default function Abonnements() {
               ))}
             </ul>
 
-            <div className="manager-modal-actions">
+            <div className="manager-modal-actions fiche-actions">
               {fiche.statut === 'ACTIF' && fiche.seancesAVenir > 0 && (
-                <button className="manager-button manager-button-danger" type="button" onClick={() => setResiliation(fiche)}>
-                  Résilier
+                <button className="fiche-annuler" type="button" onClick={() => setResiliation(fiche)}>
+                  <i className="fa-solid fa-ban" aria-hidden="true" /> Résilier l’abonnement…
                 </button>
               )}
-              <button className="manager-button manager-button-quiet" type="button" onClick={() => setFicheId(null)}>Fermer</button>
+              <span className="fiche-actions-droite">
+                {fiche.statut === 'ACTIF' && (
+                  <>
+                    <button className="manager-button manager-button-quiet" type="button" onClick={() => setEdition({ type: 'client', abonnement: fiche })}>
+                      <i className="fa-solid fa-pen" aria-hidden="true" /> Client
+                    </button>
+                    <button className="manager-button manager-button-quiet" type="button" onClick={() => setEdition({ type: 'prolonger', abonnement: fiche })}>
+                      <i className="fa-solid fa-calendar-plus" aria-hidden="true" /> Prolonger
+                    </button>
+                  </>
+                )}
+                <button className="manager-button manager-button-primary" type="button" onClick={() => setFicheId(null)}>Fermer</button>
+              </span>
             </div>
           </section>
         </div>
@@ -163,6 +244,30 @@ export default function Abonnements() {
           onConfirm={resilier}
           onCancel={() => setResiliation(null)}
         />
+      )}
+
+      {edition?.type === 'client' && (
+        <ClientAbonnementModal abonnement={edition.abonnement} onFermer={() => setEdition(null)}
+          onFait={(a) => { setEdition(null); notifier('success', `Client mis à jour : ${a.clientNom}.`); charger() }} />
+      )}
+      {edition?.type === 'prolonger' && (
+        <ProlongationModal abonnement={edition.abonnement} onFermer={() => setEdition(null)}
+          onFait={(a) => { setEdition(null); notifier('success', `Abonnement prolongé : ${a.seancesAVenir} séance(s) à venir.`); charger() }} />
+      )}
+      {suppression && (
+        <ConfirmModal
+          title={`Supprimer l’abonnement de ${suppression.clientNom} ?`}
+          message="À utiliser pour un abonnement créé par erreur : aucune séance n’a été payée ni jouée. Ses créneaux sont libérés et il disparaît de la liste."
+          confirmLabel="Supprimer"
+          cancelLabel="Retour"
+          tone="danger"
+          icon="fa-trash"
+          onConfirm={supprimer}
+          onCancel={() => setSuppression(null)}
+        />
+      )}
+      {annulationSeance && (
+        <AnnulationModal reservation={annulationSeance} onConfirmer={annulerSeance} onFermer={() => setAnnulationSeance(null)} />
       )}
 
       {creation && (
