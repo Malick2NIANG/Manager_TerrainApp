@@ -37,7 +37,10 @@ export default function EncaisserSeance({ seance, onFait, onErreur }) {
       <div className="ab-encaisser is-fait">
         <span><i className="fa-solid fa-check" aria-hidden="true" /> Encaissé{payee.monnaieRendue ? ` · à rendre ${formatFCFA(payee.monnaieRendue)}` : ''}</span>
         <button className="manager-button manager-button-quiet" type="button"
-          onClick={() => imprimerRecu(payee, { etablissement: marque.etablissement || marque.nom, moyens: MOYENS, caissier: username })}>
+          onClick={async () => {
+            await imprimerRecu(payee, { etablissement: marque.etablissement || marque.nom, moyens: MOYENS, caissier: username })
+            onFait(payee)
+          }}>
           <i className="fa-solid fa-print" aria-hidden="true" /> Reçu
         </button>
         <button className="manager-button manager-button-primary" type="button" onClick={() => onFait(payee)}>Terminer</button>

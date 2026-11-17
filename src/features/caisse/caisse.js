@@ -73,7 +73,7 @@ export function htmlRecu(r, { etablissement, moyens, caissier, qr, emisLe = new 
 </body></html>`
 }
 
-/** Imprime le recu (QR du ticket quand le code est connu) via un cadre invisible. */
+/** Imprime le recu (QR du ticket quand le code est connu) via un cadre invisible ; se resout une fois la fenetre d'impression fermee. */
 export async function imprimerRecu(r, options) {
   let qr = null
   if (r.codeTicket) {
@@ -97,7 +97,13 @@ export async function imprimerRecu(r, options) {
     if (!img || img.complete) ok()
     else { img.onload = ok; img.onerror = ok }
   })
+  // Fin de l'impression (imprime ou annule) : on rend la main a l'app.
+  const fini = new Promise((ok) => {
+    cadre.contentWindow.addEventListener('afterprint', ok, { once: true })
+    setTimeout(ok, 120_000)
+  })
   cadre.contentWindow.focus()
   cadre.contentWindow.print()
-  setTimeout(() => cadre.remove(), 60_000)
+  await fini
+  cadre.remove()
 }

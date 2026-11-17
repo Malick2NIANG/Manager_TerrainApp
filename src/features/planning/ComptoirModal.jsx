@@ -108,8 +108,9 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
           </div>
           <div className="manager-modal-actions">
             <button className="manager-button manager-button-quiet" type="button" onClick={() => onCree(cree)}>Terminer</button>
-            <button className="manager-button manager-button-primary" type="button" onClick={() => imprimer(cree)} autoFocus>
-              <i className="fa-solid fa-print" aria-hidden="true" /> Imprimer le reçu
+            <button className="manager-button manager-button-primary" type="button" autoFocus
+              onClick={async () => { await imprimer(cree); onCree(cree) }}>
+              <i className="fa-solid fa-print" aria-hidden="true" /> Imprimer le reçu et terminer
             </button>
           </div>
         </section>
