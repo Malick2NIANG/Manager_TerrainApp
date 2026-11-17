@@ -283,10 +283,10 @@ export default function JournalAudit() {
 
   return (
     <Layout>
-      <EnTetePage titre={`Journal · ${ROLE_LABELS[role]}`} resume={`Actions de l’équipe ${ROLE_LABELS[role]}, en consultation seule`} aide={AIDES.journal} />
+      <EnTetePage titre={ROLES_AUDIT.length > 1 ? `Journal · ${ROLE_LABELS[role]}` : 'Journal des gérants'} resume={ROLES_AUDIT.length > 1 ? `Actions de l’équipe ${ROLE_LABELS[role]}, en consultation seule` : 'Les actions de vos gérants, en consultation seule'} aide={AIDES.journal} />
 
       <section>
-        <nav className="audit-role-tabs" aria-label="Choisir un rôle">
+        {ROLES_AUDIT.length > 1 && <nav className="audit-role-tabs" aria-label="Choisir un rôle">
           {ROLES_AUDIT.map((r) => (
             <NavLink
               key={r}
@@ -296,7 +296,7 @@ export default function JournalAudit() {
               {ROLE_LABELS[r]}
             </NavLink>
           ))}
-        </nav>
+        </nav>}
 
         <StatFilterCards
           items={domaineItems}

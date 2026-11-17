@@ -20,23 +20,21 @@ const NAV_ITEMS = [
   { path: '/terrains', label: 'Mon complexe', icon: 'fa-futbol', roles: ['GERANT'], groupe: 'complexe' },
   { path: '/annonces', label: 'Annonces', icon: 'fa-bullhorn', roles: ['GERANT'], groupe: 'vitrine' },
   { path: '/historique', label: 'Historique', icon: 'fa-clock-rotate-left', roles: ['GERANT'] },
-  {
+  // Admin = proprietaire du complexe : son equipe (les gerants) et le
+  // journal de leurs actions. Avec les roles Accueil / Controleur actives,
+  // le journal a une sous-page par role.
+  ROLES_EQUIPE_ACTIFS ? {
     path: '/journal-audit',
     label: 'Journal d’audit',
     icon: 'fa-clipboard-list',
     roles: ['ADMIN'],
-    // Une sous-page par role ; l'Admin lui-meme n'y figure jamais.
     children: [
       { path: '/journal-audit/gerant', label: 'Gérant' },
-      ...(ROLES_EQUIPE_ACTIFS ? [
-        { path: '/journal-audit/accueil', label: 'Accueil' },
-        { path: '/journal-audit/controleur', label: 'Contrôleur' },
-      ] : []),
+      { path: '/journal-audit/accueil', label: 'Accueil' },
+      { path: '/journal-audit/controleur', label: 'Contrôleur' },
     ],
-  },
-  // L'Admin gere les comptes Gerant (et consulte le reste de l'equipe) ;
-  // le Gerant gere l'Accueil et les Controleurs.
-  { path: '/equipe', label: 'Personnel', icon: 'fa-users', roles: ['ADMIN'] },
+  } : { path: '/journal-audit/gerant', label: 'Journal', icon: 'fa-clipboard-list', roles: ['ADMIN'] },
+  { path: '/equipe', label: 'Équipe', icon: 'fa-users', roles: ['ADMIN'] },
   ...(ROLES_EQUIPE_ACTIFS ? [{ path: '/personnel', label: 'Équipe', icon: 'fa-users', roles: ['GERANT'] }] : []),
 ]
 

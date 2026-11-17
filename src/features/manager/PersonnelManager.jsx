@@ -36,7 +36,7 @@ export default function PersonnelManager() {
 
   return (
     <Layout>
-      <EnTetePage titre="Personnel" resume="Comptes Gérant et reste de l’équipe" aide={AIDES.personnel} />
+      <EnTetePage titre="Équipe" resume={ROLES_EQUIPE_ACTIFS ? 'Comptes Gérant et reste de l’équipe' : 'Les gérants de votre complexe'} aide={AIDES.personnel} />
 
       {ROLES_EQUIPE_ACTIFS && <StatFilterCards
         items={GROUPES.map((item) => ({ ...item, value: counts[item.key] }))}
