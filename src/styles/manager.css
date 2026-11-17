@@ -1226,10 +1226,6 @@ a.crud-action { text-decoration: none; }
 @media (max-width: 1100px) { .crud-filter-grid.is-5col { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 760px) { .crud-filter-grid.is-5col { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-/* Tableau de bord Admin : 2 cartes qui occupent toute la largeur. */
+/* Tableau de bord Admin : 2 cartes etirees sur toute la longueur (meme hauteur). */
 .dashboard-kpi-grid.is-2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.dashboard-kpi-grid.is-2col .dashboard-kpi-card { min-height: 128px; padding: 22px 26px; }
-.dashboard-kpi-grid.is-2col .dashboard-kpi-card strong { font-size: 34px; }
-.dashboard-kpi-grid.is-2col .dashboard-kpi-icon { width: 52px; height: 52px; font-size: 20px; }
-.dashboard-kpi-grid.is-2col .dashboard-kpi-label { font-size: 13px; }
 @media (max-width: 560px) { .dashboard-kpi-grid.is-2col { grid-template-columns: 1fr; } }
