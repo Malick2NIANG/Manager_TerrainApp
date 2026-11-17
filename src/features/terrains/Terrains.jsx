@@ -8,6 +8,7 @@ import TerrainFormModal from './TerrainFormModal.jsx'
 import '../../styles/terrains.css'
 import { estVideo } from '../annonces/annonces.js'
 import EnTetePage from '../../components/EnTetePage.jsx'
+import useChangementsPublics from '../../hooks/useChangementsPublics.js'
 import { AIDES } from '../../components/aidesPages.js'
 import Volet from '../../components/Volet.jsx'
 import StatFilterCards from '../../components/crud/StatFilterCards.jsx'
@@ -46,6 +47,8 @@ export default function Terrains() {
   }, [])
 
   useEffect(() => { charger() }, [charger])
+  // Un autre poste publie, depublie ou archive : la liste suit en direct.
+  useChangementsPublics(['terrains'], charger)
 
   async function ajouterSport(e) {
     e.preventDefault()
