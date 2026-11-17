@@ -8,7 +8,7 @@ import { dateLongue, decalerJour, formatFCFA, heure, jourISO, jourRelatif, plage
 import { BadgeStatut, MOYENS, telephoneLisible } from './statuts.jsx'
 import ComptoirModal from './ComptoirModal.jsx'
 import AnnulationModal, { refusAnnulation } from './AnnulationModal.jsx'
-import { imprimerRecu } from '../caisse/caisse.js'
+import { reimprimerRecu } from '../caisse/caisse.js'
 import { marque } from '../../config/marque.js'
 import PlanningGrille from './PlanningGrille.jsx'
 import { correspond, filtrerTerrains, terrainsParSport } from './grille.js'
@@ -96,6 +96,15 @@ export default function Planning() {
     const actives = reservations.filter((r) => ['CONFIRMEE', 'HONOREE'].includes(r.statut))
     return { nombre: actives.length, montant: actives.reduce((s, r) => s + r.montant, 0) }
   }, [reservations])
+
+  // Recu imprimable a tout moment pour une reservation payee (QR du ticket, journalise).
+  async function imprimer(r) {
+    try {
+      await reimprimerRecu(r.id, { etablissement: marque.etablissement || marque.nom, moyens: MOYENS, caissier: username }, apiPost)
+    } catch (e) {
+      setToast({ id: Date.now(), type: 'error', message: e.message })
+    }
+  }
 
   async function annuler(motif) {
     const r = annulation
@@ -215,7 +224,7 @@ export default function Planning() {
               if (Math.abs(dx) > 60) changerTerrain(dx < 0 ? 1 : -1)
             }}>
           <PlanningGrille enTete={!pagine} jour={jour} dispos={affiches} reservations={reservations} peutReserver={peutReserver} recherche={recherche}
-            onReserver={setComptoir} onOuvrir={setFiche} />
+            onReserver={setComptoir} onOuvrir={setFiche} onImprimer={peutReserver ? imprimer : undefined} />
           </div>
         </>
       )}
@@ -268,9 +277,8 @@ export default function Planning() {
                   )
               })()}
               <span className="fiche-actions-droite">
-                {fiche.payeeLe && fiche.canal === 'COMPTOIR' && (
-                  <button className="manager-button manager-button-quiet" type="button"
-                    onClick={() => imprimerRecu(fiche, { etablissement: marque.etablissement || marque.nom, moyens: MOYENS, caissier: username })}>
+                {peutReserver && fiche.payeeLe && ['CONFIRMEE', 'HONOREE'].includes(fiche.statut) && (
+                  <button className="manager-button manager-button-quiet" type="button" onClick={() => imprimer(fiche)}>
                     <i className="fa-solid fa-print" aria-hidden="true" /> Reçu
                   </button>
                 )}

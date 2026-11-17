@@ -9,7 +9,7 @@ import { MINUTE_PX, bornes, correspond, heuresAxe, minutesDepuis, position } fro
 // = un bloc pointille cliquable (« + ») ; une fermeture = un bloc hachure.
 // La ligne rouge marque l'heure actuelle. Defilement horizontal sur mobile,
 // heures et noms des terrains toujours visibles.
-export default function PlanningGrille({ jour, dispos, reservations, peutReserver, onReserver, onOuvrir, recherche = '', enTete = true }) {
+export default function PlanningGrille({ jour, dispos, reservations, peutReserver, onReserver, onOuvrir, onImprimer, recherche = '', enTete = true }) {
   const zone = useRef(null)
   const axe = bornes(jour, dispos)
   const estAujourdhui = jour === jourISO()
@@ -81,9 +81,12 @@ export default function PlanningGrille({ jour, dispos, reservations, peutReserve
               const court = pos.height < 40
               if (r) {
                 const s = STATUTS[r.statut] || {}
+                const imprimable = onImprimer && r.payeeLe && ['CONFIRMEE', 'HONOREE'].includes(r.statut)
                 return (
-                  <button key={c.debut} type="button" className={`pg-bloc is-reserve ${s.classe || ''} ${actif && correspond(r, recherche) ? 'is-trouve' : ''}`} style={pos}
-                    onClick={() => onOuvrir(r)} title={`${r.clientNom} · ${heure(c.debut)}–${heure(c.fin)} · ${s.libelle || r.statut}`}>
+                  <div key={c.debut} role="button" tabIndex={0}
+                    className={`pg-bloc is-reserve ${s.classe || ''} ${actif && correspond(r, recherche) ? 'is-trouve' : ''}`} style={pos}
+                    onClick={() => onOuvrir(r)} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onOuvrir(r))}
+                    title={`${r.clientNom} · ${heure(c.debut)}–${heure(c.fin)} · ${s.libelle || r.statut}`}>
                     <strong>{r.clientNom}</strong>
                     {!court && (
                       <small>
@@ -92,7 +95,13 @@ export default function PlanningGrille({ jour, dispos, reservations, peutReserve
                         {aEncaisser(r) && <em>À encaisser</em>}
                       </small>
                     )}
-                  </button>
+                    {imprimable && (
+                      <button type="button" className="pg-imprimer" aria-label={`Imprimer le reçu de ${r.clientNom}`} title="Imprimer le reçu"
+                        onClick={(e) => { e.stopPropagation(); onImprimer(r) }} onKeyDown={(e) => e.stopPropagation()}>
+                        <i className="fa-solid fa-print" aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
                 )
               }
               if (c.etat === 'BLOQUE') {

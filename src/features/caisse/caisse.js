@@ -107,3 +107,10 @@ export async function imprimerRecu(r, options) {
   await fini
   cadre.remove()
 }
+
+/** Reimpression depuis le planning : le serveur rend le code du ticket (QR) et journalise. */
+export async function reimprimerRecu(id, options, charger) {
+  const r = await charger(`/reservations/${id}/recu`)
+  await imprimerRecu(r, options)
+  return r
+}

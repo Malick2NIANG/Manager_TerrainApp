@@ -443,3 +443,9 @@ button.pg-bloc.is-libre:hover, button.pg-bloc.is-libre:focus-visible { backgroun
 .ab-encaisser.is-fait { flex-direction: row; align-items: center; flex-wrap: wrap; color: #1f6f57; font-weight: 700; }
 .fiche-actions-droite { display: inline-flex; gap: 8px; margin-left: auto; }
 @media (max-width: 760px) { .caisse { grid-template-columns: 1fr; } }
+
+/* Recu a reimprimer depuis le bloc d'une reservation payee */
+.pg-bloc.is-reserve { padding-right: 34px; }
+.pg-imprimer { position: absolute; top: 50%; right: 5px; transform: translateY(-50%); display: grid; width: 26px; height: 26px; place-items: center; border: 0; border-radius: 7px; background: rgb(255 255 255 / 22%); color: inherit; font-size: 12px; cursor: pointer; }
+.pg-imprimer:hover, .pg-imprimer:focus-visible { background: #fff; color: var(--marque); outline: none; }
+.pg-bloc.is-attente .pg-imprimer { background: rgb(0 0 0 / 8%); }
