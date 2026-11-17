@@ -43,15 +43,40 @@ function cellule(v) {
   return /[";\n\r]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t
 }
 
-/** CSV (separateur ; pour Excel en francais, BOM UTF-8) des reservations. */
+const JOUR_CSV = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Africa/Dakar', weekday: 'short' })
+const quand = (iso) => `${DATE_CSV.format(new Date(iso))} ${HEURE_CSV.format(new Date(iso))}`
+
+/** Montant reellement encaisse : paye et ni annule ni expire (comme la carte « Encaisse »). */
+export function montantEncaisse(r) {
+  return r.payeeLe && (r.statut === 'CONFIRMEE' || r.statut === 'HONOREE') ? Number(r.montant) || 0 : 0
+}
+
+/**
+ * CSV des reservations pour Excel en francais : separateur ;, BOM UTF-8,
+ * ordre chronologique (plus ancien en haut), montants en nombres entiers
+ * (additionnables), moyen de paiement seulement si la reservation est payee,
+ * et une ligne TOTAL a la fin.
+ */
 export function csvHistorique(reservations) {
-  const entetes = ['Date', 'Début', 'Fin', 'Référence', 'Terrain', 'Sport', 'Client', 'Téléphone', 'Montant (F CFA)',
-    'Paiement', 'Payée le', 'Statut', 'Canal', 'Motif d’annulation']
-  const lignes = reservations.map((r) => [
-    DATE_CSV.format(new Date(r.debut)), HEURE_CSV.format(new Date(r.debut)), HEURE_CSV.format(new Date(r.fin)),
-    r.reference, r.terrain, r.sport, r.clientNom, telephoneLisible(r.clientTelephone), r.montant,
-    MOYENS[r.moyenPaiement] || r.moyenPaiement || '', r.payeeLe ? `${DATE_CSV.format(new Date(r.payeeLe))} ${HEURE_CSV.format(new Date(r.payeeLe))}` : '',
-    STATUTS[r.statut]?.libelle || r.statut, r.canal === 'APP' ? 'App' : 'Comptoir', r.motifAnnulation || '',
+  const entetes = ['Date', 'Jour', 'Début', 'Fin', 'Durée (min)', 'Référence', 'Terrain', 'Sport', 'Client', 'Téléphone',
+    'Canal', 'Abonnement', 'Statut', 'Montant (F CFA)', 'Encaissé (F CFA)', 'Moyen de paiement', 'Payée le',
+    'Espèces reçues', 'Monnaie rendue', 'Motif d’annulation']
+  const tries = [...reservations].sort((a, b) => new Date(a.debut) - new Date(b.debut) || a.id - b.id)
+  const lignes = tries.map((r) => [
+    DATE_CSV.format(new Date(r.debut)), JOUR_CSV.format(new Date(r.debut)).replace('.', ''),
+    HEURE_CSV.format(new Date(r.debut)), HEURE_CSV.format(new Date(r.fin)),
+    Math.round((new Date(r.fin) - new Date(r.debut)) / 60000),
+    r.reference, r.terrain, r.sport, r.clientNom, telephoneLisible(r.clientTelephone),
+    r.canal === 'APP' ? 'App' : 'Comptoir', r.abonnementId ? 'Oui' : 'Non',
+    STATUTS[r.statut]?.libelle || r.statut, Number(r.montant) || 0, montantEncaisse(r),
+    r.payeeLe ? MOYENS[r.moyenPaiement] || r.moyenPaiement || '' : '', r.payeeLe ? quand(r.payeeLe) : '',
+    r.payeeLe && r.especesRecues != null ? r.especesRecues : '', r.payeeLe && r.monnaieRendue != null ? r.monnaieRendue : '',
+    r.motifAnnulation || '',
   ])
-  return '﻿' + [entetes, ...lignes].map((l) => l.map(cellule).join(';')).join('\r\n')
+  const total = Array(entetes.length).fill('')
+  total[0] = 'TOTAL'
+  total[5] = `${tries.length} réservation${tries.length > 1 ? 's' : ''}`
+  total[13] = tries.reduce((n, r) => n + (Number(r.montant) || 0), 0)
+  total[14] = tries.reduce((n, r) => n + montantEncaisse(r), 0)
+  return '\uFEFF' + [entetes, ...lignes, total].map((l) => l.map(cellule).join(';')).join('\r\n') + '\r\n'
 }

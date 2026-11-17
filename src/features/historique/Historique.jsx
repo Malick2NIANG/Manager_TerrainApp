@@ -79,7 +79,7 @@ export default function Historique() {
       const url = URL.createObjectURL(new Blob([csvHistorique(tout.elements)], { type: 'text/csv;charset=utf-8' }))
       const a = document.createElement('a')
       a.href = url
-      a.download = `historique-${filtres.du}-au-${filtres.au}.csv`
+      a.download = `historique-reservations_${filtres.du}_${filtres.au}.csv`
       a.click()
       URL.revokeObjectURL(url)
       if (tout.total > tout.elements.length) notifier('warning', `Export limité aux ${tout.elements.length} premières réservations : réduisez la période.`)
