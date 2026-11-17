@@ -361,3 +361,15 @@ button.pg-bloc.is-libre:hover, button.pg-bloc.is-libre:focus-visible { backgroun
 .manager-shell.is-dark .ta-date-centre { border-color: #2a2a2e; }
 .manager-shell.is-dark .ta-date-centre:hover { background: #1f1f23; }
 .manager-shell.is-dark .ta-date-fleche { color: #a1a1a6; }
+
+/* Recherche dans le planning : les blocs trouves ressortent, le reste s'estompe */
+.ta-recherche-planning { flex: 0 1 300px; }
+.ta-recherche-planning input { padding-right: 92px; background: #fff; }
+.ta-recherche-compte { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); padding: 2px 8px; border-radius: 999px; background: var(--marque-pale); color: var(--marque); font-size: 11px; font-weight: 700; pointer-events: none; }
+.ta-recherche-compte.is-vide { background: #fbe4e2; color: #b3261e; }
+.pg.is-recherche .pg-bloc { opacity: .28; }
+.pg.is-recherche .pg-bloc.is-trouve { opacity: 1; box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--marque); z-index: 1; }
+@media (max-width: 760px) {
+  .ta-recherche-planning { flex: 1 1 100%; max-width: none; order: 3; }
+  .ta-toolbar .ta-toolbar-spacer { display: none; }
+}

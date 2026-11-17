@@ -2,14 +2,14 @@ import { useEffect, useRef } from 'react'
 import { formatFCFA, heure, jourISO } from '../../utils/dates.js'
 import { STATUTS, reservationDuCreneau } from './statuts.jsx'
 import { aEncaisser } from '../abonnements/abonnements.js'
-import { MINUTE_PX, bornes, heuresAxe, minutesDepuis, position } from './grille.js'
+import { MINUTE_PX, bornes, correspond, heuresAxe, minutesDepuis, position } from './grille.js'
 
 // Planning du jour comme un agenda : une colonne par terrain, les heures en
 // lignes. Une reservation = un bloc plein (nom du client) ; un creneau libre
 // = un bloc pointille cliquable (« + ») ; une fermeture = un bloc hachure.
 // La ligne rouge marque l'heure actuelle. Defilement horizontal sur mobile,
 // heures et noms des terrains toujours visibles.
-export default function PlanningGrille({ jour, dispos, reservations, peutReserver, onReserver, onOuvrir }) {
+export default function PlanningGrille({ jour, dispos, reservations, peutReserver, onReserver, onOuvrir, recherche = '' }) {
   const zone = useRef(null)
   const axe = bornes(jour, dispos)
   const estAujourdhui = jour === jourISO()
@@ -25,13 +25,20 @@ export default function PlanningGrille({ jour, dispos, reservations, peutReserve
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jour, Boolean(axe)])
 
+  // Recherche : la premiere reservation trouvee est amenee a l'ecran.
+  const actif = recherche.trim() !== ''
+  useEffect(() => {
+    if (!actif || !zone.current) return
+    zone.current.querySelector('.pg-bloc.is-trouve')?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
+  }, [recherche, actif])
+
   if (!axe) return <p className="planning-vide">Le complexe est fermé ce jour-là.</p>
 
   const hauteur = (axe.fin - axe.debut) * MINUTE_PX
   const heures = heuresAxe(axe)
 
   return (
-    <div className="pg" ref={zone} style={{ '--pg-colonnes': dispos.length }}>
+    <div className={`pg ${actif ? 'is-recherche' : ''}`} ref={zone} style={{ '--pg-colonnes': dispos.length }}>
       <div className="pg-tete">
         <div className="pg-coin" />
         {dispos.map((t) => {
@@ -61,7 +68,7 @@ export default function PlanningGrille({ jour, dispos, reservations, peutReserve
               if (r) {
                 const s = STATUTS[r.statut] || {}
                 return (
-                  <button key={c.debut} type="button" className={`pg-bloc is-reserve ${s.classe || ''}`} style={pos}
+                  <button key={c.debut} type="button" className={`pg-bloc is-reserve ${s.classe || ''} ${actif && correspond(r, recherche) ? 'is-trouve' : ''}`} style={pos}
                     onClick={() => onOuvrir(r)} title={`${r.clientNom} · ${heure(c.debut)}–${heure(c.fin)} · ${s.libelle || r.statut}`}>
                     <strong>{r.clientNom}</strong>
                     {!court && (

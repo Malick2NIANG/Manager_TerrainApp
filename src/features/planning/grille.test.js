@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bornes, heuresAxe, minutesDepuis, position } from './grille.js'
+import { bornes, correspond, heuresAxe, minutesDepuis, position } from './grille.js'
 
 describe('planning en grille', () => {
   const jour = '2026-11-17'
@@ -24,5 +24,17 @@ describe('planning en grille', () => {
 
   it('jour sans creneau', () => {
     expect(bornes(jour, [{ creneaux: [] }])).toBeNull()
+  })
+})
+
+describe('recherche dans le planning', () => {
+  const r = { clientNom: 'Awa Ndiaye', reference: 'REBRA3U', clientTelephone: '+221771234567' }
+  it('nom sans accents, reference, numero', () => {
+    expect(correspond(r, 'ndiay')).toBe(true)
+    expect(correspond({ ...r, clientNom: 'Aïssatou Sène' }, 'sene')).toBe(true)
+    expect(correspond(r, 'rebra')).toBe(true)
+    expect(correspond(r, '77 123')).toBe(true)
+    expect(correspond(r, 'fatou')).toBe(false)
+    expect(correspond(r, '')).toBe(true)
   })
 })

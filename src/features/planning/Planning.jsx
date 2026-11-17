@@ -9,6 +9,7 @@ import { dateLongue, decalerJour, formatFCFA, heure, jourISO, jourRelatif, plage
 import { BadgeStatut, MOYENS, telephoneLisible } from './statuts.jsx'
 import ComptoirModal from './ComptoirModal.jsx'
 import PlanningGrille from './PlanningGrille.jsx'
+import { correspond } from './grille.js'
 import EncaisserSeance from '../abonnements/EncaisserSeance.jsx'
 import { aEncaisser } from '../abonnements/abonnements.js'
 import '../../styles/terrains.css'
@@ -62,11 +63,17 @@ export default function Planning() {
     return () => clearInterval(t)
   }, [charger, connecte])
 
+  const [recherche, setRecherche] = useState('')
   const visibles = useMemo(() => {
     if (!dispos) return dispos
     const un = dispos.filter((t) => String(t.terrainId) === filtre)
     return un.length ? un : dispos
   }, [dispos, filtre])
+
+  const trouvees = useMemo(() => (recherche.trim()
+    ? reservations.filter((r) => !['ANNULEE', 'EXPIREE'].includes(r.statut) && correspond(r, recherche)
+      && (visibles || []).some((t) => t.terrainId === r.terrainId)).length
+    : 0), [recherche, reservations, visibles])
 
   const stats = useMemo(() => {
     const actives = reservations.filter((r) => ['CONFIRMEE', 'HONOREE'].includes(r.statut))
@@ -121,6 +128,17 @@ export default function Planning() {
             <i className="fa-solid fa-rotate-left" aria-hidden="true" /> Aujourd’hui
           </button>
         )}
+        <span className="ta-toolbar-spacer" />
+        <div className="crud-search ta-recherche-planning">
+          <i className="fa-solid fa-magnifying-glass" aria-hidden="true" />
+          <input type="search" value={recherche} onChange={(e) => setRecherche(e.target.value)}
+            placeholder="Client, numéro ou référence…" aria-label="Rechercher une réservation du jour" />
+          {recherche.trim() && (
+            <span className={`ta-recherche-compte ${trouvees ? '' : 'is-vide'}`} aria-live="polite">
+              {trouvees ? `${trouvees} trouvée${trouvees > 1 ? 's' : ''}` : 'Aucune'}
+            </span>
+          )}
+        </div>
         {dispos && dispos.length > 1 && (
           <label className="ta-filtre-terrain">
             <i className="fa-solid fa-filter" aria-hidden="true" />
@@ -131,8 +149,6 @@ export default function Planning() {
             </select>
           </label>
         )}
-        <span className="ta-toolbar-spacer" />
-        <span className={`ta-live ${connecte ? 'is-on' : ''}`}>{connecte ? 'En direct' : 'Hors direct'}</span>
       </div>
 
       {erreur && <p className="ta-form-erreur" role="alert">{erreur}</p>}
@@ -148,7 +164,7 @@ export default function Planning() {
             <span><i className="pg-pastille is-libre" /> Libre{peutReserver ? ' : touchez pour réserver' : ''}</span>
             <span><i className="pg-pastille is-bloque" /> Fermé</span>
           </div>
-          <PlanningGrille jour={jour} dispos={visibles} reservations={reservations} peutReserver={peutReserver}
+          <PlanningGrille jour={jour} dispos={visibles} reservations={reservations} peutReserver={peutReserver} recherche={recherche}
             onReserver={setComptoir} onOuvrir={setFiche} />
         </>
       )}

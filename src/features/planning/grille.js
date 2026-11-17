@@ -31,3 +31,14 @@ export function position(jour, axe, debut, fin) {
   const f = minutesDepuis(jour, fin)
   return { top: (d - axe.debut) * MINUTE_PX, height: Math.max(18, (f - d) * MINUTE_PX) }
 }
+
+const sansAccents = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
+/** Recherche dans le planning : nom du client, reference, ou numero (chiffres, avec ou sans 221). */
+export function correspond(r, recherche) {
+  const q = sansAccents(recherche).trim()
+  if (!q) return true
+  if (sansAccents(r.clientNom).includes(q) || sansAccents(r.reference).includes(q)) return true
+  const chiffres = q.replace(/\D/g, '')
+  return chiffres.length >= 3 && String(r.clientTelephone || '').replace(/\D/g, '').includes(chiffres)
+}
