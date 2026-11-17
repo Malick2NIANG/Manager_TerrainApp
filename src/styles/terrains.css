@@ -519,3 +519,12 @@ button.pg-bloc.is-libre:hover, button.pg-bloc.is-libre:focus-visible { backgroun
 
 .ta-carte-statut { position: absolute; top: 10px; left: 10px; }
 .ta-carte-actions.crud-card-actions { flex-wrap: wrap; gap: 6px; }
+
+/* Bouton Horaires : bien visible a cote de l'action principale */
+.manager-button.ta-bouton-horaires { gap: 10px; padding: 8px 16px 8px 8px; border: 1.5px solid var(--marque); background: #fff; color: #141414; box-shadow: 0 4px 12px rgb(20 20 20 / 6%); }
+.manager-button.ta-bouton-horaires > i { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 9px; background: var(--marque-pale); color: var(--marque); font-size: 15px; }
+.manager-button.ta-bouton-horaires span { color: #141414; font-weight: 800; font-size: 14px; }
+.manager-button.ta-bouton-horaires small { color: var(--marque); font-size: 12px; font-weight: 700; }
+.manager-button.ta-bouton-horaires:hover { background: var(--marque-pale); }
+.manager-shell.is-dark .manager-button.ta-bouton-horaires { background: #18181b; }
+.manager-shell.is-dark .manager-button.ta-bouton-horaires span { color: #f2f2f2; }
