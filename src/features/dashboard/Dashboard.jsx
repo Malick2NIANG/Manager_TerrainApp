@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { ROLES_EQUIPE_ACTIFS } from '../../config/fonctionnalites.js'
 import usePagination from '../../hooks/usePagination.jsx'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext.jsx'
@@ -91,7 +92,7 @@ function TableauAdmin() {
     <>
       <div className="dashboard-kpi-grid">
         <KpiCard icon="fa-user-tie" accent="green" label="Gérants actifs" value={equipe ? compte('GERANT') : '…'} to="/equipe" />
-        <KpiCard icon="fa-users" accent="blue" label="Accueil et contrôleurs" value={equipe ? compte('ACCUEIL') + compte('CONTROLEUR') : '…'} to="/equipe" />
+        {ROLES_EQUIPE_ACTIFS && <KpiCard icon="fa-users" accent="blue" label="Accueil et contrôleurs" value={equipe ? compte('ACCUEIL') + compte('CONTROLEUR') : '…'} to="/equipe" />}
         <KpiCard icon="fa-clipboard-list" accent="gold" label="Actions aujourd’hui" value={actions ? actions.length : '…'} to="/journal-audit/gerant" />
       </div>
       <section className="dashboard-panel" style={{ marginTop: 20 }}>

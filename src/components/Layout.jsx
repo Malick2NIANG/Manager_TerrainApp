@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ROLES_EQUIPE_ACTIFS } from '../config/fonctionnalites.js'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { tempsEcoule, useNotifications } from '../notifications/NotificationsContext.jsx'
 import { ROLE_LABELS } from '../auth/roles.js'
@@ -27,14 +28,16 @@ const NAV_ITEMS = [
     // Une sous-page par role ; l'Admin lui-meme n'y figure jamais.
     children: [
       { path: '/journal-audit/gerant', label: 'Gérant' },
-      { path: '/journal-audit/accueil', label: 'Accueil' },
-      { path: '/journal-audit/controleur', label: 'Contrôleur' },
+      ...(ROLES_EQUIPE_ACTIFS ? [
+        { path: '/journal-audit/accueil', label: 'Accueil' },
+        { path: '/journal-audit/controleur', label: 'Contrôleur' },
+      ] : []),
     ],
   },
   // L'Admin gere les comptes Gerant (et consulte le reste de l'equipe) ;
   // le Gerant gere l'Accueil et les Controleurs.
   { path: '/equipe', label: 'Personnel', icon: 'fa-users', roles: ['ADMIN'] },
-  { path: '/personnel', label: 'Équipe', icon: 'fa-users', roles: ['GERANT'] },
+  ...(ROLES_EQUIPE_ACTIFS ? [{ path: '/personnel', label: 'Équipe', icon: 'fa-users', roles: ['GERANT'] }] : []),
 ]
 
 function initials(username, role) {

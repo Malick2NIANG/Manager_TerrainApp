@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { ROLES_EQUIPE_ACTIFS } from '../../config/fonctionnalites.js'
 import Layout from '../../components/Layout.jsx'
 import EnTetePage from '../../components/EnTetePage.jsx'
 import { AIDES } from '../../components/aidesPages.js'
@@ -37,14 +38,14 @@ export default function PersonnelManager() {
     <Layout>
       <EnTetePage titre="Personnel" resume="Comptes Gérant et reste de l’équipe" aide={AIDES.personnel} />
 
-      <StatFilterCards
+      {ROLES_EQUIPE_ACTIFS && <StatFilterCards
         items={GROUPES.map((item) => ({ ...item, value: counts[item.key] }))}
         selected={groupe}
         onSelect={setGroupe}
         ariaLabel="Filtrer le personnel par groupe"
-      />
+      />}
 
-      {groupe === 'GERANTS' ? (
+      {groupe === 'GERANTS' || !ROLES_EQUIPE_ACTIFS ? (
         <StaffUserSection
           key="gerants"
           roles={ROLES_GERANTS}

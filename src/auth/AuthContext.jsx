@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { MESSAGE_ROLE_INACTIF, roleActif } from '../config/fonctionnalites.js'
 import {
   apiPost,
   clearAuthToken,
@@ -18,7 +19,7 @@ const AuthContext = createContext(null)
 
 function readStoredRole() {
   const role = localStorage.getItem(ROLE_KEY)
-  return getAuthToken() && isKnownRole(role) ? role : null
+  return getAuthToken() && isKnownRole(role) && roleActif(role) ? role : null
 }
 
 function readStoredUsername() {
@@ -49,6 +50,9 @@ export function AuthProvider({ children }) {
     // Un ancien token ne doit pas accompagner la tentative de connexion.
     clearAuthToken()
     const response = await apiPost('/auth/login', { username, password })
+    if (response?.role && !roleActif(response.role)) {
+      throw new Error(MESSAGE_ROLE_INACTIF)
+    }
     if (response?.mustChangePassword) {
       return { mustChangePassword: true, role: response.role }
     }

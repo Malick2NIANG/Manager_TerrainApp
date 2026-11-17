@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { ROLES_EQUIPE_ACTIFS } from '../../config/fonctionnalites.js'
 import { Navigate, NavLink, useParams } from 'react-router-dom'
 import Layout from '../../components/Layout.jsx'
 import EnTetePage from '../../components/EnTetePage.jsx'
@@ -17,7 +18,7 @@ import { exporterJournalAudit } from './exportJournalAudit.js'
 // Journal d’audit (Admin) : consultation seule des actions metier du
 // personnel, une sous-page par role (voir Layout.jsx et App.jsx). L'Admin
 // n'a pas sa propre sous-page.
-export const ROLES_AUDIT = ['GERANT', 'ACCUEIL', 'CONTROLEUR']
+export const ROLES_AUDIT = ROLES_EQUIPE_ACTIFS ? ['GERANT', 'ACCUEIL', 'CONTROLEUR'] : ['GERANT']
 
 const SLUG_PAR_ROLE = { GERANT: 'gerant', ACCUEIL: 'accueil', CONTROLEUR: 'controleur' }
 const ROLE_PAR_SLUG = Object.fromEntries(Object.entries(SLUG_PAR_ROLE).map(([role, slug]) => [slug, role]))

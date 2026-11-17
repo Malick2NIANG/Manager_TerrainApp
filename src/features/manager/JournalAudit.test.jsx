@@ -9,6 +9,9 @@ import {
   TOUS, erreurPeriode, filtrerJournal, filtrerParPeriode, libellePeriode, lignesExport, nomFichierExport,
 } from './journalAuditFiltres.js'
 
+// Ces tests couvrent l'equipe complete : roles Accueil / Controleur actives.
+vi.mock('../../config/fonctionnalites.js', async (original) => ({ ...(await original()), ROLES_EQUIPE_ACTIFS: true }))
+
 vi.mock('./useDonneesManager.js', async () => {
   const { journalAudit } = await import('./auditData.js')
   return { useJournalAudit: () => ({ entrees: journalAudit, chargement: false, erreur: null }) }
