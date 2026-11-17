@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ROLES_EQUIPE_ACTIFS } from '../../config/fonctionnalites.js'
-import { Navigate, NavLink, useParams } from 'react-router-dom'
+import { Navigate, NavLink, useNavigate, useParams } from 'react-router-dom'
+import { CHEMIN_JOURNAL, JOURNAL_PAR_SECTIONS, SECTIONS_JOURNAL, sectionDepuisSlug } from './sectionsJournal.js'
 import Layout from '../../components/Layout.jsx'
 import EnTetePage from '../../components/EnTetePage.jsx'
 import { AIDES } from '../../components/aidesPages.js'
@@ -194,8 +195,12 @@ function ExportAuditModal({ entrees, filtres, onExported, onClose }) {
 
 export default function JournalAudit() {
   const { roleSlug } = useParams()
-  const roleResolu = roleDepuisSlug(roleSlug)
-  const roleValide = roleResolu !== null
+  const navigate = useNavigate()
+  // Sans les roles Accueil / Controleur, le parametre d'URL designe une
+  // sous-page du journal des gerants (une par carte) et non un role.
+  const section = JOURNAL_PAR_SECTIONS ? sectionDepuisSlug(roleSlug) : null
+  const roleResolu = JOURNAL_PAR_SECTIONS ? 'GERANT' : roleDepuisSlug(roleSlug)
+  const roleValide = JOURNAL_PAR_SECTIONS ? section !== null : roleResolu !== null
   // Repli pour que les Hooks ci-dessous recoivent toujours un role audit
   // valide, meme sur un slug invalide : on ne doit JAMAIS retourner avant
   // d’avoir appele tous les Hooks (regle des Hooks) — un slug
@@ -237,27 +242,41 @@ export default function JournalAudit() {
     setPage(1)
   }, [role, entreesDuRole])
 
-  const domaineItems = useMemo(() => DOMAINES_CARTES.map((key) => ({
-    key,
-    label: domaineAudit(key).label,
-    icon: domaineAudit(key).icon,
-    value: entreesDuRole.filter((entree) => entree.domaine === key).length,
-    ...DOMAINE_ACCENTS[key],
-  })), [entreesDuRole])
+  // Changement de sous-page (carte ou menu) : liste reprise en page 1.
+  useEffect(() => { setPage(1) }, [roleSlug])
 
-  const filtres = { role, domaine, recherche }
+  const domaineItems = useMemo(() => (JOURNAL_PAR_SECTIONS
+    ? SECTIONS_JOURNAL.map((s) => ({
+      key: s.slug, label: s.label, icon: s.icon, accent: s.accent, accentBg: s.accentBg,
+      value: entreesDuRole.filter((entree) => s.domaines.includes(entree.domaine)).length,
+    }))
+    : DOMAINES_CARTES.map((key) => ({
+      key,
+      label: domaineAudit(key).label,
+      icon: domaineAudit(key).icon,
+      value: entreesDuRole.filter((entree) => entree.domaine === key).length,
+      ...DOMAINE_ACCENTS[key],
+    }))), [entreesDuRole])
+
+  // Sous-page : les domaines de sa carte ; sinon le domaine choisi.
+  const domaineFiltre = JOURNAL_PAR_SECTIONS ? (section ?? SECTIONS_JOURNAL[0]).domaines : domaine
+  const filtres = { role, domaine: domaineFiltre, recherche, libelleDomaine: section?.label }
   const periode = { debut: dateDebut, fin: dateFin }
   const erreurDate = erreurPeriode(periode)
-  const filtresActifs = domaine !== domainePrincipal(entreesDuRole) || recherche.trim() !== '' || Boolean(dateDebut) || Boolean(dateFin)
+  const filtresActifs = (!JOURNAL_PAR_SECTIONS && domaine !== domainePrincipal(entreesDuRole)) || recherche.trim() !== '' || Boolean(dateDebut) || Boolean(dateFin)
   const resultats = useMemo(() => {
     const entreesPeriode = erreurDate ? entreesDuRole : filtrerParPeriode(entreesDuRole, periode)
-    return filtrerJournal(entreesPeriode, { domaine, recherche })
+    return filtrerJournal(entreesPeriode, { domaine: domaineFiltre, recherche })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entreesDuRole, domaine, recherche, dateDebut, dateFin])
+  }, [entreesDuRole, domaine, roleSlug, recherche, dateDebut, dateFin])
   const pageCount = Math.max(1, Math.ceil(resultats.length / rows))
   const groupes = grouperParJour(resultats.slice((page - 1) * rows, page * rows))
 
   function changerDomaine(key) {
+    if (JOURNAL_PAR_SECTIONS) {
+      navigate(`/journal-audit/${key}`)
+      return
+    }
     setDomaine(key)
     setPage(1)
   }
@@ -279,11 +298,11 @@ export default function JournalAudit() {
     setPage(1)
   }
 
-  if (!roleValide) return <Navigate to="/journal-audit/gerant" replace />
+  if (!roleValide) return <Navigate to={CHEMIN_JOURNAL} replace />
 
   return (
     <Layout>
-      <EnTetePage titre={ROLES_AUDIT.length > 1 ? `Journal · ${ROLE_LABELS[role]}` : 'Journal des gérants'} resume={ROLES_AUDIT.length > 1 ? `Actions de l’équipe ${ROLE_LABELS[role]}, en consultation seule` : 'Les actions de vos gérants, en consultation seule'} aide={AIDES.journal} />
+      <EnTetePage titre={JOURNAL_PAR_SECTIONS ? `Journal · ${section?.label ?? ''}` : `Journal · ${ROLE_LABELS[role]}`} resume={JOURNAL_PAR_SECTIONS ? 'Les actions de vos gérants, en consultation seule' : `Actions de l’équipe ${ROLE_LABELS[role]}, en consultation seule`} aide={AIDES.journal} />
 
       <section>
         {ROLES_AUDIT.length > 1 && <nav className="audit-role-tabs" aria-label="Choisir un rôle">
@@ -300,10 +319,10 @@ export default function JournalAudit() {
 
         <StatFilterCards
           items={domaineItems}
-          selected={domaine}
+          selected={JOURNAL_PAR_SECTIONS ? section?.slug : domaine}
           onSelect={changerDomaine}
           ariaLabel="Filtrer par type d’action"
-          className="is-4col"
+          className={JOURNAL_PAR_SECTIONS ? 'is-5col' : 'is-4col'}
         />
 
         <div className="crud-toolbar audit-toolbar">

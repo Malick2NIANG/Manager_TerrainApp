@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react'
+import { CHEMIN_JOURNAL } from './features/manager/sectionsJournal.js'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Connexion from './auth/Connexion.jsx'
 import { AuthProvider, useAuth } from './auth/AuthContext.jsx'
@@ -61,7 +62,7 @@ export default function App() {
                 path="/journal-audit"
                 element={
                   <ProtectedRoute roles={ROUTE_ROLES['/journal-audit']}>
-                    <Navigate to="/journal-audit/gerant" replace />
+                    <Navigate to={CHEMIN_JOURNAL} replace />
                   </ProtectedRoute>
                 }
               />

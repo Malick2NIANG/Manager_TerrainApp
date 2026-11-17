@@ -93,13 +93,13 @@ function TableauAdmin() {
       <div className="dashboard-kpi-grid">
         <KpiCard icon="fa-user-tie" accent="green" label="Gérants actifs" value={equipe ? compte('GERANT') : '…'} to="/equipe" />
         {ROLES_EQUIPE_ACTIFS && <KpiCard icon="fa-users" accent="blue" label="Accueil et contrôleurs" value={equipe ? compte('ACCUEIL') + compte('CONTROLEUR') : '…'} to="/equipe" />}
-        <KpiCard icon="fa-clipboard-list" accent="gold" label="Actions aujourd’hui" value={actions ? actions.length : '…'} to="/journal-audit/gerant" />
+        <KpiCard icon="fa-clipboard-list" accent="gold" label="Actions aujourd’hui" value={actions ? actions.length : '…'} to="/journal-audit" />
       </div>
       <section className="dashboard-panel" style={{ marginTop: 20 }}>
         <div className="dashboard-panel-heading ta-toolbar">
           <div><p className="manager-eyebrow">Monitoring</p><h2>Dernières actions</h2></div>
           <span className="ta-toolbar-spacer" />
-          <Link className="manager-button manager-button-quiet" to="/journal-audit/gerant">Journal d’audit</Link>
+          <Link className="manager-button manager-button-quiet" to="/journal-audit">Journal</Link>
         </div>
         {actions?.length === 0 && <p className="planning-vide">Aucune action aujourd’hui.</p>}
         <ul className="dashboard-activity-list">

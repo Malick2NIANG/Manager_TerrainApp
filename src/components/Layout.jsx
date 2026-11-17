@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { SECTIONS_JOURNAL } from '../features/manager/sectionsJournal.js'
 import { ROLES_EQUIPE_ACTIFS } from '../config/fonctionnalites.js'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { tempsEcoule, useNotifications } from '../notifications/NotificationsContext.jsx'
@@ -33,7 +34,14 @@ const NAV_ITEMS = [
       { path: '/journal-audit/accueil', label: 'Accueil' },
       { path: '/journal-audit/controleur', label: 'Contrôleur' },
     ],
-  } : { path: '/journal-audit/gerant', label: 'Journal', icon: 'fa-clipboard-list', roles: ['ADMIN'] },
+  } : {
+    path: '/journal-audit',
+    label: 'Journal',
+    icon: 'fa-clipboard-list',
+    roles: ['ADMIN'],
+    // Une sous-page par carte du journal des gerants.
+    children: SECTIONS_JOURNAL.map((s) => ({ path: `/journal-audit/${s.slug}`, label: s.label })),
+  },
   { path: '/equipe', label: 'Équipe', icon: 'fa-users', roles: ['ADMIN'] },
   ...(ROLES_EQUIPE_ACTIFS ? [{ path: '/personnel', label: 'Équipe', icon: 'fa-users', roles: ['GERANT'] }] : []),
 ]
