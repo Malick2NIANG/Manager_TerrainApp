@@ -3,7 +3,8 @@
    manager.css n'est pas forcement charge. */
 
 .pied-de-page { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; text-align: left; }
-.pied-de-page-version { text-align: center; }
+.pied-de-page-copyright { justify-self: start; text-align: left; }
+.pied-de-page-version { justify-self: center; text-align: center; }
 .pied-de-page-aide { justify-self: end; }
 .pied-de-page-aide { margin: -8px -4px; border: 0; padding: 8px 4px; color: inherit; background: none; font: inherit; cursor: pointer; text-underline-offset: 2px; }
 .pied-de-page-aide:hover, .pied-de-page-aide:focus-visible { text-decoration: underline; }
