@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { path: '/planning', label: 'Planning', icon: 'fa-calendar-days', roles: ['GERANT', 'ACCUEIL', 'CONTROLEUR'], groupe: 'planning' },
   { path: '/terrains', label: 'Mon complexe', icon: 'fa-futbol', roles: ['GERANT'], groupe: 'complexe' },
   { path: '/annonces', label: 'Annonces', icon: 'fa-bullhorn', roles: ['GERANT'], groupe: 'vitrine' },
+  { path: '/historique', label: 'Historique', icon: 'fa-clock-rotate-left', roles: ['GERANT'] },
   {
     path: '/journal-audit',
     label: 'Journal d’audit',
@@ -93,6 +94,7 @@ const BOTTOM_TAB_LABELS = {
   '/equipe': 'Équipe',
   '/annonces': 'Annonces',
   '/avis': 'Avis',
+  '/historique': 'Historique',
 }
 
 // Telephone : 4 onglets dans la barre du bas, le reste dans "Plus".

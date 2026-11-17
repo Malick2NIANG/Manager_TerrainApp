@@ -27,6 +27,7 @@ export const ROUTE_ROLES = {
   '/terrains': ['GERANT'],
   '/annonces': ['GERANT'],
   '/avis': ['GERANT'],
+  '/historique': ['GERANT'],
   // Le Gerant gere l'Accueil et les Controleurs ; l'Admin gere les Gerants
   // et consulte le reste de l'equipe (meme partage que SenYummies).
   '/personnel': ['GERANT'],

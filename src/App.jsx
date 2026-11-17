@@ -23,6 +23,7 @@ const PAGES = {
   '/terrains': lazy(() => import('./features/terrains/Terrains.jsx')),
   '/annonces': lazy(() => import('./features/annonces/Annonces.jsx')),
   '/avis': lazy(() => import('./features/avis/Avis.jsx')),
+  '/historique': lazy(() => import('./features/historique/Historique.jsx')),
   '/personnel': lazy(() => import('./features/gerant/Personnel.jsx')),
   '/equipe': lazy(() => import('./features/manager/PersonnelManager.jsx')),
   '/journal-audit/:roleSlug': lazy(() => import('./features/manager/JournalAudit.jsx')),
