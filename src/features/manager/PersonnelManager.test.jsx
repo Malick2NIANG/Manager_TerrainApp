@@ -4,6 +4,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import PersonnelManager from './PersonnelManager.jsx'
 import { apiDelete, apiGet } from '../../api/client.js'
 
+// Ces tests couvrent l'equipe complete : roles Accueil / Controleur actives.
+vi.mock('../../config/fonctionnalites.js', async (original) => ({ ...(await original()), ROLES_EQUIPE_ACTIFS: true }))
+
 // Page Personnel cote Admin : l'Admin gere les
 // comptes Gerant (groupe CRUD) et consulte le reste de l'equipe (groupe
 // lecture seule) - bascule via deux cartes stats/filtre Gerants/Autres,

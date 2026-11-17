@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react'
+import { CHEMIN_JOURNAL } from './features/manager/sectionsJournal.js'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Connexion from './auth/Connexion.jsx'
 import { AuthProvider, useAuth } from './auth/AuthContext.jsx'
@@ -18,9 +19,12 @@ const PAGES = {
   '/dashboard': lazy(() => import('./features/dashboard/Dashboard.jsx')),
   '/planning': lazy(() => import('./features/planning/Planning.jsx')),
   '/scan': lazy(() => import('./features/scan/Scan.jsx')),
+  '/abonnements': lazy(() => import('./features/abonnements/Abonnements.jsx')),
   '/blocages': lazy(() => import('./features/terrains/Blocages.jsx')),
   '/terrains': lazy(() => import('./features/terrains/Terrains.jsx')),
-  '/horaires': lazy(() => import('./features/terrains/Horaires.jsx')),
+  '/annonces': lazy(() => import('./features/annonces/Annonces.jsx')),
+  '/avis': lazy(() => import('./features/avis/Avis.jsx')),
+  '/historique': lazy(() => import('./features/historique/Historique.jsx')),
   '/personnel': lazy(() => import('./features/gerant/Personnel.jsx')),
   '/equipe': lazy(() => import('./features/manager/PersonnelManager.jsx')),
   '/journal-audit/:roleSlug': lazy(() => import('./features/manager/JournalAudit.jsx')),
@@ -35,8 +39,9 @@ function RoleHome() {
 // le planning, le tableau de bord et la cloche) et les notifications.
 function ServicesSession({ children }) {
   const { role } = useAuth()
+  // Flux temps reel du planning : aussi pour l'Admin (grille du tableau de bord, lecture seule).
   return (
-    <FluxPlanningProvider actif={Boolean(role) && role !== 'ADMIN'}>
+    <FluxPlanningProvider actif={Boolean(role)}>
       <NotificationsProvider>{children}</NotificationsProvider>
     </FluxPlanningProvider>
   )
@@ -58,7 +63,7 @@ export default function App() {
                 path="/journal-audit"
                 element={
                   <ProtectedRoute roles={ROUTE_ROLES['/journal-audit']}>
-                    <Navigate to="/journal-audit/gerant" replace />
+                    <Navigate to={CHEMIN_JOURNAL} replace />
                   </ProtectedRoute>
                 }
               />

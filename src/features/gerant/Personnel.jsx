@@ -1,4 +1,6 @@
 import Layout from '../../components/Layout.jsx'
+import EnTetePage from '../../components/EnTetePage.jsx'
+import { AIDES } from '../../components/aidesPages.js'
 import StaffUserSection from '../../components/staff/StaffUserSection.jsx'
 
 // Le Gerant gere l'Accueil et les Controleurs ; les comptes Gerant sont
@@ -8,15 +10,15 @@ const ROLES_GERES_PAR_GERANT = ['ACCUEIL', 'CONTROLEUR']
 export default function Personnel() {
   return (
     <Layout>
-      <section className="dashboard-intro">
-        <div>
-          <p className="manager-eyebrow">Gérance</p>
-          <h1>Utilisateurs</h1>
-          <p>Gérez les accès, les rôles et les mots de passe de l’Accueil et des Contrôleurs.</p>
-        </div>
-      </section>
-
       <StaffUserSection
+        entete={(ouvrirCreation) => (
+          <EnTetePage titre="Équipe" resume="Accueil et contrôleurs du complexe" aide={AIDES.equipe}
+            actions={(
+              <button className="manager-button manager-button-primary" type="button" onClick={ouvrirCreation}>
+                <i className="fa-solid fa-user-plus" aria-hidden="true" /> Créer un compte
+              </button>
+            )} />
+        )}
         roles={ROLES_GERES_PAR_GERANT}
         assignableRoles={ROLES_GERES_PAR_GERANT}
         eyebrow="Gestion du personnel"

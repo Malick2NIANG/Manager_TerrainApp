@@ -8,6 +8,8 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
+# picomatch corrige (overrides -> vendor/picomatch), requis par npm ci.
+COPY vendor ./vendor
 RUN npm ci --no-audit --no-fund
 COPY . .
 # Version affichee dans l'app : tag Git de la livraison (ex. v1.2.0), passe par
@@ -44,6 +46,7 @@ USER nginx
 ENV API_BASE_URL=/api/v1 \
     SUPPORT_TELEPHONE= \
     SUPPORT_EMAIL= \
+    URL_APP_CLIENT= \
     MARQUE_NOM= \
     MARQUE_NOM_ACCENT= \
     MARQUE_INITIALES= \

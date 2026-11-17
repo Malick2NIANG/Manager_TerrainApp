@@ -5,7 +5,7 @@ const PAGE_DETAILS = {
   terrains: { title: 'Terrains et tarifs' },
   horaires: { title: 'Horaires' },
   personnel: { title: 'Utilisateurs' },
-  equipe: { title: 'Personnel' },
+  equipe: { title: 'Équipe' },
   'journal-audit': { title: 'Journal d’audit' },
 }
 

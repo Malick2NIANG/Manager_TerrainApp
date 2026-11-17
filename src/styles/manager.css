@@ -1207,3 +1207,25 @@
 .categorie-accomp input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--marque); flex: none; }
 .categorie-accomp span { display: flex; flex-direction: column; gap: 2px; font-weight: 600; }
 .categorie-accomp small { color: #6b6b6b; font-size: 12px; font-weight: 400; line-height: 1.4; }
+
+/* Menu lateral : seule la liste des pages defile ; l'en-tete (marque) et le
+   pied (Deconnexion) restent toujours visibles, meme sur un ecran peu haut. */
+.manager-sidebar-brand, .manager-sidebar-footer { flex-shrink: 0; }
+.manager-nav { min-height: 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgb(255 255 255 / 18%) transparent; }
+
+.crud-crop-aide { display: flex; gap: 8px; align-items: flex-start; margin: 0; color: #6b6b6b; font-size: 13px; line-height: 1.45; }
+.crud-crop-aide i { margin-top: 2px; color: var(--marque); }
+a.crud-action { text-decoration: none; }
+
+/* Pastille de notifications non lues sur les onglets du bas (telephone). */
+.manager-bottom-tabbar-icon { position: relative; }
+.manager-bottom-tabbar-badge { position: absolute; top: -6px; right: -12px; display: grid; min-width: 17px; height: 17px; box-sizing: border-box; place-items: center; padding: 0 4px; border: 2px solid #fff; border-radius: 999px; background: #d93025; color: #fff; font-family: inherit; font-size: 9.5px; font-weight: 800; line-height: 1; }
+
+/* Journal des gerants : 5 cartes (une par sous-page). */
+.crud-filter-grid.is-5col { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .crud-filter-grid.is-5col { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .crud-filter-grid.is-5col { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Tableau de bord Admin : 2 cartes etirees sur toute la longueur (meme hauteur). */
+.dashboard-kpi-grid.is-2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 560px) { .dashboard-kpi-grid.is-2col { grid-template-columns: 1fr; } }

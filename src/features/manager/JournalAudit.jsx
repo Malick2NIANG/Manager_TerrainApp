@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Navigate, NavLink, useParams } from 'react-router-dom'
+import { ROLES_EQUIPE_ACTIFS } from '../../config/fonctionnalites.js'
+import { Navigate, NavLink, useNavigate, useParams } from 'react-router-dom'
+import { CHEMIN_JOURNAL, JOURNAL_PAR_SECTIONS, SECTIONS_JOURNAL, sectionDepuisSlug } from './sectionsJournal.js'
 import Layout from '../../components/Layout.jsx'
+import EnTetePage from '../../components/EnTetePage.jsx'
+import { AIDES } from '../../components/aidesPages.js'
 import Toast from '../../components/Toast.jsx'
 import Pagination from '../../components/crud/Pagination.jsx'
 import StatFilterCards from '../../components/crud/StatFilterCards.jsx'
 import { ROLE_LABELS } from '../../auth/roles.js'
-import { DOMAINES_AUDIT } from './auditData.js'
+import { domaineAudit } from './auditData.js'
 import { useJournalAudit } from './useDonneesManager.js'
 import {
   erreurPeriode, filtrerJournal, filtrerParPeriode, libellePeriode, libellesFiltres, nomFichierExport,
@@ -15,7 +19,7 @@ import { exporterJournalAudit } from './exportJournalAudit.js'
 // Journal d’audit (Admin) : consultation seule des actions metier du
 // personnel, une sous-page par role (voir Layout.jsx et App.jsx). L'Admin
 // n'a pas sa propre sous-page.
-export const ROLES_AUDIT = ['GERANT', 'ACCUEIL', 'CONTROLEUR']
+export const ROLES_AUDIT = ROLES_EQUIPE_ACTIFS ? ['GERANT', 'ACCUEIL', 'CONTROLEUR'] : ['GERANT']
 
 const SLUG_PAR_ROLE = { GERANT: 'gerant', ACCUEIL: 'accueil', CONTROLEUR: 'controleur' }
 const ROLE_PAR_SLUG = Object.fromEntries(Object.entries(SLUG_PAR_ROLE).map(([role, slug]) => [slug, role]))
@@ -30,10 +34,11 @@ const DOMAINE_ACCENTS = {
   RESERVATION: { accent: 'var(--marque)', accentBg: 'var(--marque-pale)' },
   TERRAIN: { accent: '#2f6fed', accentBg: '#e8eefc' },
   BLOCAGE: { accent: '#b3261e', accentBg: '#fbe4e2' },
+  ANNONCE: { accent: '#9c6b0c', accentBg: '#f6ecd9' },
   PERSONNEL: { accent: '#1f6f57', accentBg: '#e2f2ec' },
 }
 
-const DOMAINES_CARTES = ['RESERVATION', 'TERRAIN', 'BLOCAGE', 'PERSONNEL']
+const DOMAINES_CARTES = ['RESERVATION', 'TERRAIN', 'BLOCAGE', 'ANNONCE', 'PERSONNEL']
 
 const ROWS_OPTIONS = [10, 25, 50]
 
@@ -85,7 +90,7 @@ function AuditDetailModal({ entree, onClose }) {
       <section className="manager-modal" role="dialog" aria-modal="true" aria-labelledby="audit-detail-title">
         <div className="manager-modal-header">
           <div>
-            <p className="manager-eyebrow">{DOMAINES_AUDIT[entree.domaine].label}</p>
+            <p className="manager-eyebrow">{domaineAudit(entree.domaine).label}</p>
             <h2 id="audit-detail-title">Détail de l’action</h2>
           </div>
           <button className="manager-icon-button" type="button" aria-label="Fermer" onClick={onClose}>
@@ -95,7 +100,7 @@ function AuditDetailModal({ entree, onClose }) {
         <dl className="staff-user-details">
           <div><dt>Employé</dt><dd>{entree.acteur.nom}</dd></div>
           <div><dt>Rôle</dt><dd>{ROLE_LABELS[entree.acteur.role]}</dd></div>
-          <div><dt>Type d’action</dt><dd>{DOMAINES_AUDIT[entree.domaine].label}</dd></div>
+          <div><dt>Type d’action</dt><dd>{domaineAudit(entree.domaine).label}</dd></div>
           <div><dt>Date</dt><dd>{new Date(entree.createdAt).toLocaleString('fr-FR')}</dd></div>
           <div className="staff-user-detail-wide"><dt>Description</dt><dd>{entree.action}</dd></div>
         </dl>
@@ -190,8 +195,12 @@ function ExportAuditModal({ entrees, filtres, onExported, onClose }) {
 
 export default function JournalAudit() {
   const { roleSlug } = useParams()
-  const roleResolu = roleDepuisSlug(roleSlug)
-  const roleValide = roleResolu !== null
+  const navigate = useNavigate()
+  // Sans les roles Accueil / Controleur, le parametre d'URL designe une
+  // sous-page du journal des gerants (une par carte) et non un role.
+  const section = JOURNAL_PAR_SECTIONS ? sectionDepuisSlug(roleSlug) : null
+  const roleResolu = JOURNAL_PAR_SECTIONS ? 'GERANT' : roleDepuisSlug(roleSlug)
+  const roleValide = JOURNAL_PAR_SECTIONS ? section !== null : roleResolu !== null
   // Repli pour que les Hooks ci-dessous recoivent toujours un role audit
   // valide, meme sur un slug invalide : on ne doit JAMAIS retourner avant
   // d’avoir appele tous les Hooks (regle des Hooks) — un slug
@@ -233,27 +242,41 @@ export default function JournalAudit() {
     setPage(1)
   }, [role, entreesDuRole])
 
-  const domaineItems = useMemo(() => DOMAINES_CARTES.map((key) => ({
-    key,
-    label: DOMAINES_AUDIT[key].label,
-    icon: DOMAINES_AUDIT[key].icon,
-    value: entreesDuRole.filter((entree) => entree.domaine === key).length,
-    ...DOMAINE_ACCENTS[key],
-  })), [entreesDuRole])
+  // Changement de sous-page (carte ou menu) : liste reprise en page 1.
+  useEffect(() => { setPage(1) }, [roleSlug])
 
-  const filtres = { role, domaine, recherche }
+  const domaineItems = useMemo(() => (JOURNAL_PAR_SECTIONS
+    ? SECTIONS_JOURNAL.map((s) => ({
+      key: s.slug, label: s.label, icon: s.icon, accent: s.accent, accentBg: s.accentBg,
+      value: entreesDuRole.filter((entree) => s.domaines.includes(entree.domaine)).length,
+    }))
+    : DOMAINES_CARTES.map((key) => ({
+      key,
+      label: domaineAudit(key).label,
+      icon: domaineAudit(key).icon,
+      value: entreesDuRole.filter((entree) => entree.domaine === key).length,
+      ...DOMAINE_ACCENTS[key],
+    }))), [entreesDuRole])
+
+  // Sous-page : les domaines de sa carte ; sinon le domaine choisi.
+  const domaineFiltre = JOURNAL_PAR_SECTIONS ? (section ?? SECTIONS_JOURNAL[0]).domaines : domaine
+  const filtres = { role, domaine: domaineFiltre, recherche, libelleDomaine: section?.label }
   const periode = { debut: dateDebut, fin: dateFin }
   const erreurDate = erreurPeriode(periode)
-  const filtresActifs = domaine !== domainePrincipal(entreesDuRole) || recherche.trim() !== '' || Boolean(dateDebut) || Boolean(dateFin)
+  const filtresActifs = (!JOURNAL_PAR_SECTIONS && domaine !== domainePrincipal(entreesDuRole)) || recherche.trim() !== '' || Boolean(dateDebut) || Boolean(dateFin)
   const resultats = useMemo(() => {
     const entreesPeriode = erreurDate ? entreesDuRole : filtrerParPeriode(entreesDuRole, periode)
-    return filtrerJournal(entreesPeriode, { domaine, recherche })
+    return filtrerJournal(entreesPeriode, { domaine: domaineFiltre, recherche })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entreesDuRole, domaine, recherche, dateDebut, dateFin])
+  }, [entreesDuRole, domaine, roleSlug, recherche, dateDebut, dateFin])
   const pageCount = Math.max(1, Math.ceil(resultats.length / rows))
   const groupes = grouperParJour(resultats.slice((page - 1) * rows, page * rows))
 
   function changerDomaine(key) {
+    if (JOURNAL_PAR_SECTIONS) {
+      navigate(`/journal-audit/${key}`)
+      return
+    }
     setDomaine(key)
     setPage(1)
   }
@@ -275,20 +298,14 @@ export default function JournalAudit() {
     setPage(1)
   }
 
-  if (!roleValide) return <Navigate to="/journal-audit/gerant" replace />
+  if (!roleValide) return <Navigate to={CHEMIN_JOURNAL} replace />
 
   return (
     <Layout>
-      <section className="dashboard-intro">
-        <div>
-          <p className="manager-eyebrow">Traçabilité</p>
-          <h1>Journal d’audit · {ROLE_LABELS[role]}</h1>
-          <p>Toutes les actions enregistrées pour l’équipe {ROLE_LABELS[role]}, en consultation seule.</p>
-        </div>
-      </section>
+      <EnTetePage titre={JOURNAL_PAR_SECTIONS ? `Journal · ${section?.label ?? ''}` : `Journal · ${ROLE_LABELS[role]}`} resume={JOURNAL_PAR_SECTIONS ? 'Les actions de vos gérants, en consultation seule' : `Actions de l’équipe ${ROLE_LABELS[role]}, en consultation seule`} aide={AIDES.journal} />
 
       <section>
-        <nav className="audit-role-tabs" aria-label="Choisir un rôle">
+        {ROLES_AUDIT.length > 1 && <nav className="audit-role-tabs" aria-label="Choisir un rôle">
           {ROLES_AUDIT.map((r) => (
             <NavLink
               key={r}
@@ -298,15 +315,18 @@ export default function JournalAudit() {
               {ROLE_LABELS[r]}
             </NavLink>
           ))}
-        </nav>
+        </nav>}
 
-        <StatFilterCards
-          items={domaineItems}
-          selected={domaine}
-          onSelect={changerDomaine}
-          ariaLabel="Filtrer par type d’action"
-          className="is-4col"
-        />
+        {/* Sous-pages : le sous-menu Journal suffit, pas de cartes. */}
+        {!JOURNAL_PAR_SECTIONS && (
+          <StatFilterCards
+            items={domaineItems}
+            selected={domaine}
+            onSelect={changerDomaine}
+            ariaLabel="Filtrer par type d’action"
+            className="is-4col"
+          />
+        )}
 
         <div className="crud-toolbar audit-toolbar">
           <div className="crud-search">
@@ -366,10 +386,10 @@ export default function JournalAudit() {
                   {groupe.entrees.map((entree) => (
                     <li key={entree.id}>
                       <div className="dashboard-activity-row is-static is-wrapping">
-                        <span className="dashboard-activity-icon" aria-hidden="true"><i className={`fa-solid ${DOMAINES_AUDIT[entree.domaine].icon}`} /></span>
+                        <span className="dashboard-activity-icon" aria-hidden="true"><i className={`fa-solid ${domaineAudit(entree.domaine).icon}`} /></span>
                         <span className="dashboard-activity-text">
                           <strong>{entree.acteur.nom}</strong>
-                          <span>{DOMAINES_AUDIT[entree.domaine].label}</span>
+                          <span>{domaineAudit(entree.domaine).label}</span>
                         </span>
                         <time className="dashboard-activity-time" dateTime={entree.createdAt} title={new Date(entree.createdAt).toLocaleString('fr-FR')}>
                           {new Date(entree.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}

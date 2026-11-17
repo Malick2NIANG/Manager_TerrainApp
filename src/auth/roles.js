@@ -1,3 +1,4 @@
+import { ROLES_EQUIPE_ACTIFS } from '../config/fonctionnalites.js'
 // Roles du personnel, identiques a l'enum Role du backend (Backend_TerrainApp).
 export const ROLES = ['GERANT', 'ACCUEIL', 'CONTROLEUR', 'ADMIN']
 
@@ -22,12 +23,16 @@ export const ROUTE_ROLES = {
   '/dashboard': ROLES,
   '/planning': ['GERANT', 'ACCUEIL', 'CONTROLEUR'],
   '/scan': ['GERANT', 'ACCUEIL', 'CONTROLEUR'],
+  '/abonnements': ['GERANT', 'ACCUEIL'],
   '/blocages': ['GERANT', 'ACCUEIL'],
   '/terrains': ['GERANT'],
-  '/horaires': ['GERANT'],
+  '/annonces': ['GERANT'],
+  '/avis': ['GERANT'],
+  '/historique': ['GERANT'],
   // Le Gerant gere l'Accueil et les Controleurs ; l'Admin gere les Gerants
   // et consulte le reste de l'equipe (meme partage que SenYummies).
-  '/personnel': ['GERANT'],
+  // Equipe (comptes Accueil / Controleur) : masquee tant que ces roles sont mis de cote.
+  '/personnel': ROLES_EQUIPE_ACTIFS ? ['GERANT'] : [],
   '/equipe': ['ADMIN'],
   '/journal-audit': ['ADMIN'],
   '/journal-audit/:roleSlug': ['ADMIN'],

@@ -14,7 +14,7 @@ export function filtrerJournal(entrees, { role = TOUS, domaine = TOUS, recherche
   const termes = normaliser(recherche.trim()).split(/\s+/).filter(Boolean)
   return entrees.filter((entree) => {
     if (role !== TOUS && entree.acteur.role !== role) return false
-    if (domaine !== TOUS && entree.domaine !== domaine) return false
+    if (domaine !== TOUS && !(Array.isArray(domaine) ? domaine.includes(entree.domaine) : entree.domaine === domaine)) return false
     if (!termes.length) return true
     const texte = normaliser([
       entree.acteur.nom, entree.action, ROLE_LABELS[entree.acteur.role], DOMAINES_AUDIT[entree.domaine].label,
@@ -49,10 +49,10 @@ export function filtrerParPeriode(entrees, { debut, fin }) {
   })
 }
 
-export function libellesFiltres({ role = TOUS, domaine = TOUS, recherche = '' }) {
+export function libellesFiltres({ role = TOUS, domaine = TOUS, recherche = '', libelleDomaine }) {
   return {
     role: role === TOUS ? 'Tous les rôles' : ROLE_LABELS[role],
-    domaine: domaine === TOUS ? 'Tous les types' : DOMAINES_AUDIT[domaine].label,
+    domaine: libelleDomaine ?? (domaine === TOUS ? 'Tous les types' : DOMAINES_AUDIT[domaine].label),
     recherche: recherche.trim() ? `« ${recherche.trim()} »` : 'Aucune',
   }
 }

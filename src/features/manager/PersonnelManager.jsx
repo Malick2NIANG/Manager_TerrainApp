@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import { ROLES_EQUIPE_ACTIFS } from '../../config/fonctionnalites.js'
 import Layout from '../../components/Layout.jsx'
+import EnTetePage from '../../components/EnTetePage.jsx'
+import { AIDES } from '../../components/aidesPages.js'
 import StaffUserSection from '../../components/staff/StaffUserSection.jsx'
 import StatFilterCards from '../../components/crud/StatFilterCards.jsx'
 import { apiGet } from '../../api/client.js'
@@ -33,22 +36,16 @@ export default function PersonnelManager() {
 
   return (
     <Layout>
-      <section className="dashboard-intro">
-        <div>
-          <p className="manager-eyebrow">Pilotage</p>
-          <h1>Personnel</h1>
-          <p>Gérez les comptes Gérant et consultez le reste de l’équipe.</p>
-        </div>
-      </section>
+      <EnTetePage titre="Équipe" resume={ROLES_EQUIPE_ACTIFS ? 'Comptes Gérant et reste de l’équipe' : 'Les gérants de votre complexe'} aide={AIDES.personnel} />
 
-      <StatFilterCards
+      {ROLES_EQUIPE_ACTIFS && <StatFilterCards
         items={GROUPES.map((item) => ({ ...item, value: counts[item.key] }))}
         selected={groupe}
         onSelect={setGroupe}
         ariaLabel="Filtrer le personnel par groupe"
-      />
+      />}
 
-      {groupe === 'GERANTS' ? (
+      {groupe === 'GERANTS' || !ROLES_EQUIPE_ACTIFS ? (
         <StaffUserSection
           key="gerants"
           roles={ROLES_GERANTS}

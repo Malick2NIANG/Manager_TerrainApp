@@ -55,9 +55,11 @@ body,
   display: block;
   margin-bottom: 42px;
   color: #141414;
-  font-size: 20px;
+  font-family: 'Barlow Condensed', 'Poppins', sans-serif;
+  font-size: 30px;
+  font-style: italic;
   font-weight: 800;
-  letter-spacing: 1.5px;
+  letter-spacing: .5px;
   text-align: center;
 }
 
@@ -77,7 +79,7 @@ body,
 
 .auth-carousel .auth-eyebrow {
   margin: 0 0 10px;
-  color: #f7b2a8;
+  color: var(--marque-rose);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1.5px;
@@ -446,7 +448,20 @@ body,
 }
 
 .auth-carousel-overlay {
-  background: linear-gradient(180deg, rgb(20 20 20 / 8%) 0%, rgb(20 20 20 / 25%) 45%, rgb(20 20 20 / 88%) 100%);
+  background:
+    linear-gradient(180deg, rgb(4 18 11 / 55%) 0%, rgb(4 18 11 / 10%) 30%, rgb(4 18 11 / 45%) 60%, rgb(4 18 11 / 92%) 100%),
+    linear-gradient(90deg, rgb(var(--marque-rgb) / 35%) 0%, transparent 60%);
+}
+
+/* Lignes d'un terrain, a la craie, en decor. */
+.auth-lignes {
+  position: absolute;
+  right: -12%;
+  top: 8%;
+  width: 78%;
+  height: 70%;
+  color: rgb(255 255 255 / 12%);
+  pointer-events: none;
 }
 
 .auth-carousel-content {
@@ -462,15 +477,59 @@ body,
 }
 
 .auth-brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   color: #fff;
-  font-size: 20px;
+  font-family: 'Barlow Condensed', 'Poppins', sans-serif;
+  font-size: 30px;
+  font-style: italic;
   font-weight: 800;
-  letter-spacing: 1.5px;
+  letter-spacing: .5px;
+  line-height: 1;
 }
 
-/* Fin du nom dans la couleur de marque (SEN + YUMMIES). */
-.auth-brand-nom > span {
+.auth-brand-monogramme {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 14px;
+  background: #fff;
   color: var(--marque);
+  font-size: 22px;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 30%);
+}
+
+/* Fin du nom en teinte claire : lisible sur la photo et le vert sombre. */
+.auth-brand-nom > span {
+  color: var(--marque-rose);
+}
+
+.auth-direct {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 22px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 12%);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.auth-direct > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--marque-rose);
+  animation: auth-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes auth-pulse {
+  50% { opacity: .35; }
 }
 
 .auth-slide-copy {
@@ -479,13 +538,17 @@ body,
 }
 
 .auth-carousel .auth-slide-copy h2 {
-  max-width: 560px;
+  max-width: 600px;
   margin: 0 0 16px;
   color: #fff;
-  font-size: clamp(32px, 4.5vw, 64px);
-  letter-spacing: -1px;
-  line-height: 1.03;
-  text-shadow: 0 2px 12px rgb(0 0 0 / 26%);
+  font-family: 'Barlow Condensed', 'Poppins', sans-serif;
+  font-size: clamp(44px, 6vw, 88px);
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: .92;
+  text-transform: uppercase;
+  text-shadow: 0 4px 24px rgb(0 0 0 / 35%);
 }
 
 .auth-carousel .auth-slide-copy > p:last-child {
@@ -512,16 +575,34 @@ body,
 }
 
 .auth-carousel-dots button {
-  width: 28px;
+  width: 42px;
   height: 3px;
   border: 0;
+  border-radius: 3px;
   padding: 0;
-  background: rgb(255 255 255 / 42%);
+  overflow: hidden;
+  background: rgb(255 255 255 / 30%);
   cursor: pointer;
 }
 
-.auth-carousel-dots button.is-active {
+/* Barre qui se remplit pendant l'affichage de la presentation. */
+.auth-carousel-dots button > span {
+  display: block;
+  width: 0;
+  height: 100%;
   background: #fff;
+}
+
+.auth-carousel-dots button.is-vu > span {
+  width: 100%;
+}
+
+.auth-carousel-dots button.is-active > span {
+  animation: auth-barre linear forwards;
+}
+
+@keyframes auth-barre {
+  to { width: 100%; }
 }
 
 @keyframes auth-copy-in {

@@ -9,6 +9,9 @@ import {
   TOUS, erreurPeriode, filtrerJournal, filtrerParPeriode, libellePeriode, lignesExport, nomFichierExport,
 } from './journalAuditFiltres.js'
 
+// Ces tests couvrent l'equipe complete : roles Accueil / Controleur actives.
+vi.mock('../../config/fonctionnalites.js', async (original) => ({ ...(await original()), ROLES_EQUIPE_ACTIFS: true }))
+
 vi.mock('./useDonneesManager.js', async () => {
   const { journalAudit } = await import('./auditData.js')
   return { useJournalAudit: () => ({ entrees: journalAudit, chargement: false, erreur: null }) }
@@ -103,11 +106,11 @@ describe('Journal d’audit page', () => {
     screen.getAllByRole('listitem').forEach((li) => expect(within(li).getAllByRole('button')).toHaveLength(1))
   })
 
-  it('shows exactly four domain cards, no « Toutes » nor « Catégories »', () => {
+  it('shows exactly five domain cards, no « Toutes » nor « Catégories »', () => {
     renderPage('gerant')
     const tabs = screen.getAllByRole('tab')
-    expect(tabs).toHaveLength(4)
-    ;['Réservations', 'Terrains', 'Blocages', 'Personnel'].forEach((label) => {
+    expect(tabs).toHaveLength(5)
+    ;['Réservations', 'Terrains', 'Blocages', 'Annonces', 'Personnel'].forEach((label) => {
       // nosemgrep: detect-non-literal-regexp -- libelles fixes du test, pas une saisie
       expect(screen.getByRole('tab', { name: new RegExp(label) })).toBeInTheDocument()
     })

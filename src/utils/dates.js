@@ -29,3 +29,12 @@ export const instantDe = (jour, hhmm) => `${jour}T${hhmm}:00Z`
 export function formatFCFA(montant) {
   return `${Number(montant || 0).toLocaleString('fr-FR')} F CFA`
 }
+
+/** "Aujourd’hui", "Demain", "Hier", "Dans 3 jours", "Il y a 2 jours" (par rapport a aujourd'hui). */
+export function jourRelatif(iso, reference = jourISO()) {
+  const n = Math.round((Date.parse(`${iso}T12:00:00Z`) - Date.parse(`${reference}T12:00:00Z`)) / 86400000)
+  if (n === 0) return 'Aujourd’hui'
+  if (n === 1) return 'Demain'
+  if (n === -1) return 'Hier'
+  return n > 0 ? `Dans ${n} jours` : `Il y a ${-n} jours`
+}
