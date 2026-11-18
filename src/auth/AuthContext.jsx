@@ -96,6 +96,15 @@ export function AuthProvider({ children }) {
     return receivedRole
   }, [])
 
+  /** Le membre connecte change son mot de passe : le serveur renvoie une nouvelle session. */
+  const changePassword = useCallback(async ({ currentPassword, newPassword }) => {
+    const response = await apiPost('/auth/change-password', { currentPassword, newPassword })
+    if (!response?.token) {
+      throw new Error('Réponse de changement de mot de passe inattendue du serveur.')
+    }
+    setAuthToken(response.token)
+  }, [])
+
   useEffect(() => {
     window.addEventListener(SESSION_EXPIRED_EVENT, logout)
     return () => window.removeEventListener(SESSION_EXPIRED_EVENT, logout)
@@ -103,7 +112,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ role, username, lastLoginAt, login, changeTemporaryPassword, logout }}
+      value={{ role, username, lastLoginAt, login, changeTemporaryPassword, changePassword, logout }}
     >
       {children}
     </AuthContext.Provider>
