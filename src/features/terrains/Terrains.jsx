@@ -1,3 +1,4 @@
+import { libelleDuree } from '../../utils/durees.js'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import usePagination from '../../hooks/usePagination.jsx'
 import { Link } from 'react-router-dom'
@@ -190,7 +191,7 @@ export default function Terrains() {
               </div>
               <div className="ta-carte-corps">
                 <h3>{t.nom}</h3>
-                <p>{t.sport} · {t.capacite} joueurs · créneaux de {t.dureeCreneauMinutes} min</p>
+                <p>{t.sport} · {t.capacite} joueurs · {t.dureesProposees?.length > 1 ? `durées ${t.dureesProposees.map(libelleDuree).join(', ')}` : `créneaux de ${t.dureeCreneauMinutes} min`}</p>
                 {t.localite && <p><i className="fa-solid fa-location-dot" aria-hidden="true" /> {t.localite}</p>}
                 <p><strong>{formatFCFA(t.tarifHeure)} / h</strong>
                   {t.plages.length > 0 && <span title={t.plages.map((p) => `${p.libelle} ${formatFCFA(p.tarifHeure)}`).join(' · ')}>

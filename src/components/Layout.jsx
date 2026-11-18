@@ -132,14 +132,30 @@ function ChangePasswordModal({ onClose, onNotice }) {
     onClose()
   }
 
-  function submit(e) {
+  const { changePassword } = useAuth()
+  const [envoi, setEnvoi] = useState(false)
+  const [erreur, setErreur] = useState(null)
+
+  async function submit(e) {
     e.preventDefault()
     if (newPassword !== confirmPassword) {
-      onNotice('error', 'Les deux nouveaux mots de passe ne correspondent pas.')
+      setErreur('Les deux nouveaux mots de passe ne correspondent pas.')
       return
     }
-    onNotice('error', 'Le changement de mot de passe sera connecté à l’API prochainement.')
-    onClose()
+    if (newPassword.length < 12) {
+      setErreur('Le nouveau mot de passe doit contenir au moins 12 caractères.')
+      return
+    }
+    setEnvoi(true)
+    setErreur(null)
+    try {
+      await changePassword({ currentPassword, newPassword })
+      onNotice('success', 'Mot de passe modifié.')
+      onClose()
+    } catch (err) {
+      setErreur(err.message)
+      setEnvoi(false)
+    }
   }
 
   return (
@@ -181,10 +197,12 @@ function ChangePasswordModal({ onClose, onNotice }) {
                 </button>
               </span>
             </label>
+            <p className="ta-form-aide">12 caractères minimum.</p>
+            {erreur && <p className="ta-form-erreur" role="alert">{erreur}</p>}
             <div className="manager-modal-actions">
-              <button className="manager-button manager-button-quiet" type="button" onClick={requestClose}>Annuler</button>
-              <button className="manager-button manager-button-primary" type="submit" disabled={!currentPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword}>
-                Enregistrer
+              <button className="manager-button manager-button-quiet" type="button" onClick={requestClose} disabled={envoi}>Annuler</button>
+              <button className="manager-button manager-button-primary" type="submit" disabled={envoi || !currentPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword}>
+                {envoi ? 'Enregistrement…' : 'Enregistrer'}
               </button>
             </div>
           </form>

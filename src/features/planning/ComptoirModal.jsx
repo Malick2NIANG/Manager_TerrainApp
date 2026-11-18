@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { libelleDuree, optionsDuree } from '../../utils/durees.js'
 import { apiGet, apiPostAvecEntetes } from '../../api/client.js'
 import { decalerJour, formatFCFA, heure, jourISO } from '../../utils/dates.js'
 import { MOYENS, MOYENS_COMPTOIR } from './statuts.jsx'
@@ -34,6 +35,9 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
   const [terrainId, setTerrainId] = useState(initial.terrainId ?? terrains[0]?.terrainId ?? '')
   const [jour, setJour] = useState(initial.debut ? initial.debut.slice(0, 10) : jourInitial)
   const [creneaux, setCreneaux] = useState(null)
+  const [tous, setTous] = useState([])
+  const [durees, setDurees] = useState([])
+  const [duree, setDuree] = useState(null)
   const [debut, setDebut] = useState(initial.debut || null)
   const [prenom, setPrenom] = useState('')
   const [nom, setNom] = useState('')
@@ -53,7 +57,10 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
     apiGet(`/disponibilites?date=${jour}&terrainId=${terrainId}`)
       .then((d) => {
         if (!actif) return
-        const libres = (d[0]?.creneaux || []).filter((c) => c.etat === 'LIBRE')
+        const liste = d[0]?.creneaux || []
+        const libres = liste.filter((c) => c.etat === 'LIBRE')
+        setTous(liste)
+        setDurees(d[0]?.dureesProposees?.length ? d[0].dureesProposees : [d[0]?.dureeCreneauMinutes].filter(Boolean))
         setCreneaux(libres)
         setDebut((cur) => (libres.some((c) => c.debut === cur) ? cur : null))
       })
@@ -61,11 +68,15 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
     return () => { actif = false }
   }, [terrainId, jour])
 
-  const creneau = useMemo(() => creneaux?.find((c) => c.debut === debut) || null, [creneaux, debut])
+  // Periode louee : heure de debut + une des durees proposees (la premiere qui tient par defaut).
+  const options = useMemo(() => (debut ? optionsDuree(tous, debut, durees) : []), [tous, debut, durees])
+  const option = options.find((o) => o.minutes === duree && o.possible) || options.find((o) => o.possible)
+  const creneau = useMemo(() => (debut && option ? { debut, fin: option.fin, prix: option.prix, dureeMinutes: option.minutes } : null),
+    [debut, option])
   const tel = normaliserTelephone(telephone)
   async function valider(e) {
     e.preventDefault()
-    const probleme = !creneau ? 'Choisissez un créneau.'
+    const probleme = !creneau ? (debut ? 'Aucune durée possible à cette heure : choisissez une autre heure.' : 'Choisissez un créneau.')
       : prenom.trim().length < 2 ? 'Indiquez le prénom du client.'
         : nom.trim().length < 2 ? 'Indiquez le nom du client.'
           : !tel ? 'Numéro à 9 chiffres (ex. 77 123 45 67).'
@@ -79,7 +90,7 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
     try {
       const r = await apiPostAvecEntetes('/reservations/comptoir', {
         terrainId: Number(terrainId), debut: creneau.debut, clientNom: `${prenom.trim()} ${nom.trim()}`, clientTelephone: tel,
-        moyenPaiement: moyen, especesRecues: moyen === 'especes' ? Number(recu || creneau.prix) : null,
+        moyenPaiement: moyen, especesRecues: moyen === 'especes' ? Number(recu || creneau.prix) : null, dureeMinutes: creneau.dureeMinutes,
       }, { 'Idempotency-Key': cle.current })
       setEnvoi(false)
       setCree(r.reservation)
@@ -99,7 +110,7 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
           <div className="caisse-ok">
             <span className="caisse-ok-icone" aria-hidden="true"><i className="fa-solid fa-check" /></span>
             <h2 id="comptoir-ok-titre">Réservation {cree.reference} enregistrée</h2>
-            <p>{cree.clientNom} · {cree.terrain} · {heure(cree.debut)}</p>
+            <p>{cree.clientNom} · {cree.terrain} · {heure(cree.debut)} – {heure(cree.fin)}</p>
             <dl className="caisse-ok-montants">
               <div><dt>Payé ({MOYENS[cree.moyenPaiement]})</dt><dd>{formatFCFA(cree.montant)}</dd></div>
               {cree.especesRecues != null && <div><dt>Reçu</dt><dd>{formatFCFA(cree.especesRecues)}</dd></div>}
@@ -157,6 +168,21 @@ export default function ComptoirModal({ jour: jourInitial, terrains, initial, on
                   </div>
                 )}
           </fieldset>
+
+          {debut && durees.length > 1 && (
+            <fieldset>
+              <legend>Durée</legend>
+              <div className="ta-creneaux-choix">
+                {options.map((o) => (
+                  <button key={o.minutes} type="button" disabled={!o.possible} className={option?.minutes === o.minutes ? 'is-actif' : ''}
+                    aria-pressed={option?.minutes === o.minutes} onClick={() => setDuree(o.minutes)}>
+                    {libelleDuree(o.minutes)}<small>{o.possible ? formatFCFA(o.prix) : 'Indisponible'}</small>
+                  </button>
+                ))}
+              </div>
+              {creneau && <span className="ta-form-aide">De {heure(creneau.debut)} à {heure(creneau.fin)}.</span>}
+            </fieldset>
+          )}
 
           <div className="ta-form-ligne">
             <label>Prénom

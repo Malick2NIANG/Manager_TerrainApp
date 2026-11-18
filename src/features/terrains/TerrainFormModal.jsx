@@ -5,12 +5,16 @@ import Volet from '../../components/Volet.jsx'
 import { gpsEnTexte, lireGps } from './gps.js'
 import { estVideo, mediaEnvoye } from '../annonces/annonces.js'
 import { formatFCFA } from '../../utils/dates.js'
+import { libelleDuree } from '../../utils/durees.js'
 
 export const JOURS = [
   { n: 1, court: 'Lun' }, { n: 2, court: 'Mar' }, { n: 3, court: 'Mer' }, { n: 4, court: 'Jeu' },
   { n: 5, court: 'Ven' }, { n: 6, court: 'Sam' }, { n: 7, court: 'Dim' },
 ]
-const DUREES = [30, 45, 60, 90, 120]
+const DUREES = [30, 45, 60, 90, 120, 180]
+const pgcd = (a, b) => (b ? pgcd(b, a % b) : a)
+/** Durees cochees, ou la duree de creneau seule (ancien format). */
+const dureesDuFormulaire = (f) => [...new Set((f.durees?.length ? f.durees : [f.dureeCreneauMinutes]).map(Number))].sort((a, b) => a - b)
 const hhmm = (t) => String(t || '').slice(0, 5)
 
 /** Saisie du formulaire -> corps de l'API (montants entiers, champs nettoyes). */
@@ -26,7 +30,9 @@ export function versApi(f) {
     capacite: Number(f.capacite),
     equipements: String(f.equipements || '').split(',').map((e) => e.trim()).filter(Boolean),
     photos: (f.photos || []).filter(Boolean),
-    dureeCreneauMinutes: Number(f.dureeCreneauMinutes),
+    dureeCreneauMinutes: dureesDuFormulaire(f)[0],
+    // Durees proposees au joueur ; la plus courte sert de duree de creneau (abonnements).
+    dureesProposees: dureesDuFormulaire(f),
     tarifHeure: Number(f.tarifHeure),
     plages: f.plages.map((p) => ({ libelle: p.libelle.trim(), jours: p.jours, debut: p.debut, fin: p.fin, tarifHeure: Number(p.tarifHeure) })),
     actif: f.actif,
@@ -56,6 +62,8 @@ export function erreursFormulaire(f) {
   if (!(Number(f.capacite) > 0)) e.push('la capacité')
   if (f.gps?.trim() && !lireGps(f.gps)) e.push('la position GPS (ex. 14.7256, -17.4569 ou un lien Google Maps)')
   if (!(Number(f.tarifHeure) >= 0) || f.tarifHeure === '') e.push('le tarif horaire')
+  if (f.durees && !f.durees.length) e.push('au moins une durée proposée')
+  else if (dureesDuFormulaire(f).reduce(pgcd) < 30) e.push('des durées compatibles (45 min ne se combine qu’avec 1 h 30)')
   if (f.horaires?.some((h) => h.ouvert && (!h.ouverture || !h.fermeture || h.ouverture === h.fermeture))) e.push('les horaires du terrain')
   f.plages.forEach((p, i) => {
     if (!p.libelle.trim() || !p.jours.length || !p.debut || !p.fin || p.debut === p.fin || p.tarifHeure === '') {
@@ -71,11 +79,12 @@ function depuis(terrain, sports) {
     surface: terrain.surface || '', capacite: terrain.capacite, equipements: terrain.equipements.join(', '),
     photos: terrain.photos || (terrain.photoUrl ? [terrain.photoUrl] : []),
     dureeCreneauMinutes: terrain.dureeCreneauMinutes, tarifHeure: terrain.tarifHeure,
+    durees: terrain.dureesProposees?.length ? [...terrain.dureesProposees] : [terrain.dureeCreneauMinutes],
     plages: terrain.plages.map((p) => ({ ...p, debut: hhmm(p.debut), fin: hhmm(p.fin) })), actif: terrain.actif, ordre: terrain.ordre,
     horaires: terrain.horaires?.length ? terrain.horaires.map((h) => ({ ...h, ouverture: hhmm(h.ouverture), fermeture: hhmm(h.fermeture) })) : null,
   } : {
     sportId: sports[0]?.id || '', nom: '', description: '', localite: '', gps: '', surface: 'Gazon synthétique', capacite: 10,
-    equipements: 'Éclairage, Vestiaires', photos: [], dureeCreneauMinutes: 60, tarifHeure: '', plages: [], actif: true, ordre: 0,
+    equipements: 'Éclairage, Vestiaires', photos: [], dureeCreneauMinutes: 60, durees: [60], tarifHeure: '', plages: [], actif: true, ordre: 0,
     horaires: null,
   }
 }
@@ -160,20 +169,28 @@ export default function TerrainFormModal({ terrain, sports, onFermer, onEnregist
             </label>
           </div>
           <div className="ta-form-ligne">
-            <label>Durée d’un créneau
-              <select value={f.dureeCreneauMinutes} onChange={maj('dureeCreneauMinutes')}>
-                {DUREES.map((d) => <option key={d} value={d}>{d < 60 ? `${d} min` : `${Math.floor(d / 60)} h${d % 60 ? ` ${d % 60}` : ''}`}</option>)}
-              </select>
-            </label>
             <label>Tarif à l’heure (F CFA)
               <input type="number" min={0} step={500} value={f.tarifHeure} onChange={maj('tarifHeure')} placeholder="15000" />
             </label>
           </div>
-          {f.tarifHeure !== '' && (
-            <p className="ta-form-aide">
-              Créneau de {f.dureeCreneauMinutes} min au tarif de base : {formatFCFA(Math.round(Number(f.tarifHeure) * Number(f.dureeCreneauMinutes) / 60))}.
-            </p>
-          )}
+          <fieldset>
+            <legend>Durées proposées au joueur</legend>
+            <div className="ta-creneaux-choix" role="group" aria-label="Durées proposées au joueur">
+              {DUREES.map((d) => {
+                const coche = (f.durees || []).includes(d)
+                return (
+                  <button key={d} type="button" className={coche ? 'is-actif' : ''} aria-pressed={coche}
+                    onClick={() => setF((x) => ({ ...x, durees: coche ? x.durees.filter((v) => v !== d) : [...(x.durees || []), d].sort((a, b) => a - b) }))}>
+                    {libelleDuree(d)}
+                  </button>
+                )
+              })}
+            </div>
+            <span className="ta-form-aide">
+              Le joueur choisit son heure de début puis l’une de ces durées.
+              {f.tarifHeure !== '' && (f.durees || []).length > 0 && <> Au tarif de base : {(f.durees || []).map((d) => `${libelleDuree(d)} = ${formatFCFA(Math.round(Number(f.tarifHeure) * d / 60))}`).join(' · ')}.</>}
+            </span>
+          </fieldset>
           {/* Creation : publier tout de suite ou garder en brouillon. Modification : toujours un brouillon,
               republie ensuite depuis sa carte. */}
           {!terrain && (

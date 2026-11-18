@@ -15,6 +15,15 @@ describe('formulaire terrain', () => {
     expect(c).toMatchObject({ latitude: 14.7256, longitude: -17.4569 })
     expect(c.equipements).toEqual(['Éclairage', 'Vestiaires'])
     expect(c.plages[0]).toEqual({ libelle: 'Soirée', jours: [1, 2], debut: '18:00', fin: '01:00', tarifHeure: 20000 })
+    expect(c.dureesProposees).toEqual([90])
+  })
+
+  it('durees proposees : la plus courte devient la duree de creneau', () => {
+    const c = versApi({ ...base, durees: [120, 60, 90] })
+    expect(c).toMatchObject({ dureeCreneauMinutes: 60, dureesProposees: [60, 90, 120] })
+    expect(erreursFormulaire({ ...base, durees: [] })).toEqual(['au moins une durée proposée'])
+    expect(erreursFormulaire({ ...base, durees: [45, 60] })[0]).toMatch(/durées compatibles/)
+    expect(erreursFormulaire({ ...base, durees: [45, 90] })).toEqual([])
   })
 
   it('signale les champs manquants', () => {
