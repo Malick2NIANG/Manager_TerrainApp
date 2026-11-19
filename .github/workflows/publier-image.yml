@@ -1,0 +1,26 @@
+name: Publier l'image Docker
+# A chaque tag de version (v1.2.0) : image du Manager publiee sur GHCR,
+# identique pour tous les complexes (la personnalisation est lue au demarrage).
+on:
+  push:
+    tags: ["v*.*.*"]
+permissions:
+  contents: read
+  packages: write
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Connexion a GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Construction et publication
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          IMAGE="ghcr.io/$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
+          VERSION="${TAG#v}"
+          docker build --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.version=${VERSION}" --build-arg "APP_VERSION=${TAG}" -t "${IMAGE}:${VERSION}" -t "${IMAGE}:latest" .
+          docker push "${IMAGE}:${VERSION}"
+          docker push "${IMAGE}:latest"

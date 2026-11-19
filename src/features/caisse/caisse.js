@@ -1,4 +1,5 @@
 // Calculs de caisse (especes au comptoir) et texte du recu.
+import { marque } from '../../config/marque'
 
 /** Monnaie a rendre ; null si rien de saisi, negatif si la somme ne suffit pas. */
 export function monnaie(recu, montant) {
@@ -43,7 +44,8 @@ export function lignesRecu(r, { moyens = {}, caissier } = {}) {
 }
 
 /** Recu de caisse au format ticket (80 mm), pret a imprimer. */
-export function htmlRecu(r, { etablissement, moyens, caissier, qr, emisLe = new Date() } = {}) {
+export function htmlRecu(r, { etablissement, moyens, caissier, qr, emisLe = new Date(), pied = marque.piedDeRecu,
+  logo = marque.personnalise ? marque.logo : '', marge = marque.margeEntreeMinutes } = {}) {
   const emis = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Africa/Dakar', dateStyle: 'short', timeStyle: 'short' }).format(emisLe)
   const lignes = lignesRecu(r, { moyens, caissier })
     .map(([l, v]) => `<tr><td>${echapper(l)}</td><td>${echapper(v)}</td></tr>`).join('')
@@ -61,15 +63,17 @@ export function htmlRecu(r, { etablissement, moyens, caissier, qr, emisLe = new 
   .qr { margin: 10px auto 2px; text-align: center; }
   .qr img { width: 38mm; height: 38mm; }
   .code { text-align: center; font-size: 13px; font-weight: 700; letter-spacing: .08em; }
+  .logo { display: block; width: 18mm; height: 18mm; margin: 0 auto 4px; object-fit: contain; }
   .pied { margin-top: 8px; padding-top: 6px; border-top: 1px dashed #000; text-align: center; font-size: 11px; }
 </style></head><body>
+  ${logo && /^\/marque\/[\w/.-]+$/.test(logo) ? `<img class="logo" src="${echapper(logo)}" alt="">` : ''}
   <h1>${echapper(etablissement)}</h1>
   <p class="sous">Reçu émis le ${echapper(emis)}</p>
   <p class="titre">REÇU DE PAIEMENT</p>
   <table>${lignes}</table>
   ${qr ? `<div class="qr"><img src="${qr}" alt=""></div>` : ''}
   <p class="code">${echapper(r.reference)}</p>
-  <p class="pied">${qr ? 'Présentez ce reçu (QR code) à l’entrée.' : 'Donnez cette référence à l’entrée.'}<br>Merci et bon match !</p>
+  <p class="pied">${qr ? `Présentez ce reçu (QR code) à l’entrée, au plus tôt ${Number(marge)} min avant.` : 'Donnez cette référence à l’entrée.'}<br>${echapper(pied)}</p>
 </body></html>`
 }
 

@@ -1,4 +1,5 @@
 import { MOYENS, STATUTS, telephoneLisible } from '../planning/statuts.jsx'
+import { marque } from '../../config/marque.js'
 
 // Periodes rapides de l'historique (date du match). La periode
 // personnalisee est limitee a un an par l'API.
@@ -112,7 +113,7 @@ function remplir(cellule, valeur) {
 export async function exporterHistorique({ reservations, nomFichier, resume, etablissement = '' }) {
   const ExcelJS = (await import('exceljs')).default
   const classeur = new ExcelJS.Workbook()
-  classeur.creator = etablissement || 'TerrainApp'
+  classeur.creator = etablissement || marque.nom
   classeur.created = new Date()
 
   const f = classeur.addWorksheet('Réservations', {
