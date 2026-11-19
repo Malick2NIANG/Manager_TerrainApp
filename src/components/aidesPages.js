@@ -1,5 +1,6 @@
 // Guide de chaque page (bouton « i » de l'en-tete) : a quoi sert la page,
 // puis les gestes utiles. Ecrit pour le personnel du complexe, sans jargon.
+import { marque } from '../config/marque'
 export const AIDES = {
   dashboard: {
     GERANT: ['Le résumé de la journée : réservations, recettes et occupation des terrains.',
@@ -25,7 +26,7 @@ export const AIDES = {
   scan: ['Contrôle des entrées : le client montre le QR code de son ticket (app ou reçu imprimé).',
     'Allumez la caméra avec l’interrupteur, ou tapez la référence du ticket.',
     'Vert : entrée autorisée. Rouge : la raison est affichée (déjà utilisé, trop tôt, non payé…).',
-    'Entrée possible à partir de 30 min avant le début du créneau. La croix efface le résultat.'],
+    `Entrée possible à partir de ${marque.margeEntreeMinutes} min avant le début du créneau. La croix efface le résultat.`],
   complexe: ['Vos terrains tels que les clients les voient dans l’app.',
     'Actifs : réservables. Brouillons : en préparation ou dépubliés. Archivés : retirés, restaurables.',
     'Un terrain publié ne se modifie pas (des clients réservent dessus) : dépubliez-le, modifiez-le dans les brouillons, puis republiez-le.',

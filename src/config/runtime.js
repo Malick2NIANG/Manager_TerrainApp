@@ -9,6 +9,12 @@ const runtime = (typeof window !== 'undefined' && window.__TERRAINAPP_CONFIG__) 
 
 export function configuration(cle, valeurVite, defaut) {
   const v = runtime[cle]
-  if (v !== undefined && v !== null && String(v).trim() !== '') return String(v)
+  if (v !== undefined && v !== null && typeof v !== 'object' && String(v).trim() !== '') return String(v)
   return valeurVite || defaut
+}
+
+/** Valeur structuree de /config.js (ex. MARQUE_COMPLETE), ou {} si absente ou invalide. */
+export function configurationObjet(cle) {
+  const v = runtime[cle]
+  return v && typeof v === 'object' && !Array.isArray(v) ? v : {}
 }

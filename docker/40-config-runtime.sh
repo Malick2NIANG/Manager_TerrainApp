@@ -41,6 +41,14 @@ else
   [ ${#INITIALES} -ge 2 ] || INITIALES=$(printf '%s' "$NOM" | cut -c1-2 | tr 'a-z' 'A-Z')
 fi
 
+# Identite complete du complexe (/marque/marque.json, produite par
+# `npm run client` : memes champs que GET /api/v1/marque). Lue telle quelle,
+# sur une ligne, et parsee dans le navigateur (JSON invalide : ignoree).
+MARQUE_JSON='{}'
+if [ -f /marque/marque.json ]; then
+  MARQUE_JSON=$(tr -d '\r\n' < /marque/marque.json)
+fi
+
 cat > "$HTML/config.js" <<EOF
 // Genere au demarrage du conteneur (docker/40-config-runtime.sh).
 window.__TERRAINAPP_CONFIG__ = {
@@ -54,7 +62,8 @@ window.__TERRAINAPP_CONFIG__ = {
   MARQUE_LOGO_URL: "$(echapper "${MARQUE_LOGO_URL:-}")",
   MARQUE_ETABLISSEMENT: "$(echapper "${MARQUE_ETABLISSEMENT:-}")",
   MARQUE_COULEUR: "$(echapper "${MARQUE_COULEUR:-}")",
-  MARQUE_COULEUR_CLAIRE: "$(echapper "${MARQUE_COULEUR_CLAIRE:-}")"
+  MARQUE_COULEUR_CLAIRE: "$(echapper "${MARQUE_COULEUR_CLAIRE:-}")",
+  MARQUE_COMPLETE: (function () { try { return JSON.parse("$(echapper "$MARQUE_JSON")"); } catch (e) { return {}; } })()
 };
 EOF
 
@@ -69,6 +78,12 @@ sed -e "s|#1f7a4d|$COULEUR|g" -e "s|>TA<|>$INITIALES_SVG<|" "$MODELES/favicon.sv
 # /marque : servis sous /marque/ (MARQUE_LOGO_URL=/marque/logo.png).
 if [ -d /marque ]; then
   cp -R /marque/. "$HTML/marque/"
+  # Favicon du complexe (fourni ou genere depuis le logo par npm run client).
+  if [ -f /marque/favicon.svg ]; then
+    cp /marque/favicon.svg "$HTML/favicon.svg"
+  elif [ -f /marque/favicon.png ]; then
+    sed -i -e 's|<link rel="icon" type="image/svg+xml" href="/favicon.svg" />|<link rel="icon" type="image/png" href="/marque/favicon.png" />|' "$HTML/index.html"
+  fi
 fi
 
 echo "config-runtime: API_BASE_URL=${API_BASE_URL:-(defaut)} marque=$NOM couleur=$COULEUR"

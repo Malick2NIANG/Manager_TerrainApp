@@ -5,7 +5,12 @@
 // /config.js genere au demarrage du conteneur (variables MARQUE_*, voir
 // docker/40-config-runtime.sh) > variables VITE_MARQUE_* du .env > valeurs
 // par defaut (TerrainApp). Meme fiche que l'App Client.
-import { configuration } from './runtime'
+//
+// En tete de cette liste : l'identite complete du dossier du complexe
+// (MARQUE_COMPLETE dans /config.js, injectee au demarrage du conteneur depuis
+// /marque/marque.json, produite par `npm run client` ; memes champs que
+// GET /api/v1/marque).
+import { configuration, configurationObjet } from './runtime'
 
 const env = import.meta.env
 
@@ -21,7 +26,15 @@ const DEFAUT = {
   rose: '#A8DFC0', // texte clair sur fond sombre
 }
 
-const nom = configuration('MARQUE_NOM', env.VITE_MARQUE_NOM, DEFAUT.nom)
+/** Identite complete du complexe (objet), ou {} sans dossier. */
+const complete = configurationObjet('MARQUE_COMPLETE')
+const texte = (v) => (typeof v === 'string' && v.trim() !== '' ? v.trim() : '')
+/** Valeur du dossier du complexe, sinon variable MARQUE_* / VITE_MARQUE_*, sinon defaut. */
+const valeur = (duDossier, cle, valeurVite, defaut) => texte(duDossier) || configuration(cle, valeurVite, defaut)
+const couleurs = complete.couleurs || {}
+const regles = complete.regles || {}
+
+const nom = valeur(complete.nom, 'MARQUE_NOM', env.VITE_MARQUE_NOM, DEFAUT.nom)
 const nomParDefaut = nom === DEFAUT.nom
 
 /** Initiales du monogramme : majuscules du nom ("TerrainApp" -> "TA"), sinon 2 premieres lettres. */
@@ -51,26 +64,34 @@ export function nuance(rgb, part) {
 export const hexDe = (rgb) => `#${rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`.toUpperCase()
 
 const couleurRgb =
-  rgbDe(configuration('MARQUE_COULEUR', env.VITE_MARQUE_COULEUR, DEFAUT.couleur)) || rgbDe(DEFAUT.couleur)
+  rgbDe(valeur(couleurs.principale, 'MARQUE_COULEUR', env.VITE_MARQUE_COULEUR, DEFAUT.couleur)) || rgbDe(DEFAUT.couleur)
 const couleurParDefaut = hexDe(couleurRgb) === DEFAUT.couleur
 // Declinaisons : exactes pour la couleur par defaut, calculees sinon.
 const decliner = (exacte, part) => (couleurParDefaut ? rgbDe(exacte) : nuance(couleurRgb, part))
 const vifRgb =
-  rgbDe(configuration('MARQUE_COULEUR_CLAIRE', env.VITE_MARQUE_COULEUR_CLAIRE, '')) || decliner(DEFAUT.vif, 0.35)
+  rgbDe(valeur(couleurs.claire, 'MARQUE_COULEUR_CLAIRE', env.VITE_MARQUE_COULEUR_CLAIRE, '')) || decliner(DEFAUT.vif, 0.35)
 
 export const marque = Object.freeze({
   nom,
+  // Vrai si un dossier de complexe est applique (npm run client).
+  personnalise: complete.personnalise === true,
   // Partie du nom mise en couleur (fin du nom) : "TerrainApp" -> TERRAIN + APP.
-  accent: configuration('MARQUE_NOM_ACCENT', env.VITE_MARQUE_NOM_ACCENT, nomParDefaut ? DEFAUT.accent : ''),
-  initiales: configuration('MARQUE_INITIALES', env.VITE_MARQUE_INITIALES, initialesDe(nom)),
+  accent: valeur(complete.nomAccent, 'MARQUE_NOM_ACCENT', env.VITE_MARQUE_NOM_ACCENT, nomParDefaut ? DEFAUT.accent : ''),
+  initiales: valeur(complete.initiales, 'MARQUE_INITIALES', env.VITE_MARQUE_INITIALES, initialesDe(nom)),
   // URL d'un logo (carre) : remplace le monogramme.
-  logo: configuration('MARQUE_LOGO_URL', env.VITE_MARQUE_LOGO_URL, ''),
-  // Nom du restaurant sur les tickets (vide = le nom de la marque seul).
-  etablissement: configuration(
+  logo: valeur(complete.logoUrl, 'MARQUE_LOGO_URL', env.VITE_MARQUE_LOGO_URL, ''),
+  // Nom en tete des tickets et recus (dossier : nomSurTickets ; vide = le nom de la marque seul).
+  etablissement: valeur(
+    complete.documents?.nomSurTickets,
     'MARQUE_ETABLISSEMENT',
     env.VITE_MARQUE_ETABLISSEMENT,
     nomParDefaut ? DEFAUT.etablissement : '',
   ),
+  // Phrase de pied du recu de caisse, et marge d'entree avant le creneau (scan).
+  piedDeRecu: texte(complete.documents?.piedDeRecu) || 'Merci et bon match !',
+  margeEntreeMinutes: Number.isInteger(regles.margeEntreeMinutes) ? regles.margeEntreeMinutes : 30,
+  delaiAnnulationHeures: Number.isInteger(regles.delaiAnnulationHeures) ? regles.delaiAnnulationHeures : null,
+  ville: texte(complete.ville),
   couleur: hexDe(couleurRgb),
   couleurRgb,
   vifRgb,

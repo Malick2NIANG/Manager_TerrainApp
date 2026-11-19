@@ -6,6 +6,7 @@ import { gpsEnTexte, lireGps } from './gps.js'
 import { estVideo, mediaEnvoye } from '../annonces/annonces.js'
 import { formatFCFA } from '../../utils/dates.js'
 import { libelleDuree } from '../../utils/durees.js'
+import { marque } from '../../config/marque.js'
 
 export const JOURS = [
   { n: 1, court: 'Lun' }, { n: 2, court: 'Mar' }, { n: 3, court: 'Mer' }, { n: 4, court: 'Jeu' },
@@ -212,7 +213,7 @@ export default function TerrainFormModal({ terrain, sports, onFermer, onEnregist
                   placeholder="Terrain couvert, gazon récent, éclairage LED…" />
               </label>
               <label>Localité <span className="ta-form-aide">quartier ou site, pour la recherche</span>
-                <input value={f.localite} onChange={maj('localite')} maxLength={120} placeholder="Liberté 6, Dakar" />
+                <input value={f.localite} onChange={maj('localite')} maxLength={120} placeholder={marque.ville ? `Quartier, ${marque.ville}` : 'Quartier, ville'} />
               </label>
               <label>Position GPS <span className="ta-form-aide">pour le bouton « Itinéraire » de l’app : coordonnées ou lien Google Maps</span>
                 <input value={f.gps} onChange={maj('gps')} placeholder="14.7256, -17.4569" />
